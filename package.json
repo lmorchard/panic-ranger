@@ -55,7 +55,7 @@
     "watch:js": "onchange -p -v \"src/**/*.js\" \"test/**/*.js\" -- npm-run-all --parallel lint:js test:js build:js",
     "test:js": "mocha --colors --compilers js:babel-register --recursive",
     "build:sketches": "babel-node bin/build-sketches.js",
-    "watch:sketches": "onchange -p -v \"src/sketches/**/*.js\" -- npm-run-all --parallel build:sketches"
+    "watch:sketches": "onchange -p -v \"src/sketches/**/*.js\" -- babel-node bin/build-sketches.js {{changed}}"
   },
   "dependencies": {
     "dat-gui": "^0.5.0",

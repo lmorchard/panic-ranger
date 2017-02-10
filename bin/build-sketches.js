@@ -6,14 +6,13 @@ import glob from 'glob';
 import mkdirp from 'mkdirp';
 import copy from 'copy';
 
-let rollupCache;
-
-glob('./src/sketches/*js', {}, (err, sketchPaths) => {
+const processSketches = (err, sketchPaths) => {
   if (err) {
     console.error(err);
     process.exit(1);
   }
 
+  let rollupCache;
   Promise.all(sketchPaths.map(sketchPath => {
     const sketchName = path.basename(sketchPath, '.js');
     const sketchDist = `dist/sketches/${sketchName}`;
@@ -36,4 +35,10 @@ glob('./src/sketches/*js', {}, (err, sketchPaths) => {
   }).catch(err => {
    console.error('err', err);
   })
-});
+};
+
+if (process.argv.length > 2) {
+  processSketches(null, process.argv.slice(2));
+} else {
+  glob('./src/sketches/*js', {}, processSketches);
+}
