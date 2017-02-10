@@ -41,6 +41,8 @@
     "server": "browser-sync start --no-open --server --serveStatic dist --files \"dist/**/*.css, dist/**/*.js, dist/**/*.html\"",
     "build:html": "shx cp src/*.html dist/",
     "watch:html": "onchange -p -v \"src/*.html\" -- npm-run-all --parallel build:html",
+    "build:css": "shx cp src/*.css dist/",
+    "watch:css": "onchange -p -v \"src/*.css\" -- npm-run-all --parallel build:css",
     "lint:js": "eslint --color src test",
     "build:js": "rollup -c --environment entry:index",
     "watch:js": "onchange -p -v \"src/**/*.js\" \"test/**/*.js\" -- npm-run-all --parallel lint:js test:js build:js",
