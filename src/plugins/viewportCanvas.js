@@ -1,0 +1,457 @@
+import * as Core from '../lib/core';
+import defaults from 'lodash.defaults';
+
+export class CanvasSprite extends Core.Component {
+  static defaults() {
+    return {
+      name: null,
+      color: '#fff',
+      size: 100,
+      width: null,
+      height: null
+    };
+  }
+  static create(attrs) {
+    const c = super.create(attrs);
+    if (!c.width) { c.width = c.size; }
+    if (!c.height) { c.height = c.size; }
+    return c;
+  }
+}
+Core.registerComponent('Sprite', CanvasSprite);
+
+// See also: http://phrogz.net/JS/wheeldelta.html
+const wheelDistance = function(evt){
+  if (!evt) evt = event;
+  const w=evt.wheelDelta, d=evt.detail;
+  if (d){
+    if (w) return w/d/40*d>0?1:-1; // Opera
+    else return -d/3;              // Firefox;         TODO: do not /3 for OS X
+  } else return w/120;             // IE/Safari/Chrome TODO: /3 for Chrome OS X
+};
+
+export class ViewportCanvas extends Core.System {
+
+  defaultOptions() {
+    return {
+      lineWidth: 1.5,
+      zoom: 1.0,
+      zoomMin: 0.1,
+      zoomMax: 10.0,
+      zoomWheelFactor: 0.025,
+      gridEnabled: true,
+      gridSize: 500,
+      gridColor: '#111',
+      followEnabled: true,
+      followName: null,
+      followEntityId: null
+    };
+  }
+
+  initialize() {
+    this.container = document.querySelector(this.options.container);
+    this.canvas = document.querySelector(this.options.canvas);
+    this.ctx = this.canvas.getContext('2d');
+
+    const events = {
+      'resize': (ev) => { this.updateMetrics(ev); },
+      'orientationchange': (ev) => { this.updateMetrics(ev); },
+      'mousedown': (ev) => { this.onMouseDown(ev); },
+      'mousemove': (ev) => { this.onMouseMove(ev); },
+      'mouseup': (ev) => { this.onMouseUp(ev); },
+      //'wheel': (ev) => { this.onMouseWheel(ev); }
+    };
+
+    for (const name in events) {
+      this.canvas.addEventListener(name, events[name], false);
+    }
+
+    // See also: http://phrogz.net/JS/wheeldelta.html
+    const boundOnMouseWheel = (ev) => this.onMouseWheel(ev);
+    if (window.addEventListener){
+      window.addEventListener('mousewheel', boundOnMouseWheel, false); // Chrome/Safari/Opera
+      window.addEventListener('DOMMouseScroll', boundOnMouseWheel, false); // Firefox
+    } else if (window.attachEvent){
+      window.attachEvent('onmousewheel', boundOnMouseWheel); // IE
+    }
+
+    this.followEnabled = this.options.followEnabled;
+    this.zoom = this.options.zoom;
+    this.followEntityId = this.options.followEntityId;
+    this.gridEnabled = this.options.gridEnabled;
+    this.lineWidth = this.options.lineWidth;
+
+    this.cursorRawX = 0;
+    this.cursorRawY = 0;
+
+    this.cursorChanged = false;
+    this.cursorPosition = { x: 0, y: 0 };
+
+    this.cameraX = 0;
+    this.cameraY = 0;
+
+    this.debugDummySprite = { size: 100 };
+  }
+
+  draw(timeDelta) {
+    this.updateMetrics();
+    this.ctx.save();
+
+    this.clear();
+    this.centerAndZoom(timeDelta);
+    this.followEntity(timeDelta);
+
+    if (this.gridEnabled) { this.drawBackdrop(timeDelta); }
+
+    this.drawScene(timeDelta);
+
+    if (this.world.debug) { this.drawDebugCursor(); }
+
+    this.ctx.restore();
+  }
+
+  onMouseWheel(ev) {
+    this.zoom += wheelDistance(ev) * this.options.zoomWheelFactor;
+    if (this.zoom < this.options.zoomMin) {
+      this.zoom = this.options.zoomMin;
+    }
+    if (this.zoom > this.options.zoomMax) {
+      this.zoom = this.options.zoomMax;
+    }
+  }
+
+  // TODO: Use a symbol for 'mouse{Down,Move,Up}' message?
+
+  onMouseDown(ev) {
+    this.setCursor(ev.clientX, ev.clientY);
+    this.world.publish('mouseDown', this.cursorPosition);
+  }
+
+  onMouseMove(ev) {
+    this.setCursor(ev.clientX, ev.clientY);
+  }
+
+  onMouseUp(ev) {
+    this.setCursor(ev.clientX, ev.clientY);
+    this.world.publish('mouseUp', this.cursorPosition);
+  }
+
+  update(/* timeDelta */) {
+    // Use the cursorChanged flag set by setCursor to limit mouseMove messages
+    // to one per game loop tick
+    if (this.cursorChanged) {
+      this.cursorChanged = false;
+      this.world.publish('mouseMove', this.cursorPosition);
+    }
+  }
+
+  setCursor(x, y) {
+    const width = this.container.offsetWidth;
+    const height = this.container.offsetHeight;
+
+    this.cursorRawX = x;
+    this.cursorRawY = y;
+
+    const newX = ((x - (width / 2)) / this.zoom) + this.cameraX;
+    const newY = ((y - (height / 2)) / this.zoom) + this.cameraY;
+
+    if (newX !== this.cursorPosition.x || newY !== this.cursorPosition.y) {
+      this.cursorChanged = true;
+      this.cursorPosition.x = newX;
+      this.cursorPosition.y = newY;
+    }
+  }
+
+  updateMetrics() {
+    const width = this.container.offsetWidth;
+    const height = this.container.offsetHeight;
+
+    this.canvas.width = width;
+    this.canvas.height = height;
+
+    this.visibleWidth = width / this.zoom;
+    this.visibleHeight = height / this.zoom;
+
+    this.visibleLeft = (0 - this.visibleWidth / 2) + this.cameraX;
+    this.visibleTop = (0 - this.visibleHeight / 2) + this.cameraY;
+    this.visibleRight = this.visibleLeft + this.visibleWidth;
+    this.visibleBottom = this.visibleTop + this.visibleHeight;
+  }
+
+  clear() {
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 1.0)';
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  centerAndZoom() {
+    this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
+    this.ctx.scale(this.zoom, this.zoom);
+  }
+
+  followEntity() {
+    if (!this.followEnabled) {
+      this.cameraX = this.cameraY = 0;
+      return;
+    }
+    if (this.options.followName && !this.followEntityId) {
+      // Look up named entity, if necessary.
+      this.followEntityId = Core.getComponent('Name')
+        .findEntityByName(this.world, this.options.followName);
+    }
+    if (this.followEntityId) {
+      // Adjust the viewport center offset to the entity position
+      const position = this.world.get('Position', this.followEntityId);
+      if (position) {
+        this.cameraX = position.x;
+        this.cameraY = position.y;
+        this.setCursor(this.cursorRawX, this.cursorRawY);
+        this.ctx.translate(0 - this.cameraX, 0 - this.cameraY);
+      }
+    }
+  }
+
+  drawDebugCursor() {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.strokeStyle = '#f0f';
+    ctx.lineWidth = this.lineWidth / this.zoom;
+    ctx.translate(this.cursorPosition.x, this.cursorPosition.y);
+    ctx.beginPath();
+    ctx.moveTo(-20, 0);
+    ctx.lineTo(20, 0);
+    ctx.moveTo(0, -20);
+    ctx.lineTo(0, 20);
+    ctx.strokeRect(-10, -10, 20, 20);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawBackdrop() {
+    const gridSize = this.options.gridSize;
+    const gridOffsetX = this.visibleLeft % gridSize;
+    const gridOffsetY = this.visibleTop % gridSize;
+
+    const ctx = this.ctx;
+
+    ctx.save();
+    ctx.beginPath();
+
+    ctx.strokeStyle = this.options.gridColor;
+    ctx.lineWidth = this.lineWidth / this.zoom;
+
+    for (let x = (this.visibleLeft - gridOffsetX); x < this.visibleRight; x += gridSize) {
+      ctx.moveTo(x, this.visibleTop);
+      ctx.lineTo(x, this.visibleBottom);
+    }
+
+    for (let y = (this.visibleTop - gridOffsetY); y < this.visibleBottom; y += gridSize) {
+      ctx.moveTo(this.visibleLeft, y);
+      ctx.lineTo(this.visibleRight, y);
+    }
+
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawScene(timeDelta) {
+    const positions = this.world.get('Position');
+    for (const entityId in positions) {
+      this.drawSprite(timeDelta, entityId, positions[entityId]);
+    }
+  }
+
+  drawSprite(timeDelta, entityId, position) {
+
+    let sprite = this.world.get('Sprite', entityId);
+    if (!sprite) { sprite = CanvasSprite.defaults(); }
+
+    let spriteFn = getSprite(sprite.name);
+    if (!spriteFn) { spriteFn = getSprite('default'); }
+
+    const ctx = this.ctx;
+
+    ctx.save();
+
+    ctx.translate(position.x, position.y);
+
+    ctx.rotate(position.rotation + Math.PI/2);
+    ctx.scale(sprite.size / 100, sprite.size / 100);
+
+    // HACK: Try to keep line width consistent regardless of zoom, to sort of
+    // simulate a vector display
+    ctx.lineWidth = this.lineWidth / this.zoom / (sprite.size / 100);
+
+    ctx.strokeStyle = sprite.color;
+    spriteFn(ctx, timeDelta, sprite, entityId);
+
+    ctx.restore();
+
+  }
+
+}
+
+Core.registerSystem('ViewportCanvas', ViewportCanvas);
+
+const spriteRegistry = {};
+export function registerSprite(name, sprite) {
+  spriteRegistry[name] = sprite;
+}
+export function getSprite(name) {
+  return spriteRegistry[name];
+}
+
+const PI2 = Math.PI * 2;
+
+registerSprite('default', (ctx/*, timeDelta, sprite, entityId*/) => {
+  ctx.beginPath();
+  ctx.arc(0, 0, 50, 0, PI2, true);
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, -50);
+  ctx.moveTo(0, 0);
+  ctx.stroke();
+});
+
+registerSprite('sun', (ctx/*, timeDelta, sprite, entityId*/) => {
+  ctx.beginPath();
+  ctx.arc(0, 0, 50, 0, PI2, true);
+  ctx.stroke();
+});
+
+registerSprite('enemyscout', (ctx/*, timeDelta, sprite, entityId*/) => {
+  ctx.beginPath();
+  ctx.moveTo(0, -50);
+  ctx.lineTo(-45, 50);
+  ctx.lineTo(-12.5, 12.5);
+  ctx.lineTo(0, 25);
+  ctx.lineTo(12.5, 12.5);
+  ctx.lineTo(45, 50);
+  ctx.lineTo(0, -50);
+  ctx.moveTo(0, -50);
+  ctx.stroke();
+});
+
+registerSprite('hero', (ctx/*, timeDelta, sprite, entityId*/) => {
+  ctx.rotate(Math.PI);
+  ctx.beginPath();
+  ctx.moveTo(-12.5, -50);
+  ctx.lineTo(-25, -50);
+  ctx.lineTo(-50, 0);
+  ctx.arc(0, 0, 50, Math.PI, 0, true);
+  ctx.lineTo(25, -50);
+  ctx.lineTo(12.5, -50);
+  ctx.lineTo(25, 0);
+  ctx.arc(0, 0, 25, 0, Math.PI, true);
+  ctx.lineTo(-12.5, -50);
+  ctx.stroke();
+});
+
+registerSprite('asteroid', (ctx, timeDelta, sprite/*, entityId*/) => {
+  let idx;
+
+  if (!sprite.points) {
+    const NUM_POINTS = 7 + Math.floor(8 * Math.random());
+    const MAX_RADIUS = 50;
+    const MIN_RADIUS = 35;
+    const ROTATION = PI2 / NUM_POINTS;
+
+    sprite.points = [];
+    for (idx = 0; idx < NUM_POINTS; idx++) {
+      const rot = idx * ROTATION;
+      const dist = (Math.random() * (MAX_RADIUS - MIN_RADIUS)) + MIN_RADIUS;
+      sprite.points.push([dist * Math.cos(rot), dist * Math.sin(rot)]);
+    }
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(sprite.points[0][0], sprite.points[0][1]);
+  for (idx = 0; idx < sprite.points.length; idx++) {
+    ctx.lineTo(sprite.points[idx][0], sprite.points[idx][1]);
+  }
+  ctx.lineTo(sprite.points[0][0], sprite.points[0][1]);
+  ctx.stroke();
+
+});
+
+registerSprite('explosion', (ctx, timeDelta, sprite/*, entityId*/) => {
+  let p, idx;
+
+  if (!sprite.initialized) {
+
+    sprite.initialized = true;
+
+    defaults(sprite, {
+      ttl: 2.0,
+      radius: 100,
+      maxParticles: 25,
+      maxParticleSize: 4,
+      maxVelocity: 300,
+      color: '#f00',
+      age: 0,
+      stop: false,
+    });
+
+    sprite.particles = [];
+
+    for (idx = 0; idx < sprite.maxParticles; idx++) {
+      sprite.particles.push({ free: true });
+    }
+
+  }
+
+  for (idx = 0; idx < sprite.particles.length; idx++) {
+    p = sprite.particles[idx];
+
+    if (!sprite.stop && p.free) {
+
+      p.velocity = sprite.maxVelocity * Math.random();
+      p.angle = (Math.PI * 2) * Math.random();
+      p.dx = 0 - (p.velocity * Math.sin(p.angle));
+      p.dy = p.velocity * Math.cos(p.angle);
+      p.distance = p.x = p.y = 0;
+      p.maxDistance = sprite.radius * Math.random();
+      p.size = sprite.maxParticleSize;
+      p.free = false;
+
+    } else if (!p.free) {
+
+      p.x += p.dx * timeDelta;
+      p.y += p.dy * timeDelta;
+
+      p.distance += p.velocity * timeDelta;
+      if (p.distance >= p.maxDistance) {
+        p.distance = p.maxDistance;
+        p.free = true;
+      }
+
+    }
+
+  }
+
+  sprite.age += timeDelta;
+
+  if (sprite.age >= sprite.ttl) {
+    sprite.stop = true;
+  }
+
+  const alpha = Math.max(0, 1 - (sprite.age / sprite.ttl));
+
+  ctx.save();
+  ctx.strokeStyle = sprite.color;
+  ctx.fillStyle = sprite.color;
+
+  for (idx = 0; idx < sprite.particles.length; idx++) {
+    p = sprite.particles[idx];
+    if (p.free) { continue; }
+
+    ctx.globalAlpha = (1 - (p.distance / p.maxDistance)) * alpha;
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineWidth = p.size;
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+});
