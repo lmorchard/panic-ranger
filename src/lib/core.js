@@ -1,5 +1,3 @@
-import defaults from 'lodash.defaults';
-
 const TARGET_FPS = 60;
 const TARGET_DURATION = 1000 / TARGET_FPS;
 
@@ -252,7 +250,7 @@ export class Component {
   }
 
   static create(attrs) {
-    return defaults(attrs || {}, this.defaults());
+    return {...this.defaults(), ...(attrs || {})};
   }
 
 }
@@ -260,7 +258,7 @@ export class Component {
 export class System {
 
   constructor(options) {
-    this.options = defaults(options || {}, this.defaultOptions());
+    this.options = {...this.defaultOptions(), ...(options || {})};
     this.debug = this.options.debug || false;
   }
 

@@ -1,5 +1,4 @@
 import * as Core from '../lib/core';
-import defaults from 'lodash.defaults';
 
 export class CanvasSprite extends Core.Component {
   static defaults() {
@@ -50,7 +49,9 @@ export class ViewportCanvas extends Core.System {
 
   initialize() {
     this.container = document.querySelector(this.options.container);
-    this.canvas = document.querySelector(this.options.canvas);
+    this.canvas = document.createElement('canvas');
+    this.container.appendChild(this.canvas);
+
     this.ctx = this.canvas.getContext('2d');
 
     const events = {
@@ -379,7 +380,7 @@ registerSprite('explosion', (ctx, timeDelta, sprite/*, entityId*/) => {
 
     sprite.initialized = true;
 
-    defaults(sprite, {
+    Object.assign(sprite, {
       ttl: 2.0,
       radius: 100,
       maxParticles: 25,
@@ -388,6 +389,7 @@ registerSprite('explosion', (ctx, timeDelta, sprite/*, entityId*/) => {
       color: '#f00',
       age: 0,
       stop: false,
+      ...sprite
     });
 
     sprite.particles = [];

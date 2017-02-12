@@ -1,6 +1,7 @@
 import { World } from '../lib/core';
 
-import '../plugins/viewportCanvas';
+// import '../plugins/viewportCanvas';
+import '../plugins/viewportPixi';
 import '../plugins/drawStats';
 import '../plugins/memoryStats';
 import '../plugins/datGui';
@@ -11,9 +12,11 @@ import '../plugins/motion';
 
 const world = new World({
   systems: {
-    ViewportCanvas: {
+    // ViewportCanvas: {
+    ViewportPixi: {
       container: '#game',
-      canvas: '#viewport'
+      canvas: '#viewport',
+      // followName: 'alpha'
     },
     DrawStats: {},
     MemoryStats: {},

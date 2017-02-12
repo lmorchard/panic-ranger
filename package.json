@@ -22,6 +22,8 @@
     "eslint-plugin-promise": "^3.4.0",
     "gh-pages": "^0.12.0",
     "glob": "^7.1.1",
+    "lodash": "^4.17.4",
+    "lodash.defaults": "^4.2.0",
     "mkdirp": "^0.5.1",
     "mocha": "^3.2.0",
     "npm-run-all": "^3.1.2",
@@ -30,12 +32,19 @@
     "rollup": "^0.36.4",
     "rollup-plugin-babel": "^2.6.1",
     "rollup-plugin-commonjs": "^5.0.5",
+    "rollup-plugin-conditional": "^1.1.1",
     "rollup-plugin-node-globals": "^1.1.0",
     "rollup-plugin-node-resolve": "^2.0.0",
     "rollup-plugin-replace": "^1.1.1",
+    "rollup-plugin-uglify": "^1.0.1",
     "shx": "^0.2.1",
-    "sinon": "^1.17.6",
-    "web-ext": "1.7.0"
+    "sinon": "^1.17.6"
+  },
+  "dependencies": {
+    "dat-gui": "^0.5.0",
+    "memory-stats": "^1.0.2",
+    "pixi.js": "^4.3.5",
+    "stats-js": "^1.0.0-alpha1"
   },
   "scripts": {
     "start": "npm run clean && npm run lint && npm run test && npm run build && npm-run-all --parallel watch server",
@@ -44,7 +53,7 @@
     "watch": "npm-run-all --parallel watch:*",
     "lint": "npm-run-all --parallel lint:*",
     "test": "npm-run-all --parallel test:*",
-    "server": "browser-sync start --no-open --server --serveStatic dist --files \"dist/**/*.css, dist/**/*.js, dist/**/*.html\"",
+    "server": "browser-sync start --reload-delay 1000 --no-open --server --serveStatic dist --files \"dist/**/*.css, dist/**/*.js, dist/**/*.html\"",
     "deploy": "gh-pages -d dist",
     "build:html": "shx cp src/*.html dist/",
     "watch:html": "onchange -p -v \"src/*.html\" -- npm-run-all --parallel build:html",
@@ -52,15 +61,9 @@
     "watch:css": "onchange -p -v \"src/*.css\" -- npm-run-all --parallel build:css",
     "lint:js": "eslint --color src test",
     "build:js": "rollup -c --environment entry:index",
-    "watch:js": "onchange -p -v \"src/**/*.js\" \"test/**/*.js\" -- npm-run-all --parallel lint:js test:js build:js",
+    "watch:js": "onchange -p -v \"src/**/*.js\" \"test/**/*.js\" -- npm-run-all --parallel lint:js test:js build:js build:sketches",
     "test:js": "mocha --colors --compilers js:babel-register --recursive",
     "build:sketches": "babel-node bin/build-sketches.js",
     "watch:sketches": "onchange -p -v \"src/sketches/**/*.js\" -- babel-node bin/build-sketches.js {{changed}}"
-  },
-  "dependencies": {
-    "dat-gui": "^0.5.0",
-    "lodash.defaults": "^4.2.0",
-    "memory-stats": "^1.0.2",
-    "stats-js": "^1.0.0-alpha1"
   }
 }

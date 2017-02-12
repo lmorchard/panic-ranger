@@ -1,3 +1,2 @@
 dist/**
-data/**
-lib/moment.js
+src/lib/QuadTree.js
