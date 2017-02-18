@@ -15,8 +15,9 @@ export class ClickCourseSystem extends Core.System {
   initialize() {
     this.trackingCursor = false;
     this.world
-      .subscribe('mouseDown', (/*msg, cursorPosition*/) => {
+      .subscribe('mouseDown', (msg, cursorPosition) => {
         this.trackingCursor = true;
+        this.setCourse(cursorPosition);
       })
       .subscribe('mouseUp', (msg, cursorPosition) => {
         this.trackingCursor = false;

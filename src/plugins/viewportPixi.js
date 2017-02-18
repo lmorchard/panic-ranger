@@ -1,6 +1,8 @@
 /* global PIXI */
 import * as Core from '../lib/core';
 import '../../node_modules/pixi.js/dist/pixi.js';
+import '../../node_modules/pixi-filters/bin/filters.js';
+import '../../node_modules/pixi-extra-filters/bin/pixi-extra-filters.js';
 
 const PI2 = Math.PI * 2;
 
@@ -104,6 +106,7 @@ export class ViewportPixi extends Core.System {
 
   onMouseMove(ev) {
     this.setCursor(ev.clientX, ev.clientY);
+    this.world.publish('mouseMove', this.cursorPosition);
   }
 
   onMouseUp(ev) {
