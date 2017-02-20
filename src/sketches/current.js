@@ -1,20 +1,20 @@
-import * as Core from './lib/core';
+import * as Core from '../lib/core';
 
-import Vector2D from './lib/Vector2D';
+import Vector2D from '../lib/Vector2D';
 
-import './plugins/drawStats';
-import './plugins/memoryStats';
-import './plugins/datGui';
-import './plugins/viewportPixi';
-import './plugins/name';
-import './plugins/health';
-import './plugins/position';
-import './plugins/motion';
-import './plugins/thruster';
-import './plugins/seeker';
-import './plugins/collision';
-import './plugins/bounce';
-import './plugins/playerInputSteering';
+import '../plugins/drawStats';
+import '../plugins/memoryStats';
+import '../plugins/datGui';
+import '../plugins/viewportPixi';
+import '../plugins/name';
+import '../plugins/health';
+import '../plugins/position';
+import '../plugins/motion';
+import '../plugins/thruster';
+import '../plugins/seeker';
+import '../plugins/collision';
+import '../plugins/bounce';
+import '../plugins/playerInputSteering';
 
 const debug = true;
 

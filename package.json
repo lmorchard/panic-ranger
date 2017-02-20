@@ -63,8 +63,9 @@
     "watch:css": "onchange -p -v \"src/*.css\" -- npm-run-all --parallel build:css",
     "lint:js": "eslint --color src test",
     "build:js": "rollup -c --environment entry:index",
-    "watch:js": "onchange -p -v \"src/**/*.js\" \"test/**/*.js\" -e \"src/sketches/**/*.js\" -- npm-run-all --parallel lint:js test:js build:js build:sketches",
+    "watch:js": "onchange -p -v \"src/**/*.js\" \"test/**/*.js\" -e \"src/sketches/**/*.js\" -- npm-run-all --parallel lint:js test:js build:js build:currentSketch",
     "test:js": "mocha --colors --compilers js:babel-register --recursive",
+    "build:currentSketch": "babel-node bin/build-sketches.js src/sketches/current.js",
     "build:sketches": "babel-node bin/build-sketches.js",
     "watch:sketches": "onchange -p -v \"src/sketches/**/*.js\" -- babel-node bin/build-sketches.js {{changed}}"
   }

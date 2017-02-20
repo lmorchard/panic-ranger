@@ -12,9 +12,9 @@ import '../plugins/position';
 import '../plugins/motion';
 import '../plugins/thruster';
 import '../plugins/seeker';
-import '../plugins/clickCourse';
 import '../plugins/collision';
 import '../plugins/bounce';
+import '../plugins/playerInputSteering';
 
 const debug = true;
 
@@ -33,7 +33,7 @@ const world = window.world = new Core.World({
     Motion: {},
     Thruster: {},
     Seeker: {},
-    ClickCourse: {},
+    PlayerInputSteering: {},
     Collision: {},
     Bounce: {}
   }
@@ -48,7 +48,7 @@ world.insert({
   Thruster: { deltaV: 1200, maxV: 500, active: false },
   Seeker: { radPerSec: Math.PI },
   Motion: {},
-  ClickCourse: { stopOnArrival: true, active: false }
+  PlayerInputSteering: { radPerSec: Math.PI }
 });
 
 function spawnAsteroid(x, y, width, height, dx, dy, dr, mass, health) {
@@ -63,7 +63,7 @@ function spawnAsteroid(x, y, width, height, dx, dy, dr, mass, health) {
 }
 
 function spawnField(centerX, centerY, radius=300,
-    MAX_ASTEROIDS=50, MAX_TRIES=5, MIN_SIZE=20, MAX_SIZE=200, MAX_GRAV=10) {
+    MAX_ASTEROIDS=150, MAX_TRIES=5, MIN_SIZE=20, MAX_SIZE=300, MAX_GRAV=10) {
 
   const vCenter = new Vector2D(centerY, centerX);
   const vSpawn = new Vector2D(0, 0);

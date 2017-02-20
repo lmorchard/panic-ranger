@@ -8,6 +8,7 @@ import Vector2D from '../lib/Vector2D';
 export class Seeker extends Core.Component {
   static defaults() {
     return {
+      active: true,
       targetName: null,
       targetEntityId: null,
       targetPosition: null,
@@ -29,6 +30,8 @@ export class SeekerSystem extends Core.System {
   }
 
   updateComponent(timeDelta, entityId, seeker) {
+
+    if (!seeker.active) { return; }
 
     // Look up the orbited entity ID, if only name given.
     if (seeker.targetName && !seeker.targetEntityId) {

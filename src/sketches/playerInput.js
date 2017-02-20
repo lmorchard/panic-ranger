@@ -5,12 +5,11 @@ import '../plugins/position';
 import '../plugins/motion';
 import '../plugins/thruster';
 import '../plugins/seeker';
-import '../plugins/clickCourse';
-// import '../plugins/viewportCanvas';
 import '../plugins/viewportPixi';
 import '../plugins/drawStats';
 import '../plugins/memoryStats';
 import '../plugins/datGui';
+import '../plugins/playerInputSteering';
 
 const debug = true;
 
@@ -28,7 +27,7 @@ const world = new Core.World({
     MemoryStats: {},
     DatGui: {},
     Motion: {},
-    ClickCourse: {},
+    PlayerInputSteering: {},
     Thruster: {},
     Seeker: {}
   }
@@ -39,9 +38,8 @@ world.insert({
   Sprite: { name: 'hero', color: '#00f' },
   Position: { x: 250, y: 250 },
   Thruster: { deltaV: 1200, maxV: 500, active: false },
-  Seeker: { radPerSec: Math.PI },
   Motion: {},
-  ClickCourse: { stopOnArrival: true, active: false }
+  PlayerInputSteering: { radPerSec: Math.PI }
 }, {
   Name: { name: 'sun'},
   Sprite: { name: 'asteroid', size: 300 },
