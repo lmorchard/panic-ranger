@@ -98,7 +98,7 @@ export class PlayerInputSteeringSystem extends System {
     const dleft  = (this.keys[65] || this.keys[37] || this.gamepad.button13);
     const dright = (this.keys[68] || this.keys[39] || this.gamepad.button14);
     const dup    = (this.keys[87] || this.keys[38] || this.gamepad.button11);
-    const ddown  = (this.keys[83] || this.keys[40] || this.gamepad.button12);
+    // const ddown  = (this.keys[83] || this.keys[40] || this.gamepad.button12);
 
     if (dup) {
       thruster.active = true;

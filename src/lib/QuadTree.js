@@ -20,7 +20,7 @@
  * @param {number} [maxLevels=4] - The maximum number of levels to iterate to.
  * @param {number} [level=0] - Which level is this?
  */
-export default function QuadTree(x, y, width, height, maxObjects, maxLevels, level, root) {
+export default function QuadTree(left, top, width, height, maxObjects, maxLevels, level, root) {
 
   /**
    * @property {number} maxObjects - The maximum number of objects per node.
@@ -63,7 +63,7 @@ export default function QuadTree(x, y, width, height, maxObjects, maxLevels, lev
   this.root = root || this;
   this.entityMap = {};
 
-  this.reset(x, y, width, height, maxObjects, maxLevels, level);
+  this.reset(left, top, width, height, maxObjects, maxLevels, level);
 
 };
 
@@ -81,21 +81,23 @@ QuadTree.prototype = {
    * @param {number} [maxLevels=4] - The maximum number of levels to iterate to.
    * @param {number} [level=0] - Which level is this?
    */
-  reset: function (x, y, width, height, maxObjects, maxLevels, level) {
+  reset: function (left, top, width, height, maxObjects, maxLevels, level) {
 
     this.maxObjects = maxObjects || 10;
     this.maxLevels = maxLevels || 4;
     this.level = level || 0;
 
     this.bounds = {
-      x: Math.round(x),
-      y: Math.round(y),
       width: width,
       height: height,
       subWidth: Math.floor(width / 2),
       subHeight: Math.floor(height / 2),
-      right: Math.round(x) + Math.floor(width / 2),
-      bottom: Math.round(y) + Math.floor(height / 2)
+      left: Math.round(left),
+      top: Math.round(top),
+      midX: Math.round(left + width / 2),
+      midY: Math.round(top + height / 2),
+      right: Math.round(left + width),
+      bottom: Math.round(top + height)
     };
 
     this.objects.length = 0;
@@ -111,24 +113,36 @@ QuadTree.prototype = {
   split: function () {
 
     //  top right node
-    this.nodes[0] = new QuadTree(this.bounds.right, this.bounds.y,
-        this.bounds.subWidth, this.bounds.subHeight, this.maxObjects,
-        this.maxLevels, (this.level + 1), this.root);
+    this.nodes[0] = new QuadTree(
+      this.bounds.left + this.bounds.subWidth,
+      this.bounds.top,
+      this.bounds.subWidth, this.bounds.subHeight,
+      this.maxObjects, this.maxLevels, (this.level + 1), this.root
+    );
 
     //  top left node
-    this.nodes[1] = new QuadTree(this.bounds.x, this.bounds.y,
-        this.bounds.subWidth, this.bounds.subHeight, this.maxObjects,
-        this.maxLevels, (this.level + 1), this.root);
+    this.nodes[1] = new QuadTree(
+      this.bounds.left,
+      this.bounds.top,
+      this.bounds.subWidth, this.bounds.subHeight,
+      this.maxObjects, this.maxLevels, (this.level + 1), this.root
+    );
 
     //  bottom left node
-    this.nodes[2] = new QuadTree(this.bounds.x, this.bounds.bottom,
-        this.bounds.subWidth, this.bounds.subHeight, this.maxObjects,
-        this.maxLevels, (this.level + 1), this.root);
+    this.nodes[2] = new QuadTree(
+      this.bounds.left,
+      this.bounds.top + this.bounds.subHeight,
+      this.bounds.subWidth, this.bounds.subHeight,
+      this.maxObjects, this.maxLevels, (this.level + 1), this.root
+    );
 
     //  bottom right node
-    this.nodes[3] = new QuadTree(this.bounds.right, this.bounds.bottom,
-        this.bounds.subWidth, this.bounds.subHeight, this.maxObjects,
-        this.maxLevels, (this.level + 1), this.root);
+    this.nodes[3] = new QuadTree(
+      this.bounds.left + this.bounds.subWidth,
+      this.bounds.top + this.bounds.subHeight,
+      this.bounds.subWidth, this.bounds.subHeight,
+      this.maxObjects, this.maxLevels, (this.level + 1), this.root
+    );
 
   },
 
@@ -152,7 +166,6 @@ QuadTree.prototype = {
       }
     }
 
-    /*
     // Check if we already have this item in the quadtree structure.
     var oldNode = this.root.entityMap[body.entityId];
     if (oldNode === this) {
@@ -167,6 +180,7 @@ QuadTree.prototype = {
       }
     }
 
+    /*
     // TODO: Need the opposite of split() to consolidate subtrees when they
     // lose items.
 
@@ -202,29 +216,26 @@ QuadTree.prototype = {
    * @return {number} index - Index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node.
    */
   getIndex: function (rect) {
-    //  default is that rect doesn't fit, i.e. it straddles the internal quadrants
-    var index = -1;
-
-    if (rect.x < this.bounds.right && rect.right < this.bounds.right) {
-      if (rect.y < this.bounds.bottom && rect.bottom < this.bounds.bottom) {
+    if (rect.left < this.bounds.midX && rect.right < this.bounds.midX) {
+      if (rect.top < this.bounds.midY && rect.bottom < this.bounds.midY) {
         //  rect fits within the top-left quadrant of this quadtree
-        index = 1;
-      } else if (rect.y > this.bounds.bottom) {
+        return 1;
+      } else if (rect.top > this.bounds.midY) {
         //  rect fits within the bottom-left quadrant of this quadtree
-        index = 2;
+        return 2;
       }
-    } else if (rect.x > this.bounds.right) {
+    } else if (rect.left > this.bounds.midX) {
       //  rect can completely fit within the right quadrants
-      if (rect.y < this.bounds.bottom && rect.bottom < this.bounds.bottom) {
+      if (rect.top < this.bounds.midY && rect.bottom < this.bounds.midY) {
         //  rect fits within the top-right quadrant of this quadtree
-        index = 0;
-      } else if (rect.y > this.bounds.bottom) {
+        return 0;
+      } else if (rect.top > this.bounds.midY) {
         //  rect fits within the bottom-right quadrant of this quadtree
-        index = 3;
+        return 3;
       }
     }
-
-    return index;
+    // rect doesn't fit, i.e. it straddles the internal quadrants
+    return -1;
   },
 
   /**

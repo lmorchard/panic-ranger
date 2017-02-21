@@ -32,6 +32,7 @@ const world = window.world = new Core.World({
     DatGui: {},
     PlayerInputSteering: {},
     Motion: {},
+    Position: {},
     Thruster: {},
     Seeker: {},
     Collision: {},
@@ -44,13 +45,13 @@ world.insert({
   Sprite: { name: 'hero', color: '#00f' },
   Collidable: {},
   Bounce: { mass: 7000 },
-  Position: { x: 0, y: 0 },
+  Position: { x: 0, y: 0, rotation: -(Math.PI / 2) },
   Motion: {},
   Thruster: { deltaV: 1200, maxV: 650, active: false },
   PlayerInputSteering: { radPerSec: Math.PI }
 });
 
-function spawnAsteroid(x, y, width, height, dx, dy, dr, mass, health) {
+function spawnMine(x, y, width, height, dx, dy, dr, mass, health) {
   world.insert({
     Sprite: { name: 'mine', size: width},
     Health: { max: health },
@@ -94,7 +95,7 @@ function spawnField(centerX, centerY, radius=300,
       vGrav.setValues(0, Math.random() * MAX_GRAV);
       vGrav.rotate(rot);
 
-      spawnAsteroid(
+      spawnMine(
         vSpawn.x, vSpawn.y,
         size, size,
         vGrav.x, vGrav.y,

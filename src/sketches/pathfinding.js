@@ -15,10 +15,10 @@ import '../plugins/motion';
 import '../plugins/thruster';
 import '../plugins/seeker';
 import '../plugins/steering';
-import '../plugins/clickCourse';
 import '../plugins/collision';
 import '../plugins/bounce';
 import '../plugins/pathfinding';
+import '../plugins/playerInputSteering';
 
 const debug = true;
 
@@ -34,6 +34,7 @@ const world = window.world = new Core.World({
     DrawStats: {},
     MemoryStats: {},
     DatGui: {},
+    PlayerInputSteering: {},
     Motion: {},
     Thruster: {},
     Seeker: {},
@@ -41,7 +42,6 @@ const world = window.world = new Core.World({
     Steering: {
       debug: true
     },
-    ClickCourse: {},
     Collision: {},
     Bounce: {}
   }
@@ -146,9 +146,8 @@ world.insert({
   Bounce: { mass: 700000 },
   Position: { x: 1100, y: 0 },
   Thruster: { deltaV: 1200, maxV: 500, active: false },
-  Seeker: { radPerSec: Math.PI },
   Motion: {},
-  ClickCourse: { stopOnArrival: true, active: false },
+  PlayerInputSteering: { radPerSec: Math.PI },
   Pathfinder: {}
 });
 
