@@ -17,15 +17,13 @@ export class PositionSystem extends System {
     return {
       quadtreeMaxAge: 2,
       quadtreeObjectsPerNode: 5,
-      quadtreeMaxLevels: 5,
-      viewportSystemName: 'ViewportPixi'
+      quadtreeMaxLevels: 5
     };
   }
 
   matchComponent() { return 'Position'; }
 
   initialize() {
-    this.viewportSystem = null;
     this.bounds = {
       left: 0, top: 0, right: 0, bottom: 0,
       width: 0, height: 0

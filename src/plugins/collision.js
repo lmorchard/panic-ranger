@@ -17,8 +17,7 @@ export class CollisionSystem extends Core.System {
 
   defaultOptions() {
     return {
-      positionSystemName: 'Position',
-      viewportSystemName: 'ViewportPixi'
+      positionSystemName: 'Position'
     };
   }
 
@@ -55,6 +54,8 @@ export class CollisionSystem extends Core.System {
 
     aCollidable = this.world.get('Collidable', aPosition.entityId);
     bCollidable = this.world.get('Collidable', bPosition.entityId);
+
+    if (!aCollidable || !bCollidable) { return; }
 
     dx = aPosition.x - bPosition.x;
     dy = aPosition.y - bPosition.y;

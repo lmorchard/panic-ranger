@@ -14,6 +14,7 @@ import '../plugins/thruster';
 import '../plugins/seeker';
 import '../plugins/collision';
 import '../plugins/bounce';
+import '../plugins/repulsor';
 import '../plugins/playerInputSteering';
 
 const debug = true;
@@ -24,7 +25,7 @@ const world = window.world = new Core.World({
       debug: debug,
       container: '#game',
       canvas: '#viewport',
-      followName: 'hero1',
+      // followName: 'hero1',
       zoom: 0.5
     },
     DrawStats: {},
@@ -35,6 +36,7 @@ const world = window.world = new Core.World({
     Position: {},
     Thruster: {},
     Seeker: {},
+    Repulsor: {},
     Collision: {},
     Bounce: {}
   }
@@ -42,13 +44,21 @@ const world = window.world = new Core.World({
 
 world.insert({
   Name: { name: 'hero1'},
-  Sprite: { name: 'hero', color: '#00f' },
+  Sprite: { name: 'hero', color: 0x0000ff },
   Collidable: {},
   Bounce: { mass: 7000 },
   Position: { x: 0, y: 0, rotation: -(Math.PI / 2) },
   Motion: {},
   Thruster: { deltaV: 1200, maxV: 650, active: false },
   PlayerInputSteering: { radPerSec: Math.PI }
+});
+
+world.insert({
+  Name: { name: 'repulsor1' },
+  Sprite: { name: 'enemywing', color: 0xff3333 },
+  Position: { x: 0, y: -120, rotation: -(Math.PI / 2) },
+  Motion: {},
+  Repulsor: {}
 });
 
 function spawnMine(x, y, width, height, dx, dy, dr, mass, health) {

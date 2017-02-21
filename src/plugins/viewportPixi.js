@@ -44,6 +44,10 @@ export class ViewportPixi extends Core.System {
     this.container.appendChild(this.canvas);
     this.stage = new PIXI.Container();
 
+    //this.filter = new PIXI.filters.FXAAFilter();
+    //this.filter.blur = 1;
+    //this.stage.filters = [ this.filter ];
+
     this.backdrop = new PIXI.Graphics();
     this.stage.addChild(this.backdrop);
 
@@ -327,6 +331,8 @@ registerSprite('enemyscout', (ctx, sprite/*, entityId*/) => {
 registerSprite('enemywing', (g, sprite/*, entityId*/) => {
   if (sprite.drawn) { return; }
 
+  g.lineColor = 0x228822;
+
   g.moveTo(-50, 0);
   g.lineTo(-37.5, -37.5);
   g.lineTo(0, 50);
@@ -334,6 +340,7 @@ registerSprite('enemywing', (g, sprite/*, entityId*/) => {
   g.lineTo(50, 0);
   g.lineTo(37.5, 50);
   g.lineTo(25, 50);
+  g.lineTo(0, 0);
   g.lineTo(-25, 50);
   g.lineTo(-37.5, 50);
   g.lineTo(-50, 0);
