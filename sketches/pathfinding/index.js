@@ -59434,7 +59434,7 @@ var ViewportPixi = function (_Core$System) {
         zoomWheelFactor: 0.05,
         gridEnabled: true,
         gridSize: 250,
-        gridColor: 0x111111,
+        gridColor: 0x222222,
         followEnabled: true,
         followName: null,
         followEntityId: null
@@ -59557,11 +59557,14 @@ var ViewportPixi = function (_Core$System) {
       var newX = (x - width / 2) / this.zoom + this.cameraX;
       var newY = (y - height / 2) / this.zoom + this.cameraY;
 
+      this.cursorChanged = false;
       if (newX !== this.cursorPosition.x || newY !== this.cursorPosition.y) {
         this.cursorChanged = true;
         this.cursorPosition.x = newX;
         this.cursorPosition.y = newY;
       }
+
+      return this.cursorPosition;
     }
   }, {
     key: 'updateMetrics',
@@ -59582,6 +59585,13 @@ var ViewportPixi = function (_Core$System) {
     value: function update() /*timeDelta*/{
       var _this3 = this;
 
+      this.updateMetrics();
+
+      this.setCursor(this.cursorRawX, this.cursorRawY);
+      // FIXME: Should be able to skip doing this unless
+      // this.cursorChanged === true, but for some reason that's not working
+      this.world.publish('mouseMove', this.cursorPosition);
+
       var sprites = this.world.get('Sprite');
 
       var toRemove = Object.keys(this.graphics).filter(function (key) {
@@ -59598,8 +59608,6 @@ var ViewportPixi = function (_Core$System) {
       toAdd.forEach(function (entityId) {
         _this3.stage.addChild(_this3.graphics[entityId] = new PIXI.Graphics());
       });
-
-      this.updateMetrics();
     }
   }, {
     key: 'draw',
@@ -59787,7 +59795,6 @@ registerSprite('enemywing', function (g, sprite /*, entityId*/) {
   g.lineTo(50, 0);
   g.lineTo(37.5, 50);
   g.lineTo(25, 50);
-  g.lineTo(0, 0);
   g.lineTo(-25, 50);
   g.lineTo(-37.5, 50);
   g.lineTo(-50, 0);
@@ -59805,23 +59812,13 @@ registerSprite('hero', function (g, sprite /*, entityId*/) {
   g.lineTo(50, 0);
   g.lineTo(37.5, 50);
   g.lineTo(25, 50);
-  g.lineTo(12.5, 0);
-  g.lineTo(-12.5, 0);
+  g.lineTo(12.5, 12.5);
+  g.lineTo(5, 25);
+  g.lineTo(-5, 25);
+  g.lineTo(-12.5, 12.5);
   g.lineTo(-25, 50);
   g.lineTo(-37.5, 50);
   g.lineTo(-50, 0);
-
-  /*
-  ctx.moveTo(-12.5, -50);
-  ctx.lineTo(-25, -50);
-  ctx.lineTo(-50, 0);
-  ctx.arc(0, 0, 50, Math.PI, 0, true);
-  ctx.lineTo(25, -50);
-  ctx.lineTo(12.5, -50);
-  ctx.lineTo(25, 0);
-  ctx.arc(0, 0, 25, 0, Math.PI, true);
-  ctx.lineTo(-12.5, -50);
-  */
 });
 
 registerSprite('asteroid', function (ctx, sprite /*, entityId*/) {
@@ -59849,31 +59846,42 @@ registerSprite('asteroid', function (ctx, sprite /*, entityId*/) {
   ctx.drawPolygon(points);
 });
 
-registerSprite('mine', function (ctx, sprite /*, entityId*/) {
-  if (sprite.drawn) {
+registerSprite('mine', function (g, sprite /*, entityId*/) {
+  if (sprite.drawn && Math.random() > 0.1) {
     return;
   }
 
-  var NUM_POINTS = 10 + Math.floor(10 * Math.random());
-  var MAX_RADIUS = 50;
-  var MIN_RADIUS = 5;
-  var ROTATION = PI2 / NUM_POINTS;
+  if (!sprite.drawn) {
+    var NUM_POINTS = 10 + Math.floor(10 * Math.random());
+    if (NUM_POINTS % 2 !== 0) {
+      NUM_POINTS++;
+    }
 
-  var idx = void 0;
-  var even = false;
-  var points = [];
-
-  for (idx = 0; idx < NUM_POINTS; idx++) {
-    var rot = idx * ROTATION;
-    var dist = even ? 10 : Math.random() * (MAX_RADIUS - MIN_RADIUS) + MIN_RADIUS;
-    even = !even;
-    points.push(dist * Math.cos(rot));
-    points.push(dist * Math.sin(rot));
+    var MAX_RADIUS = 60;
+    var MIN_RADIUS = 10;
+    sprite.legs = [];
+    var even = false;
+    for (var idx = 0; idx < NUM_POINTS; idx++) {
+      var dist = even ? 10 : Math.random() * (MAX_RADIUS - MIN_RADIUS) + MIN_RADIUS;
+      sprite.legs.push(dist);
+      even = !even;
+    }
   }
+
+  var points = [];
+  var ROTATION = PI2 / sprite.legs.length;
+  sprite.legs.forEach(function (dist, idx) {
+    var shakeDist = dist * (0.9 + 0.5 * Math.random());
+    var rot = idx * ROTATION;
+    points.push(shakeDist * Math.cos(rot));
+    points.push(shakeDist * Math.sin(rot));
+  });
   points.push(points[0]);
   points.push(points[1]);
 
-  ctx.drawPolygon(points);
+  g.clear();
+  g.lineStyle(2.5 / (sprite.size / 100), 0xFF2222);
+  g.drawPolygon(points);
 });
 
 var Name = function (_Core$Component) {
@@ -59932,8 +59940,302 @@ var Health = function (_Core$Component) {
 
 registerComponent('Health', Health);
 
-var Position = function (_Core$Component) {
-  inherits(Position, _Core$Component);
+/**
+ * @author       Timo Hausmann
+ * @author       Richard Davey <rich@photonstorm.com>
+ * @copyright    2014 Photon Storm Ltd.
+ * @license      {@link https://github.com/photonstorm/phaser/blob/master/license.txt|MIT License}
+ */
+
+/**
+ * A QuadTree implementation. The original code was a conversion of the Java code posted to GameDevTuts.
+ * However I've tweaked it massively to add node indexing, removed lots of temp. var creation and significantly increased performance as a result.
+ * Original version at https://github.com/timohausmann/quadtree-js/
+ *
+ * @class QuadTree
+ * @constructor
+ * @param {number} x - The top left coordinate of the quadtree.
+ * @param {number} y - The top left coordinate of the quadtree.
+ * @param {number} width - The width of the quadtree in pixels.
+ * @param {number} height - The height of the quadtree in pixels.
+ * @param {number} [maxObjects=10] - The maximum number of objects per node.
+ * @param {number} [maxLevels=4] - The maximum number of levels to iterate to.
+ * @param {number} [level=0] - Which level is this?
+ */
+function QuadTree(left, top, width, height, maxObjects, maxLevels, level, root) {
+
+  /**
+   * @property {number} maxObjects - The maximum number of objects per node.
+   * @default
+   */
+  this.maxObjects = 10;
+
+  /**
+   * @property {number} maxLevels - The maximum number of levels to break down to.
+   * @default
+   */
+  this.maxLevels = 4;
+
+  /**
+   * @property {number} level - The current level.
+   */
+  this.level = 0;
+
+  /**
+   * @property {object} bounds - Object that contains the quadtree bounds.
+   */
+  this.bounds = {};
+
+  /**
+   * @property {array} objects - Array of quadtree children.
+   */
+  this.objects = [];
+
+  /**
+   * @property {array} nodes - Array of associated child nodes.
+   */
+  this.nodes = [];
+
+  /**
+   * @property {array} _empty - Internal empty array.
+   * @private
+   */
+  this._empty = [];
+
+  this.root = root || this;
+  this.entityMap = {};
+
+  this.reset(left, top, width, height, maxObjects, maxLevels, level);
+}
+
+QuadTree.prototype = {
+
+  /**
+   * Resets the QuadTree.
+   *
+   * @method QuadTree#reset
+   * @param {number} x - The top left coordinate of the quadtree.
+   * @param {number} y - The top left coordinate of the quadtree.
+   * @param {number} width - The width of the quadtree in pixels.
+   * @param {number} height - The height of the quadtree in pixels.
+   * @param {number} [maxObjects=10] - The maximum number of objects per node.
+   * @param {number} [maxLevels=4] - The maximum number of levels to iterate to.
+   * @param {number} [level=0] - Which level is this?
+   */
+  reset: function reset(left, top, width, height, maxObjects, maxLevels, level) {
+
+    this.maxObjects = maxObjects || 10;
+    this.maxLevels = maxLevels || 4;
+    this.level = level || 0;
+
+    this.bounds = {
+      width: width,
+      height: height,
+      subWidth: Math.floor(width / 2),
+      subHeight: Math.floor(height / 2),
+      left: Math.round(left),
+      top: Math.round(top),
+      right: Math.round(left + width),
+      bottom: Math.round(top + height)
+    };
+
+    this.objects.length = 0;
+    this.nodes.length = 0;
+  },
+
+  /**
+   * Split the node into 4 subnodes
+   *
+   * @method QuadTree#split
+   */
+  split: function split() {
+
+    //  top right node
+    this.nodes[0] = new QuadTree(this.bounds.left + this.bounds.subWidth, this.bounds.top, this.bounds.subWidth, this.bounds.subHeight, this.maxObjects, this.maxLevels, this.level + 1, this.root);
+
+    //  top left node
+    this.nodes[1] = new QuadTree(this.bounds.left, this.bounds.top, this.bounds.subWidth, this.bounds.subHeight, this.maxObjects, this.maxLevels, this.level + 1, this.root);
+
+    //  bottom left node
+    this.nodes[2] = new QuadTree(this.bounds.left, this.bounds.top + this.bounds.subHeight, this.bounds.subWidth, this.bounds.subHeight, this.maxObjects, this.maxLevels, this.level + 1, this.root);
+
+    //  bottom right node
+    this.nodes[3] = new QuadTree(this.bounds.left + this.bounds.subWidth, this.bounds.top + this.bounds.subHeight, this.bounds.subWidth, this.bounds.subHeight, this.maxObjects, this.maxLevels, this.level + 1, this.root);
+  },
+
+  /**
+   * Insert the object into the node. If the node exceeds the capacity, it will split and add all objects to their corresponding subnodes.
+   *
+   * @method QuadTree#insert
+   * @param {Phaser.Physics.Arcade.Body|object} body - The Body object to insert into the quadtree. Can be any object so long as it exposes x, y, right and bottom properties.
+   */
+  insert: function insert(body) {
+
+    var i = 0;
+    var index;
+
+    //  if we have subnodes ...
+    if (this.nodes[0] != null) {
+      index = this.getIndex(body);
+      if (index !== -1) {
+        this.nodes[index].insert(body);
+        return;
+      }
+    }
+
+    /*
+    // Check if we already have this item in the quadtree structure.
+    var oldNode = this.root.entityMap[body.entityId];
+    if (oldNode === this) {
+      // If we have the item, and it's this current sub-tree, then just bail.
+      return;
+    }
+    if (oldNode) {
+      // If the item is known, but in another sub-tree, then delete it from there.
+      var objectIndex = oldNode.objects.indexOf(body);
+      if (objectIndex !== -1) {
+        oldNode.objects.splice(objectIndex, 1);
+      }
+    }
+     // TODO: Need the opposite of split() to consolidate subtrees when they
+    // lose items.
+     this.root.entityMap[body.entityId] = this;
+    */
+
+    this.objects.push(body);
+
+    if (this.objects.length > this.maxObjects && this.level < this.maxLevels) {
+      //  Split if we don't already have subnodes
+      if (this.nodes[0] == null) {
+        this.split();
+      }
+      //  Add objects to subnodes
+      while (i < this.objects.length) {
+        index = this.getIndex(this.objects[i]);
+        if (index !== -1) {
+          //  this is expensive - see what we can do about it
+          this.nodes[index].insert(this.objects.splice(i, 1)[0]);
+        } else {
+          i++;
+        }
+      }
+    }
+  },
+
+  /**
+   * Determine which node the object belongs to.
+   *
+   * @method QuadTree#getIndex
+   * @param {Phaser.Rectangle|object} rect - The bounds in which to check.
+   * @return {number} index - Index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node.
+   */
+  getIndex: function getIndex(rect) {
+    //  default is that rect doesn't fit, i.e. it straddles the internal quadrants
+    var index = -1;
+
+    if (rect.left < this.bounds.right && rect.right < this.bounds.right) {
+      if (rect.top < this.bounds.bottom && rect.bottom < this.bounds.bottom) {
+        //  rect fits within the top-left quadrant of this quadtree
+        index = 1;
+      } else if (rect.top > this.bounds.bottom) {
+        //  rect fits within the bottom-left quadrant of this quadtree
+        index = 2;
+      }
+    } else if (rect.left > this.bounds.right) {
+      //  rect can completely fit within the right quadrants
+      if (rect.top < this.bounds.bottom && rect.bottom < this.bounds.bottom) {
+        //  rect fits within the top-right quadrant of this quadtree
+        index = 0;
+      } else if (rect.top > this.bounds.bottom) {
+        //  rect fits within the bottom-right quadrant of this quadtree
+        index = 3;
+      }
+    }
+
+    return index;
+  },
+
+  /**
+   * Iterate through all objects that could collide with the given Sprite or Rectangle.
+   *
+   * @method QuadTree#retrieve
+   * @param {Phaser.Sprite|Phaser.Rectangle} source - The source object to check the QuadTree against. Either a Sprite or Rectangle.
+   */
+  iterate: function iterate(source, iteratorFn, optionalParam) {
+    var index = this.getIndex(source);
+
+    for (var i = 0; i < this.objects.length; i++) {
+      iteratorFn(this.objects[i], optionalParam);
+    }
+
+    if (this.nodes[0]) {
+      //  If rect fits into a subnode ..
+      if (index !== -1) {
+        this.nodes[index].iterate(source, iteratorFn, optionalParam);
+      } else {
+        //  If rect does not fit into a subnode, check it against all subnodes (unrolled for speed)
+        this.nodes[0].iterate(source, iteratorFn, optionalParam);
+        this.nodes[1].iterate(source, iteratorFn, optionalParam);
+        this.nodes[2].iterate(source, iteratorFn, optionalParam);
+        this.nodes[3].iterate(source, iteratorFn, optionalParam);
+      }
+    }
+  },
+
+  /**
+   * Clear the quadtree.
+   * @method QuadTree#clear
+   */
+  clear: function clear() {
+    this.objects.length = 0;
+    var i = this.nodes.length;
+    while (i--) {
+      this.nodes[i].clear();
+      this.nodes.splice(i, 1);
+    }
+    this.nodes.length = 0;
+  }
+
+};
+
+/**
+ * Javascript QuadTree
+ * @version 1.0
+ *
+ * @version 1.3, March 11th 2014
+ * @author Richard Davey
+ * The original code was a conversion of the Java code posted to GameDevTuts. However I've tweaked
+ * it massively to add node indexing, removed lots of temp. var creation and significantly
+ * increased performance as a result.
+ *
+ * Original version at https://github.com/timohausmann/quadtree-js/
+ */
+
+/**
+ * @copyright © 2012 Timo Hausmann
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+var Position = function (_Component) {
+  inherits(Position, _Component);
 
   function Position() {
     classCallCheck(this, Position);
@@ -59948,7 +60250,76 @@ var Position = function (_Core$Component) {
   }]);
   return Position;
 }(Component);
+
 registerComponent('Position', Position);
+
+var PositionSystem = function (_System) {
+  inherits(PositionSystem, _System);
+
+  function PositionSystem() {
+    classCallCheck(this, PositionSystem);
+    return possibleConstructorReturn(this, (PositionSystem.__proto__ || Object.getPrototypeOf(PositionSystem)).apply(this, arguments));
+  }
+
+  createClass(PositionSystem, [{
+    key: 'defaultOptions',
+    value: function defaultOptions() {
+      return {
+        width: 10000,
+        height: 10000,
+        quadtreeMaxAge: 5,
+        quadtreeObjectsPerNode: 10,
+        quadtreeMaxLevels: 5
+      };
+    }
+  }, {
+    key: 'matchComponent',
+    value: function matchComponent() {
+      return 'Position';
+    }
+  }, {
+    key: 'initialize',
+    value: function initialize() {
+      this.width = this.options.width;
+      this.height = this.options.height;
+
+      this.quadtree = new QuadTree(0 - this.width / 2, 0 - this.height / 2, this.width, this.height, this.options.quadtreeObjectsPerNode, this.options.quadtreeMaxLevels);
+
+      this.retrieveBounds = {};
+      this.quadtreeAge = 0;
+    }
+  }, {
+    key: 'update',
+    value: function update(timeDelta) {
+      this.quadtree.clear();
+      get$1(PositionSystem.prototype.__proto__ || Object.getPrototypeOf(PositionSystem.prototype), 'update', this).call(this, timeDelta);
+    }
+  }, {
+    key: 'updateComponent',
+    value: function updateComponent(timeDelta, entityId, position) {
+      var sprite = this.world.get('Sprite', entityId);
+      if (!sprite) {
+        return;
+      }
+
+      var halfWidth = sprite.width / 2;
+      var halfHeight = sprite.height / 2;
+
+      position.entityId = entityId;
+      position.width = sprite.width;
+      position.height = sprite.height;
+      position.left = position.x - halfWidth;
+      position.top = position.y - halfHeight;
+      position.right = position.x + halfWidth;
+      position.bottom = position.y + halfHeight;
+
+      this.quadtree.insert(position);
+    }
+  }]);
+  return PositionSystem;
+}(System);
+
+registerSystem('Position', PositionSystem);
 
 var PI2$1 = Math.PI * 2;
 
@@ -60646,394 +61017,6 @@ var SteeringSystem = function (_Core$System) {
 
 registerSystem('Steering', SteeringSystem);
 
-var ClickCourse = function (_Core$Component) {
-  inherits(ClickCourse, _Core$Component);
-
-  function ClickCourse() {
-    classCallCheck(this, ClickCourse);
-    return possibleConstructorReturn(this, (ClickCourse.__proto__ || Object.getPrototypeOf(ClickCourse)).apply(this, arguments));
-  }
-
-  createClass(ClickCourse, null, [{
-    key: 'defaults',
-    value: function defaults() {
-      return { x: 0, y: 0, stopOnArrival: false, active: true };
-    }
-  }]);
-  return ClickCourse;
-}(Component);
-
-registerComponent('ClickCourse', ClickCourse);
-
-var ClickCourseSystem = function (_Core$System) {
-  inherits(ClickCourseSystem, _Core$System);
-
-  function ClickCourseSystem() {
-    classCallCheck(this, ClickCourseSystem);
-    return possibleConstructorReturn(this, (ClickCourseSystem.__proto__ || Object.getPrototypeOf(ClickCourseSystem)).apply(this, arguments));
-  }
-
-  createClass(ClickCourseSystem, [{
-    key: 'matchComponent',
-    value: function matchComponent() {
-      return 'ClickCourse';
-    }
-  }, {
-    key: 'initialize',
-    value: function initialize() {
-      var _this3 = this;
-
-      this.trackingCursor = false;
-      this.world.subscribe('mouseDown', function (msg, cursorPosition) {
-        _this3.trackingCursor = true;
-        _this3.setCourse(cursorPosition);
-      }).subscribe('mouseUp', function (msg, cursorPosition) {
-        _this3.trackingCursor = false;
-        _this3.setCourse(cursorPosition);
-      }).subscribe('mouseMove', function (msg, cursorPosition) {
-        if (_this3.trackingCursor) {
-          _this3.setCourse(cursorPosition);
-        }
-      });
-    }
-  }, {
-    key: 'setCourse',
-    value: function setCourse(cursorPosition) {
-      var clickCourses = this.world.get('ClickCourse');
-      for (var entityId in clickCourses) {
-        var seeker = this.world.get('Seeker', entityId);
-        var clickCourse = clickCourses[entityId];
-        seeker.active = true;
-        clickCourse.active = true;
-        clickCourse.x = cursorPosition.x;
-        clickCourse.y = cursorPosition.y;
-      }
-    }
-  }, {
-    key: 'updateComponent',
-    value: function updateComponent(timeDelta, entityId, clickCourse) {
-
-      var entities = this.world;
-      var position = entities.get('Position', entityId);
-      var seeker = entities.get('Seeker', entityId);
-      var thruster = entities.get('Thruster', entityId);
-      var sprite = entities.get('Sprite', entityId);
-
-      if (clickCourse.active) {
-        thruster.active = true;
-        thruster.stop = false;
-        seeker.targetPosition = { x: clickCourse.x, y: clickCourse.y };
-      }
-
-      var xOffset = Math.abs(position.x - clickCourse.x);
-      var yOffset = Math.abs(position.y - clickCourse.y);
-      if (xOffset < sprite.size && yOffset < sprite.size) {
-        if (clickCourse.stopOnArrival) {
-          thruster.stop = true;
-        }
-        clickCourse.active = false;
-      }
-    }
-  }]);
-  return ClickCourseSystem;
-}(System);
-
-registerSystem('ClickCourse', ClickCourseSystem);
-
-/**
- * @author       Timo Hausmann
- * @author       Richard Davey <rich@photonstorm.com>
- * @copyright    2014 Photon Storm Ltd.
- * @license      {@link https://github.com/photonstorm/phaser/blob/master/license.txt|MIT License}
- */
-
-/**
- * A QuadTree implementation. The original code was a conversion of the Java code posted to GameDevTuts.
- * However I've tweaked it massively to add node indexing, removed lots of temp. var creation and significantly increased performance as a result.
- * Original version at https://github.com/timohausmann/quadtree-js/
- *
- * @class QuadTree
- * @constructor
- * @param {number} x - The top left coordinate of the quadtree.
- * @param {number} y - The top left coordinate of the quadtree.
- * @param {number} width - The width of the quadtree in pixels.
- * @param {number} height - The height of the quadtree in pixels.
- * @param {number} [maxObjects=10] - The maximum number of objects per node.
- * @param {number} [maxLevels=4] - The maximum number of levels to iterate to.
- * @param {number} [level=0] - Which level is this?
- */
-function QuadTree(x, y, width, height, maxObjects, maxLevels, level, root) {
-
-  /**
-   * @property {number} maxObjects - The maximum number of objects per node.
-   * @default
-   */
-  this.maxObjects = 10;
-
-  /**
-   * @property {number} maxLevels - The maximum number of levels to break down to.
-   * @default
-   */
-  this.maxLevels = 4;
-
-  /**
-   * @property {number} level - The current level.
-   */
-  this.level = 0;
-
-  /**
-   * @property {object} bounds - Object that contains the quadtree bounds.
-   */
-  this.bounds = {};
-
-  /**
-   * @property {array} objects - Array of quadtree children.
-   */
-  this.objects = [];
-
-  /**
-   * @property {array} nodes - Array of associated child nodes.
-   */
-  this.nodes = [];
-
-  /**
-   * @property {array} _empty - Internal empty array.
-   * @private
-   */
-  this._empty = [];
-
-  this.root = root || this;
-  this.entityMap = {};
-
-  this.reset(x, y, width, height, maxObjects, maxLevels, level);
-}
-
-QuadTree.prototype = {
-
-  /**
-   * Resets the QuadTree.
-   *
-   * @method QuadTree#reset
-   * @param {number} x - The top left coordinate of the quadtree.
-   * @param {number} y - The top left coordinate of the quadtree.
-   * @param {number} width - The width of the quadtree in pixels.
-   * @param {number} height - The height of the quadtree in pixels.
-   * @param {number} [maxObjects=10] - The maximum number of objects per node.
-   * @param {number} [maxLevels=4] - The maximum number of levels to iterate to.
-   * @param {number} [level=0] - Which level is this?
-   */
-  reset: function reset(x, y, width, height, maxObjects, maxLevels, level) {
-
-    this.maxObjects = maxObjects || 10;
-    this.maxLevels = maxLevels || 4;
-    this.level = level || 0;
-
-    this.bounds = {
-      x: Math.round(x),
-      y: Math.round(y),
-      width: width,
-      height: height,
-      subWidth: Math.floor(width / 2),
-      subHeight: Math.floor(height / 2),
-      right: Math.round(x) + Math.floor(width / 2),
-      bottom: Math.round(y) + Math.floor(height / 2)
-    };
-
-    this.objects.length = 0;
-    this.nodes.length = 0;
-  },
-
-  /**
-   * Split the node into 4 subnodes
-   *
-   * @method QuadTree#split
-   */
-  split: function split() {
-
-    //  top right node
-    this.nodes[0] = new QuadTree(this.bounds.right, this.bounds.y, this.bounds.subWidth, this.bounds.subHeight, this.maxObjects, this.maxLevels, this.level + 1, this.root);
-
-    //  top left node
-    this.nodes[1] = new QuadTree(this.bounds.x, this.bounds.y, this.bounds.subWidth, this.bounds.subHeight, this.maxObjects, this.maxLevels, this.level + 1, this.root);
-
-    //  bottom left node
-    this.nodes[2] = new QuadTree(this.bounds.x, this.bounds.bottom, this.bounds.subWidth, this.bounds.subHeight, this.maxObjects, this.maxLevels, this.level + 1, this.root);
-
-    //  bottom right node
-    this.nodes[3] = new QuadTree(this.bounds.right, this.bounds.bottom, this.bounds.subWidth, this.bounds.subHeight, this.maxObjects, this.maxLevels, this.level + 1, this.root);
-  },
-
-  /**
-   * Insert the object into the node. If the node exceeds the capacity, it will split and add all objects to their corresponding subnodes.
-   *
-   * @method QuadTree#insert
-   * @param {Phaser.Physics.Arcade.Body|object} body - The Body object to insert into the quadtree. Can be any object so long as it exposes x, y, right and bottom properties.
-   */
-  insert: function insert(body) {
-
-    var i = 0;
-    var index;
-
-    //  if we have subnodes ...
-    if (this.nodes[0] != null) {
-      index = this.getIndex(body);
-      if (index !== -1) {
-        this.nodes[index].insert(body);
-        return;
-      }
-    }
-
-    /*
-    // Check if we already have this item in the quadtree structure.
-    var oldNode = this.root.entityMap[body.entityId];
-    if (oldNode === this) {
-      // If we have the item, and it's this current sub-tree, then just bail.
-      return;
-    }
-    if (oldNode) {
-      // If the item is known, but in another sub-tree, then delete it from there.
-      var objectIndex = oldNode.objects.indexOf(body);
-      if (objectIndex !== -1) {
-        oldNode.objects.splice(objectIndex, 1);
-      }
-    }
-     // TODO: Need the opposite of split() to consolidate subtrees when they
-    // lose items.
-     this.root.entityMap[body.entityId] = this;
-    */
-
-    this.objects.push(body);
-
-    if (this.objects.length > this.maxObjects && this.level < this.maxLevels) {
-      //  Split if we don't already have subnodes
-      if (this.nodes[0] == null) {
-        this.split();
-      }
-      //  Add objects to subnodes
-      while (i < this.objects.length) {
-        index = this.getIndex(this.objects[i]);
-        if (index !== -1) {
-          //  this is expensive - see what we can do about it
-          this.nodes[index].insert(this.objects.splice(i, 1)[0]);
-        } else {
-          i++;
-        }
-      }
-    }
-  },
-
-  /**
-   * Determine which node the object belongs to.
-   *
-   * @method QuadTree#getIndex
-   * @param {Phaser.Rectangle|object} rect - The bounds in which to check.
-   * @return {number} index - Index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node.
-   */
-  getIndex: function getIndex(rect) {
-    //  default is that rect doesn't fit, i.e. it straddles the internal quadrants
-    var index = -1;
-
-    if (rect.x < this.bounds.right && rect.right < this.bounds.right) {
-      if (rect.y < this.bounds.bottom && rect.bottom < this.bounds.bottom) {
-        //  rect fits within the top-left quadrant of this quadtree
-        index = 1;
-      } else if (rect.y > this.bounds.bottom) {
-        //  rect fits within the bottom-left quadrant of this quadtree
-        index = 2;
-      }
-    } else if (rect.x > this.bounds.right) {
-      //  rect can completely fit within the right quadrants
-      if (rect.y < this.bounds.bottom && rect.bottom < this.bounds.bottom) {
-        //  rect fits within the top-right quadrant of this quadtree
-        index = 0;
-      } else if (rect.y > this.bounds.bottom) {
-        //  rect fits within the bottom-right quadrant of this quadtree
-        index = 3;
-      }
-    }
-
-    return index;
-  },
-
-  /**
-   * Iterate through all objects that could collide with the given Sprite or Rectangle.
-   *
-   * @method QuadTree#retrieve
-   * @param {Phaser.Sprite|Phaser.Rectangle} source - The source object to check the QuadTree against. Either a Sprite or Rectangle.
-   */
-  iterate: function iterate(source, iteratorFn, optionalParam) {
-    var index = this.getIndex(source);
-
-    for (var i = 0; i < this.objects.length; i++) {
-      iteratorFn(this.objects[i], optionalParam);
-    }
-
-    if (this.nodes[0]) {
-      //  If rect fits into a subnode ..
-      if (index !== -1) {
-        this.nodes[index].iterate(source, iteratorFn, optionalParam);
-      } else {
-        //  If rect does not fit into a subnode, check it against all subnodes (unrolled for speed)
-        this.nodes[0].iterate(source, iteratorFn, optionalParam);
-        this.nodes[1].iterate(source, iteratorFn, optionalParam);
-        this.nodes[2].iterate(source, iteratorFn, optionalParam);
-        this.nodes[3].iterate(source, iteratorFn, optionalParam);
-      }
-    }
-  },
-
-  /**
-   * Clear the quadtree.
-   * @method QuadTree#clear
-   */
-  clear: function clear() {
-    this.objects.length = 0;
-    var i = this.nodes.length;
-    while (i--) {
-      this.nodes[i].clear();
-      this.nodes.splice(i, 1);
-    }
-    this.nodes.length = 0;
-  }
-
-};
-
-/**
- * Javascript QuadTree
- * @version 1.0
- *
- * @version 1.3, March 11th 2014
- * @author Richard Davey
- * The original code was a conversion of the Java code posted to GameDevTuts. However I've tweaked
- * it massively to add node indexing, removed lots of temp. var creation and significantly
- * increased performance as a result.
- *
- * Original version at https://github.com/timohausmann/quadtree-js/
- */
-
-/**
- * @copyright © 2012 Timo Hausmann
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to
- * the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
- * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 var Collidable = function (_Core$Component) {
   inherits(Collidable, _Core$Component);
 
@@ -61140,12 +61123,12 @@ var CollisionSystem = function (_Core$System) {
 
       // This update is ugly, but is an attempt not to spawn temp objects.
       collidable.entityId = entityId;
-      collidable.x = position.x - sprite.width / 2;
-      collidable.y = position.y - sprite.height / 2;
       collidable.width = sprite.width;
       collidable.height = sprite.height;
-      collidable.right = collidable.x + collidable.width;
-      collidable.bottom = collidable.y + collidable.height;
+      collidable.left = position.x - sprite.width / 2;
+      collidable.top = position.y - sprite.height / 2;
+      collidable.right = collidable.left + collidable.width;
+      collidable.bottom = collidable.top + collidable.height;
       collidable.position = position;
       collidable.sprite = sprite;
       collidable.inCollision = false;
@@ -61594,6 +61577,238 @@ var PathfindingSystem = function (_Core$System) {
 
 registerSystem('Pathfinding', PathfindingSystem);
 
+var PlayerInputSteering = function (_Component) {
+  inherits(PlayerInputSteering, _Component);
+
+  function PlayerInputSteering() {
+    classCallCheck(this, PlayerInputSteering);
+    return possibleConstructorReturn(this, (PlayerInputSteering.__proto__ || Object.getPrototypeOf(PlayerInputSteering)).apply(this, arguments));
+  }
+
+  createClass(PlayerInputSteering, null, [{
+    key: 'defaults',
+    value: function defaults() {
+      return {
+        active: true,
+        radPerSec: Math.PI * 2
+      };
+    }
+  }]);
+  return PlayerInputSteering;
+}(Component);
+
+registerComponent('PlayerInputSteering', PlayerInputSteering);
+
+var PI2$3 = Math.PI * 2;
+
+var PlayerInputSteeringSystem = function (_System) {
+  inherits(PlayerInputSteeringSystem, _System);
+
+  function PlayerInputSteeringSystem() {
+    classCallCheck(this, PlayerInputSteeringSystem);
+    return possibleConstructorReturn(this, (PlayerInputSteeringSystem.__proto__ || Object.getPrototypeOf(PlayerInputSteeringSystem)).apply(this, arguments));
+  }
+
+  createClass(PlayerInputSteeringSystem, [{
+    key: 'defaultOptions',
+    value: function defaultOptions() {
+      return {
+        gamepadDeadzone: 0.2
+      };
+    }
+  }, {
+    key: 'matchComponent',
+    value: function matchComponent() {
+      return 'PlayerInputSteering';
+    }
+  }, {
+    key: 'initialize',
+    value: function initialize() {
+      var _this3 = this;
+
+      this.gamepad = { active: false };
+      this.pointer = { active: false, x: 0, y: 0 };
+      this.keys = { active: false };
+      this.touch = { active: false, x: 0, y: 0 };
+
+      this.world.subscribe('mouseDown', function (msg, cursorPosition) {
+        return _this3.setPointer(true, cursorPosition);
+      }).subscribe('mouseUp', function (msg, cursorPosition) {
+        return _this3.setPointer(false, cursorPosition);
+      }).subscribe('mouseMove', function (msg, cursorPosition) {
+        return _this3.setPointer(_this3.pointer.active, cursorPosition);
+      });
+
+      var windowEvents = {
+        keydown: this.handleKeyDown,
+        keyup: this.handleKeyUp
+      };
+      Object.keys(windowEvents).forEach(function (k) {
+        return window.addEventListener(k, windowEvents[k].bind(_this3));
+      });
+    }
+  }, {
+    key: 'setPointer',
+    value: function setPointer(active, position) {
+      this.pointer.active = active;
+      this.pointer.x = position.x;
+      this.pointer.y = position.y;
+    }
+  }, {
+    key: 'update',
+    value: function update(timeDelta) {
+      this.updateGamepads(timeDelta);
+      this.updateKeyboard(timeDelta);
+      get$1(PlayerInputSteeringSystem.prototype.__proto__ || Object.getPrototypeOf(PlayerInputSteeringSystem.prototype), 'update', this).call(this, timeDelta);
+    }
+  }, {
+    key: 'updateComponent',
+    value: function updateComponent(timeDelta, entityId, steering) {
+      var thruster = this.world.get('Thruster', entityId);
+      var motion = this.world.get('Motion', entityId);
+
+      thruster.active = true;
+      thruster.stop = false;
+
+      if (this.keys.active) {
+        return this.updateComponentFromKeyboard(timeDelta, entityId, steering);
+      }
+
+      if (this.pointer.active) {
+        return this.updateComponentFromPointer(timeDelta, entityId, steering);
+      }
+
+      if (this.gamepad.active) {
+        return this.updateComponentFromGamepad(timeDelta, entityId, steering);
+      }
+
+      thruster.stop = true;
+      motion.drotation = 0;
+    }
+  }, {
+    key: 'updateComponentFromPointer',
+    value: function updateComponentFromPointer(timeDelta, entityId, steering) {
+      var position = this.world.get('Position', entityId);
+      this.updateMotionFromTargetAngle(timeDelta, entityId, steering, Math.atan2(this.pointer.y - position.y, this.pointer.x - position.x));
+    }
+  }, {
+    key: 'updateComponentFromGamepad',
+    value: function updateComponentFromGamepad(timeDelta, entityId, steering) {
+      this.updateMotionFromTargetAngle(timeDelta, entityId, steering, Math.atan2(this.gamepad.axis1, this.gamepad.axis0));
+    }
+  }, {
+    key: 'updateComponentFromKeyboard',
+    value: function updateComponentFromKeyboard(timeDelta, entityId, steering) {
+      var thruster = this.world.get('Thruster', entityId);
+      var motion = this.world.get('Motion', entityId);
+
+      var dleft = this.keys[65] || this.keys[37] || this.gamepad.button13;
+      var dright = this.keys[68] || this.keys[39] || this.gamepad.button14;
+      var dup = this.keys[87] || this.keys[38] || this.gamepad.button11;
+      // const ddown  = (this.keys[83] || this.keys[40] || this.gamepad.button12);
+
+      if (dup) {
+        thruster.active = true;
+      } else {
+        thruster.stop = true;
+      }
+
+      var direction = dleft ? -1 : dright ? 1 : 0;
+      var targetDr = direction * steering.radPerSec;
+      motion.drotation = targetDr;
+    }
+  }, {
+    key: 'updateGamepads',
+    value: function updateGamepads() {
+      var _this4 = this;
+
+      var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+
+      // TODO: specify which gamepad, i.e. for multiplayer
+      for (var i = 0; i < gamepads.length; i++) {
+        var gp = gamepads[i];
+        if (!gp || !gp.connected) continue;
+        gp.buttons.forEach(function (val, idx) {
+          return _this4.gamepad['button' + idx] = val.pressed;
+        });
+        gp.axes.forEach(function (val, idx) {
+          return _this4.gamepad['axis' + idx] = val;
+        });
+        break; // stop after the first gamepad
+      }
+
+      Object.keys(this.gamepad).forEach(function (k) {
+        if (!_this4.gamepad[k]) {
+          delete _this4.gamepad[k];
+        }
+      });
+
+      var axisX = this.gamepad.axis0;
+      var axisY = this.gamepad.axis1;
+      this.gamepad.active = (Math.abs(axisX) > 0 || Math.abs(axisY) > 0) && Math.sqrt(axisX * axisX + axisY * axisY) > this.options.gamepadDeadzone;
+    }
+  }, {
+    key: 'updateKeyboard',
+    value: function updateKeyboard() {
+      var dleft = this.keys[65] || this.keys[37] || this.gamepad.button13;
+      var dright = this.keys[68] || this.keys[39] || this.gamepad.button14;
+      var dup = this.keys[87] || this.keys[38] || this.gamepad.button11;
+      var ddown = this.keys[83] || this.keys[40] || this.gamepad.button12;
+
+      this.keys.active = dleft || dright || dup || ddown;
+    }
+  }, {
+    key: 'handleKeyDown',
+    value: function handleKeyDown(ev) {
+      this.keys[ev.keyCode] = true;
+      ev.preventDefault();
+    }
+  }, {
+    key: 'handleKeyUp',
+    value: function handleKeyUp(ev) {
+      delete this.keys[ev.keyCode];
+      ev.preventDefault();
+    }
+  }, {
+    key: 'updateMotionFromTargetAngle',
+    value: function updateMotionFromTargetAngle(timeDelta, entityId, steering, targetAngleRaw) {
+      var position = this.world.get('Position', entityId);
+      var motion = this.world.get('Motion', entityId);
+
+      var targetAngle = targetAngleRaw < 0 ? targetAngleRaw + PI2$3 : targetAngleRaw;
+
+      // Pick the direction from current to target angle
+      var direction = targetAngle < position.rotation ? -1 : 1;
+
+      // If the offset between the angles is more than half a circle, go
+      // the other way because it'll be shorter.
+      var offset = Math.abs(targetAngle - position.rotation);
+      if (offset > Math.PI) {
+        direction = 0 - direction;
+      }
+
+      // Work out the desired delta-rotation to steer toward target
+      var targetDr = direction * Math.min(steering.radPerSec, offset / timeDelta);
+
+      // Calculate the delta-rotation impulse required to meet the goal,
+      // but constrain to the capability of the steering thrusters
+      var impulseDr = targetDr - motion.drotation;
+      if (Math.abs(impulseDr) > steering.radPerSec) {
+        if (impulseDr > 0) {
+          impulseDr = steering.radPerSec;
+        } else if (impulseDr < 0) {
+          impulseDr = 0 - steering.radPerSec;
+        }
+      }
+
+      motion.drotation += impulseDr;
+    }
+  }]);
+  return PlayerInputSteeringSystem;
+}(System);
+
+registerSystem('PlayerInputSteering', PlayerInputSteeringSystem);
+
 var debug = true;
 
 var world = window.world = new World({
@@ -61608,6 +61823,7 @@ var world = window.world = new World({
     DrawStats: {},
     MemoryStats: {},
     DatGui: {},
+    PlayerInputSteering: {},
     Motion: {},
     Thruster: {},
     Seeker: {},
@@ -61615,7 +61831,6 @@ var world = window.world = new World({
     Steering: {
       debug: true
     },
-    ClickCourse: {},
     Collision: {},
     Bounce: {}
   }
@@ -61723,9 +61938,8 @@ world.insert({
   Bounce: { mass: 700000 },
   Position: { x: 1100, y: 0 },
   Thruster: { deltaV: 1200, maxV: 500, active: false },
-  Seeker: { radPerSec: Math.PI },
   Motion: {},
-  ClickCourse: { stopOnArrival: true, active: false },
+  PlayerInputSteering: { radPerSec: Math.PI },
   Pathfinder: {}
 });
 
