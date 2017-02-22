@@ -25,7 +25,7 @@ const world = window.world = new Core.World({
       debug: debug,
       container: '#game',
       canvas: '#viewport',
-      // followName: 'hero1',
+      followName: 'hero1',
       zoom: 0.5
     },
     DrawStats: {},
@@ -53,10 +53,43 @@ world.insert({
   PlayerInputSteering: { radPerSec: Math.PI }
 });
 
+
 world.insert({
   Name: { name: 'repulsor1' },
   Sprite: { name: 'enemywing', color: 0xff3333 },
-  Position: { x: 0, y: -120, rotation: -(Math.PI / 2) },
+  Position: { x: 0, y: 0, rotation: -(Math.PI / 2) },
+  Motion: {},
+  Repulsor: {}
+});
+
+world.insert({
+  Name: { name: 'repulsor2' },
+  Sprite: { name: 'enemywing', color: 0xff3333 },
+  Position: { x: 0, y: -600, rotation: -(Math.PI / 2) },
+  Motion: {},
+  Repulsor: {}
+});
+
+world.insert({
+  Name: { name: 'repulsor3' },
+  Sprite: { name: 'enemywing', color: 0xff3333 },
+  Position: { x: 0, y: -1200, rotation: -(Math.PI / 2) },
+  Motion: {},
+  Repulsor: {}
+});
+
+world.insert({
+  Name: { name: 'repulsor4' },
+  Sprite: { name: 'enemywing', color: 0xff3333 },
+  Position: { x: 0, y: -1800, rotation: -(Math.PI / 2) },
+  Motion: {},
+  Repulsor: {}
+});
+
+world.insert({
+  Name: { name: 'repulsor4' },
+  Sprite: { name: 'enemywing', color: 0xff3333 },
+  Position: { x: 0, y: -2400, rotation: -(Math.PI / 2) },
   Motion: {},
   Repulsor: {}
 });

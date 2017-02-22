@@ -4,7 +4,7 @@ export class Repulsor extends Component {
     static defaults() {
       return {
         range: 500,
-        force: 100
+        force: 200
       };
     }
 }

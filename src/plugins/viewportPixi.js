@@ -1,6 +1,5 @@
 /* global PIXI */
 import * as Core from '../lib/core';
-import '../../node_modules/pixi.js/dist/pixi.js';
 
 const PI2 = Math.PI * 2;
 

@@ -55,7 +55,7 @@ export class SeekerSystem extends Core.System {
     if (!targetPosition) {
       targetPosition = this.world.get('Position', seeker.targetEntityId);
     }
-    if (!targetPosition || !(targetPosition.x && targetPosition.y)) { return; }
+    if (!targetPosition) { return; }
 
     // Set up the vectors for angle math...
     this.vSeeker.setValues(position.x, position.y);

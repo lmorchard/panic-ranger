@@ -1,5 +1,4 @@
 /* global PIXI */
-import '../../node_modules/pixi.js/dist/pixi.js';
 
 const TARGET_FPS = 60;
 const TARGET_DURATION = 1000 / TARGET_FPS;
