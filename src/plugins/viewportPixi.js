@@ -3,6 +3,8 @@ import * as Core from '../lib/core';
 
 const PI2 = Math.PI * 2;
 
+let entityId, position, sprite;
+
 // See also: http://phrogz.net/JS/wheeldelta.html
 const wheelDistance = function(evt){
   if (!evt) evt = event;
@@ -163,6 +165,17 @@ export class ViewportPixi extends Core.System {
 
     const sprites = this.world.get('Sprite');
 
+    for (entityId in sprites) {
+      position = this.world.get('Position', entityId);
+      sprite = sprites[entityId];
+      sprite.visible = (
+        (position.right > this.visibleLeft) &&
+        (position.left < this.visibleRight) &&
+        (position.bottom > this.visibleTop) &&
+        (position.top < this.visibleBottom)
+      );
+    }
+
     const toRemove = Object.keys(this.graphics).filter(key => !(key in sprites));
     toRemove.forEach(entityId => {
       this.stage.removeChild(this.graphics[entityId]);
@@ -200,6 +213,8 @@ export class ViewportPixi extends Core.System {
 
   drawSprite(ctx, entityId, timeDelta) {
     const sprite = this.world.get('Sprite', entityId);
+    if (!sprite) { return; }
+
     const position = this.world.get('Position', entityId);
 
     let spriteFn = getSprite(sprite.name);
@@ -278,7 +293,8 @@ export class CanvasSprite extends Core.Component {
       size: 100,
       width: null,
       height: null,
-      drawn: false
+      drawn: false,
+      visible: false
     };
   }
   static create(attrs) {
@@ -343,6 +359,57 @@ registerSprite('enemywing', (g, sprite/*, entityId*/) => {
   g.lineTo(-25, 50);
   g.lineTo(-37.5, 50);
   g.lineTo(-50, 0);
+});
+
+// Linear interpolation from v0 to v1 over t[0..1]
+function lerp(v0, v1, t) {
+  return (1-t)*v0 + t*v1;
+}
+
+registerSprite('repulsor', (g, sprite, entityId, timeDelta) => {
+  g.clear();
+  g.lineStyle(2.5 / (sprite.size / 100), 0x228822);
+
+  g.moveTo(-50,     0);
+  g.lineTo(-37.5, -50);
+  g.lineTo(-25,   -50);
+  g.lineTo(-6.25,  25);
+  g.lineTo( 6.25,  25);
+  g.lineTo( 25,   -50);
+  g.lineTo( 37.5, -50);
+  g.lineTo( 50,     0);
+  g.lineTo( 37.5,  50);
+  g.lineTo( 25,    50);
+  g.lineTo( 6.25, -25);
+  g.lineTo(-6.25, -25);
+  g.lineTo(-25,    50);
+  g.lineTo(-37.5,  50);
+  g.lineTo(-50,     0);
+
+  if (!sprite.drawn) {
+    const d = Math.random() * 500;
+    sprite.rings = [
+      { t: 0, delay: d + 0,   startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 2000 },
+      { t: 0, delay: d + 200, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 2000 },
+      { t: 0, delay: d + 400, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 2000 }
+    ];
+  }
+
+  const dt = timeDelta * 1000;
+  sprite.rings.forEach(ring => {
+    if (ring.delay > 0) { return ring.delay -= dt; }
+
+    ring.t += dt;
+    if (ring.t >= ring.endT) { ring.t = 0; }
+
+    const r = lerp(ring.startR, ring.endR, ring.t / ring.endT);
+    const a = lerp(ring.startO, ring.endO, ring.t / ring.endT);
+
+    if (!sprite.visible) { return; }
+    g.lineStyle(2.5 / (sprite.size / 100), 0x228822, a);
+    g.moveTo(0 + r, 0);
+    g.arc(0, 0, r, 0, PI2);
+   });
 });
 
 registerSprite('hero', (g, sprite/*, entityId*/) => {

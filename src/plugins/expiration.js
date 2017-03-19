@@ -14,7 +14,7 @@ export class ExpirationSystem extends Core.System {
   updateComponent(timeDelta, entityId, expiration) {
     expiration.age += timeDelta;
     if (expiration.age >= expiration.ttl) {
-      this.world.entities.destroy(entityId);
+      this.world.destroy(entityId);
     }
   }
 }
