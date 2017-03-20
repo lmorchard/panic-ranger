@@ -545,7 +545,9 @@ function getSystem(systemName) {
 
 var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-
+function commonjsRequire () {
+	throw new Error('Dynamic requires are not currently supported by rollup-plugin-commonjs');
+}
 
 
 
@@ -22452,7 +22454,7 @@ var ExpirationSystem = function (_Core$System) {
     value: function updateComponent(timeDelta, entityId, expiration) {
       expiration.age += timeDelta;
       if (expiration.age >= expiration.ttl) {
-        this.world.entities.destroy(entityId);
+        this.world.destroy(entityId);
       }
     }
   }]);
@@ -22460,8 +22462,563 @@ var ExpirationSystem = function (_Core$System) {
 }(System);
 registerSystem('Expiration', ExpirationSystem);
 
+var filters_min = createCommonjsModule(function (module, exports) {
+/*!
+ * pixi-filters - v1.0.6
+ * Compiled Wed Aug 31 2016 08:37:40 GMT-0400 (EDT)
+ *
+ * pixi-filters is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license
+ */
+!function(t){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=t();else if("function"==typeof define&&define.amd)define([],t);else{var e;e="undefined"!=typeof window?window:"undefined"!=typeof commonjsGlobal?commonjsGlobal:"undefined"!=typeof self?self:this,e.filters=t();}}(function(){return function t(e,r,n){function o(l,u){if(!r[l]){if(!e[l]){var a="function"==typeof commonjsRequire&&commonjsRequire;if(!u&&a)return a(l,!0);if(i)return i(l,!0);var c=new Error("Cannot find module '"+l+"'");throw c.code="MODULE_NOT_FOUND",c}var s=r[l]={exports:{}};e[l][0].call(s.exports,function(t){var r=e[l][1][t];return o(r?r:t)},s,s.exports,t,e,r,n);}return r[l].exports}for(var i="function"==typeof commonjsRequire&&commonjsRequire,l=0;l<n.length;l++)o(n[l]);return o}({1:[function(t,e,r){function n(){PIXI.Filter.call(this,"#define GLSLIFY 1\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}","#define GLSLIFY 1\nvarying vec2 vTextureCoord;\n\nuniform vec4 filterArea;\nuniform float pixelSize;\nuniform sampler2D uSampler;\n\nvec2 mapCoord( vec2 coord )\n{\n    coord *= filterArea.xy;\n    coord += filterArea.zw;\n\n    return coord;\n}\n\nvec2 unmapCoord( vec2 coord )\n{\n    coord -= filterArea.zw;\n    coord /= filterArea.xy;\n\n    return coord;\n}\n\nvec2 pixelate(vec2 coord, vec2 size)\n{\n    return floor( coord / size ) * size;\n}\n\nvec2 getMod(vec2 coord, vec2 size)\n{\n    return mod( coord , size) / size;\n}\n\nfloat character(float n, vec2 p)\n{\n    p = floor(p*vec2(4.0, -4.0) + 2.5);\n    if (clamp(p.x, 0.0, 4.0) == p.x && clamp(p.y, 0.0, 4.0) == p.y)\n    {\n        if (int(mod(n/exp2(p.x + 5.0*p.y), 2.0)) == 1) return 1.0;\n    }\n    return 0.0;\n}\n\nvoid main()\n{\n    vec2 coord = mapCoord(vTextureCoord);\n\n    // get the rounded color..\n    vec2 pixCoord = pixelate(coord, vec2(pixelSize));\n    pixCoord = unmapCoord(pixCoord);\n\n    vec4 color = texture2D(uSampler, pixCoord);\n\n    // determine the character to use\n    float gray = (color.r + color.g + color.b) / 3.0;\n\n    float n =  65536.0;             // .\n    if (gray > 0.2) n = 65600.0;    // :\n    if (gray > 0.3) n = 332772.0;   // *\n    if (gray > 0.4) n = 15255086.0; // o\n    if (gray > 0.5) n = 23385164.0; // &\n    if (gray > 0.6) n = 15252014.0; // 8\n    if (gray > 0.7) n = 13199452.0; // @\n    if (gray > 0.8) n = 11512810.0; // #\n\n    // get the mod..\n    vec2 modd = getMod(coord, vec2(pixelSize));\n\n    gl_FragColor = color * character( n, vec2(-1.0) + modd * 2.0);\n\n}"),this.size=8;}n.prototype=Object.create(PIXI.Filter.prototype),n.prototype.constructor=n,e.exports=n,Object.defineProperties(n.prototype,{size:{get:function(){return this.uniforms.pixelSize},set:function(t){this.uniforms.pixelSize=t;}}});},{}],2:[function(t,e,r){function n(){PIXI.Filter.call(this),this.blurXFilter=new o,this.blurYFilter=new i,this.blurYFilter.blendMode=PIXI.BLEND_MODES.SCREEN,this.defaultFilter=new l;}var o=PIXI.filters.BlurXFilter,i=PIXI.filters.BlurYFilter,l=PIXI.filters.VoidFilter;n.prototype=Object.create(PIXI.Filter.prototype),n.prototype.constructor=n,e.exports=n,n.prototype.apply=function(t,e,r){var n=t.getRenderTarget(!0);this.defaultFilter.apply(t,e,r),this.blurXFilter.apply(t,e,n),this.blurYFilter.apply(t,n,r),t.returnRenderTarget(n);},Object.defineProperties(n.prototype,{blur:{get:function(){return this.blurXFilter.blur},set:function(t){this.blurXFilter.blur=this.blurYFilter.blur=t;}},blurX:{get:function(){return this.blurXFilter.blur},set:function(t){this.blurXFilter.blur=t;}},blurY:{get:function(){return this.blurYFilter.blur},set:function(t){this.blurYFilter.blur=t;}}});},{}],3:[function(t,e,r){if("undefined"==typeof PIXI)throw new Error("pixi.js is required to be included")},{}],4:[function(t,e,r){function n(t,e,r){PIXI.Filter.call(this,"#define GLSLIFY 1\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}","precision mediump float;\n#define GLSLIFY 1\n\nvarying mediump vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec2 texelSize;\nuniform float matrix[9];\n\nvoid main(void)\n{\n   vec4 c11 = texture2D(uSampler, vTextureCoord - texelSize); // top left\n   vec4 c12 = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y - texelSize.y)); // top center\n   vec4 c13 = texture2D(uSampler, vec2(vTextureCoord.x + texelSize.x, vTextureCoord.y - texelSize.y)); // top right\n\n   vec4 c21 = texture2D(uSampler, vec2(vTextureCoord.x - texelSize.x, vTextureCoord.y)); // mid left\n   vec4 c22 = texture2D(uSampler, vTextureCoord); // mid center\n   vec4 c23 = texture2D(uSampler, vec2(vTextureCoord.x + texelSize.x, vTextureCoord.y)); // mid right\n\n   vec4 c31 = texture2D(uSampler, vec2(vTextureCoord.x - texelSize.x, vTextureCoord.y + texelSize.y)); // bottom left\n   vec4 c32 = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y + texelSize.y)); // bottom center\n   vec4 c33 = texture2D(uSampler, vTextureCoord + texelSize); // bottom right\n\n   gl_FragColor =\n       c11 * matrix[0] + c12 * matrix[1] + c13 * matrix[2] +\n       c21 * matrix[3] + c22 * matrix[4] + c23 * matrix[5] +\n       c31 * matrix[6] + c32 * matrix[7] + c33 * matrix[8];\n\n   gl_FragColor.a = c22.a;\n}\n"),this.matrix=t,this.width=e,this.height=r;}n.prototype=Object.create(PIXI.Filter.prototype),n.prototype.constructor=n,e.exports=n,Object.defineProperties(n.prototype,{matrix:{get:function(){return this.uniforms.matrix},set:function(t){this.uniforms.matrix=new Float32Array(t);}},width:{get:function(){return 1/this.uniforms.texelSize[0]},set:function(t){this.uniforms.texelSize[0]=1/t;}},height:{get:function(){return 1/this.uniforms.texelSize[1]},set:function(t){this.uniforms.texelSize[1]=1/t;}}});},{}],5:[function(t,e,r){function n(){PIXI.Filter.call(this,"#define GLSLIFY 1\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}","precision mediump float;\n#define GLSLIFY 1\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\n\nvoid main(void)\n{\n    float lum = length(texture2D(uSampler, vTextureCoord.xy).rgb);\n\n    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n\n    if (lum < 1.00)\n    {\n        if (mod(gl_FragCoord.x + gl_FragCoord.y, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.75)\n    {\n        if (mod(gl_FragCoord.x - gl_FragCoord.y, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.50)\n    {\n        if (mod(gl_FragCoord.x + gl_FragCoord.y - 5.0, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n\n    if (lum < 0.3)\n    {\n        if (mod(gl_FragCoord.x - gl_FragCoord.y - 5.0, 10.0) == 0.0)\n        {\n            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n        }\n    }\n}\n");}n.prototype=Object.create(PIXI.Filter.prototype),n.prototype.constructor=n,e.exports=n;},{}],6:[function(t,e,r){function n(){PIXI.Filter.call(this,"#define GLSLIFY 1\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}","precision mediump float;\n#define GLSLIFY 1\n\nvarying vec2 vTextureCoord;\nvarying vec4 vColor;\n\nuniform vec4 filterArea;\nuniform sampler2D uSampler;\n\nuniform float angle;\nuniform float scale;\n\nfloat pattern()\n{\n   float s = sin(angle), c = cos(angle);\n   vec2 tex = vTextureCoord * filterArea.xy;\n   vec2 point = vec2(\n       c * tex.x - s * tex.y,\n       s * tex.x + c * tex.y\n   ) * scale;\n   return (sin(point.x) * sin(point.y)) * 4.0;\n}\n\nvoid main()\n{\n   vec4 color = texture2D(uSampler, vTextureCoord);\n   float average = (color.r + color.g + color.b) / 3.0;\n   gl_FragColor = vec4(vec3(average * 10.0 - 5.0 + pattern()), color.a);\n}\n"),this.scale=1,this.angle=5;}n.prototype=Object.create(PIXI.Filter.prototype),n.prototype.constructor=n,e.exports=n,Object.defineProperties(n.prototype,{scale:{get:function(){return this.uniforms.scale},set:function(t){this.uniforms.scale=t;}},angle:{get:function(){return this.uniforms.angle},set:function(t){this.uniforms.angle=t;}}});},{}],7:[function(t,e,r){function n(){PIXI.Filter.call(this,"#define GLSLIFY 1\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}","precision mediump float;\n#define GLSLIFY 1\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float strength;\nuniform vec4 filterArea;\n\nvoid main(void)\n{\n\tvec2 onePixel = vec2(1.0 / filterArea);\n\n\tvec4 color;\n\n\tcolor.rgb = vec3(0.5);\n\n\tcolor -= texture2D(uSampler, vTextureCoord - onePixel) * strength;\n\tcolor += texture2D(uSampler, vTextureCoord + onePixel) * strength;\n\n\tcolor.rgb = vec3((color.r + color.g + color.b) / 3.0);\n\n\tfloat alpha = texture2D(uSampler, vTextureCoord).a;\n\n\tgl_FragColor = vec4(color.rgb * alpha, alpha);\n}\n"),this.strength=5;}n.prototype=Object.create(PIXI.Filter.prototype),n.prototype.constructor=n,e.exports=n,Object.defineProperties(n.prototype,{strength:{get:function(){return this.uniforms.strength},set:function(t){this.uniforms.strength=t;}}});},{}],8:[function(t,e,r){function n(){PIXI.Filter.call(this,"#define GLSLIFY 1\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}","precision mediump float;\n#define GLSLIFY 1\n\nvarying vec2 vTextureCoord;\n\nuniform vec2 size;\nuniform sampler2D uSampler;\n\nuniform vec4 filterArea;\n\nvec2 mapCoord( vec2 coord )\n{\n    coord *= filterArea.xy;\n    coord += filterArea.zw;\n\n    return coord;\n}\n\nvec2 unmapCoord( vec2 coord )\n{\n    coord -= filterArea.zw;\n    coord /= filterArea.xy;\n\n    return coord;\n}\n\nvec2 pixelate(vec2 coord, vec2 size)\n{\n\treturn floor( coord / size ) * size;\n}\n\nvoid main(void)\n{\n    vec2 coord = mapCoord(vTextureCoord);\n\n    coord = pixelate(coord, size);\n\n    coord = unmapCoord(coord);\n\n    gl_FragColor = texture2D(uSampler, coord);\n}\n"),this.size=[10,10];}n.prototype=Object.create(PIXI.Filter.prototype),n.prototype.constructor=n,e.exports=n,Object.defineProperties(n.prototype,{size:{get:function(){return this.uniforms.size},set:function(t){this.uniforms.size.value=t;}}});},{}],9:[function(t,e,r){function n(){PIXI.Filter.call(this,"#define GLSLIFY 1\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}","precision mediump float;\n#define GLSLIFY 1\n\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform vec4 filterArea;\nuniform vec2 red;\nuniform vec2 green;\nuniform vec2 blue;\n\nvoid main(void)\n{\n   gl_FragColor.r = texture2D(uSampler, vTextureCoord + red/filterArea.xy).r;\n   gl_FragColor.g = texture2D(uSampler, vTextureCoord + green/filterArea.xy).g;\n   gl_FragColor.b = texture2D(uSampler, vTextureCoord + blue/filterArea.xy).b;\n   gl_FragColor.a = texture2D(uSampler, vTextureCoord).a;\n}\n"),this.red=[-10,0],this.green=[0,10],this.blue=[0,0];}n.prototype=Object.create(PIXI.Filter.prototype),n.prototype.constructor=n,e.exports=n,Object.defineProperties(n.prototype,{red:{get:function(){return this.uniforms.red},set:function(t){this.uniforms.red=t;}},green:{get:function(){return this.uniforms.green},set:function(t){this.uniforms.green=t;}},blue:{get:function(){return this.uniforms.blue.value},set:function(t){this.uniforms.blue.value=t;}}});},{}],10:[function(t,e,r){function n(){PIXI.Filter.call(this,"#define GLSLIFY 1\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}","#define GLSLIFY 1\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\n\nuniform vec2 center;\nuniform vec3 params; // 10.0, 0.8, 0.1\nuniform float time;\n\nvoid main()\n{\n    vec2 uv = vTextureCoord;\n    vec2 texCoord = uv;\n\n    float dist = distance(uv, center);\n\n    if ( (dist <= (time + params.z)) && (dist >= (time - params.z)) )\n    {\n        float diff = (dist - time);\n        float powDiff = 1.0 - pow(abs(diff*params.x), params.y);\n\n        float diffTime = diff  * powDiff;\n        vec2 diffUV = normalize(uv - center);\n        texCoord = uv + (diffUV * diffTime);\n    }\n\n    gl_FragColor = texture2D(uSampler, texCoord);\n}\n",{center:{type:"v2",value:{x:.5,y:.5}},params:{type:"v3",value:{x:10,y:.8,z:.1}},time:{type:"1f",value:0}}),this.center=[.5,.5],this.params=[10,.8,.1],this.time=0;}n.prototype=Object.create(PIXI.Filter.prototype),n.prototype.constructor=n,e.exports=n,Object.defineProperties(n.prototype,{center:{get:function(){return this.uniforms.center},set:function(t){this.uniforms.center=t;}},params:{get:function(){return this.uniforms.params},set:function(t){this.uniforms.params=t;}},time:{get:function(){return this.uniforms.time},set:function(t){this.uniforms.time=t;}}});},{}],11:[function(t,e,r){function n(){PIXI.Filter.call(this,"#define GLSLIFY 1\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}","#define GLSLIFY 1\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float blur;\nuniform float gradientBlur;\nuniform vec2 start;\nuniform vec2 end;\nuniform vec2 delta;\nuniform vec2 texSize;\n\nfloat random(vec3 scale, float seed)\n{\n    return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);\n}\n\nvoid main(void)\n{\n    vec4 color = vec4(0.0);\n    float total = 0.0;\n\n    float offset = random(vec3(12.9898, 78.233, 151.7182), 0.0);\n    vec2 normal = normalize(vec2(start.y - end.y, end.x - start.x));\n    float radius = smoothstep(0.0, 1.0, abs(dot(vTextureCoord * texSize - start, normal)) / gradientBlur) * blur;\n\n    for (float t = -30.0; t <= 30.0; t++)\n    {\n        float percent = (t + offset - 0.5) / 30.0;\n        float weight = 1.0 - abs(percent);\n        vec4 sample = texture2D(uSampler, vTextureCoord + delta / texSize * percent * radius);\n        sample.rgb *= sample.a;\n        color += sample * weight;\n        total += weight;\n    }\n\n    gl_FragColor = color / total;\n    gl_FragColor.rgb /= gl_FragColor.a + 0.00001;\n}\n"),this.uniforms.blur=100,this.uniforms.gradientBlur=600,this.uniforms.start=new PIXI.Point(0,window.innerHeight/2),this.uniforms.end=new PIXI.Point(600,window.innerHeight/2),this.uniforms.delta=new PIXI.Point(30,30),this.uniforms.texSize=new PIXI.Point(window.innerWidth,window.innerHeight),this.updateDelta();}n.prototype=Object.create(PIXI.Filter.prototype),n.prototype.constructor=n,e.exports=n,n.prototype.updateDelta=function(){this.uniforms.delta.x=0,this.uniforms.delta.y=0;},Object.defineProperties(n.prototype,{blur:{get:function(){return this.uniforms.blur},set:function(t){this.uniforms.blur=t;}},gradientBlur:{get:function(){return this.uniforms.gradientBlur},set:function(t){this.uniforms.gradientBlur=t;}},start:{get:function(){return this.uniforms.start},set:function(t){this.uniforms.start=t,this.updateDelta();}},end:{get:function(){return this.uniforms.end},set:function(t){this.uniforms.end=t,this.updateDelta();}}});},{}],12:[function(t,e,r){function n(){PIXI.Filter.call(this),this.tiltShiftXFilter=new o,this.tiltShiftYFilter=new i;}var o=t("./TiltShiftXFilter"),i=t("./TiltShiftYFilter");n.prototype=Object.create(PIXI.Filter.prototype),n.prototype.constructor=n,e.exports=n,n.prototype.apply=function(t,e,r){var n=t.getRenderTarget(!0);this.tiltShiftXFilter.apply(t,e,n),this.tiltShiftYFilter.apply(t,n,r),t.returnRenderTarget(n);},Object.defineProperties(n.prototype,{blur:{get:function(){return this.tiltShiftXFilter.blur},set:function(t){this.tiltShiftXFilter.blur=this.tiltShiftYFilter.blur=t;}},gradientBlur:{get:function(){return this.tiltShiftXFilter.gradientBlur},set:function(t){this.tiltShiftXFilter.gradientBlur=this.tiltShiftYFilter.gradientBlur=t;}},start:{get:function(){return this.tiltShiftXFilter.start},set:function(t){this.tiltShiftXFilter.start=this.tiltShiftYFilter.start=t;}},end:{get:function(){return this.tiltShiftXFilter.end},set:function(t){this.tiltShiftXFilter.end=this.tiltShiftYFilter.end=t;}}});},{"./TiltShiftXFilter":13,"./TiltShiftYFilter":14}],13:[function(t,e,r){function n(){o.call(this);}var o=t("./TiltShiftAxisFilter");n.prototype=Object.create(o.prototype),n.prototype.constructor=n,e.exports=n,n.prototype.updateDelta=function(){var t=this.uniforms.end.x-this.uniforms.start.x,e=this.uniforms.end.y-this.uniforms.start.y,r=Math.sqrt(t*t+e*e);this.uniforms.delta.x=t/r,this.uniforms.delta.y=e/r;};},{"./TiltShiftAxisFilter":11}],14:[function(t,e,r){function n(){o.call(this);}var o=t("./TiltShiftAxisFilter");n.prototype=Object.create(o.prototype),n.prototype.constructor=n,e.exports=n,n.prototype.updateDelta=function(){var t=this.uniforms.end.x-this.uniforms.start.x,e=this.uniforms.end.y-this.uniforms.start.y,r=Math.sqrt(t*t+e*e);this.uniforms.delta.x=-e/r,this.uniforms.delta.y=t/r;};},{"./TiltShiftAxisFilter":11}],15:[function(t,e,r){function n(){PIXI.Filter.call(this,"#define GLSLIFY 1\nattribute vec2 aVertexPosition;\nattribute vec2 aTextureCoord;\n\nuniform mat3 projectionMatrix;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);\n    vTextureCoord = aTextureCoord;\n}","#define GLSLIFY 1\nvarying vec2 vTextureCoord;\n\nuniform sampler2D uSampler;\nuniform float radius;\nuniform float angle;\nuniform vec2 offset;\nuniform vec4 filterArea;\n\nvec2 mapCoord( vec2 coord )\n{\n    coord *= filterArea.xy;\n    coord += filterArea.zw;\n\n    return coord;\n}\n\nvec2 unmapCoord( vec2 coord )\n{\n    coord -= filterArea.zw;\n    coord /= filterArea.xy;\n\n    return coord;\n}\n\nvec2 twist(vec2 coord)\n{\n    coord -= offset;\n\n    float dist = length(coord);\n\n    if (dist < radius)\n    {\n        float ratioDist = (radius - dist) / radius;\n        float angleMod = ratioDist * ratioDist * angle;\n        float s = sin(angleMod);\n        float c = cos(angleMod);\n        coord = vec2(coord.x * c - coord.y * s, coord.x * s + coord.y * c);\n    }\n\n    coord += offset;\n\n    return coord;\n}\n\nvoid main(void)\n{\n\n    vec2 coord = mapCoord(vTextureCoord);\n\n    coord = twist(coord);\n\n    coord = unmapCoord(coord);\n\n    gl_FragColor = texture2D(uSampler, coord );\n\n}\n"),this.radius=200,this.angle=4,this.padding=20;}n.prototype=Object.create(PIXI.Filter.prototype),n.prototype.constructor=n,e.exports=n,Object.defineProperties(n.prototype,{offset:{get:function(){return this.uniforms.offset},set:function(t){this.uniforms.offset=t;}},radius:{get:function(){return this.uniforms.radius},set:function(t){this.uniforms.radius=t;}},angle:{get:function(){return this.uniforms.angle},set:function(t){this.uniforms.angle=t;}}});},{}],16:[function(t,e,r){t("./check");var n={AsciiFilter:t("./ascii/AsciiFilter"),BloomFilter:t("./bloom/BloomFilter"),ConvolutionFilter:t("./convolution/ConvolutionFilter"),CrossHatchFilter:t("./crosshatch/CrossHatchFilter"),DotFilter:t("./dot/DotFilter"),EmbossFilter:t("./emboss/EmbossFilter"),PixelateFilter:t("./pixelate/PixelateFilter"),RGBSplitFilter:t("./rgb/RGBSplitFilter"),ShockwaveFilter:t("./shockwave/ShockwaveFilter"),TiltShiftFilter:t("./tiltshift/TiltShiftFilter"),TiltShiftAxisFilter:t("./tiltshift/TiltShiftAxisFilter"),TiltShiftXFilter:t("./tiltshift/TiltShiftXFilter"),TiltShiftYFilter:t("./tiltshift/TiltShiftYFilter"),TwistFilter:t("./twist/TwistFilter")};Object.assign(PIXI.filters,n),"undefined"!=typeof e&&e.exports&&(e.exports=n);},{"./ascii/AsciiFilter":1,"./bloom/BloomFilter":2,"./check":3,"./convolution/ConvolutionFilter":4,"./crosshatch/CrossHatchFilter":5,"./dot/DotFilter":6,"./emboss/EmbossFilter":7,"./pixelate/PixelateFilter":8,"./rgb/RGBSplitFilter":9,"./shockwave/ShockwaveFilter":10,"./tiltshift/TiltShiftAxisFilter":11,"./tiltshift/TiltShiftFilter":12,"./tiltshift/TiltShiftXFilter":13,"./tiltshift/TiltShiftYFilter":14,"./twist/TwistFilter":15}]},{},[16])(16)});
+});
+
+/**
+ * GlowFilter, originally by mishaa
+ * http://www.html5gamedevs.com/topic/12756-glow-filter/?hl=mishaa#entry73578
+ * http://codepen.io/mishaa/pen/raKzrm
+ *
+ * @class
+ * @param viewWidth {number} The width of the view to draw to, usually renderer.width.
+ * @param viewHeight {number} The height of the view to draw to, usually renderer.height.
+ * @param outerStrength {number} The strength of the glow outward from the edge of the sprite.
+ * @param innerStrength {number} The strength of the glow inward from the edge of the sprite.
+ * @param color {number} The color of the glow.
+ * @param quality {number} A number between 0 and 1 that describes the quality of the glow.
+ *
+ * @example
+ *  someSprite.filters = [
+ *      new GlowFilter(renderer.width, renderer.height, 15, 2, 1, 0xFF0000, 0.5)
+ *  ];
+ */
+function GlowFilter$1(viewWidth, viewHeight, distance, outerStrength, innerStrength, color, quality) {
+    PIXI.AbstractFilter.call(this,
+        // vertex shader
+        null,
+        // fragment shader
+        [
+            'precision mediump float;',
+
+            'varying vec2 vTextureCoord;',
+            'varying vec4 vColor;',
+
+            'uniform sampler2D uSampler;',
+
+            'uniform float distance;',
+            'uniform float outerStrength;',
+            'uniform float innerStrength;',
+            'uniform vec4 glowColor;',
+            'uniform float pixelWidth;',
+            'uniform float pixelHeight;',
+            'vec2 px = vec2(pixelWidth, pixelHeight);',
+
+            'void main(void) {',
+            '    const float PI = 3.14159265358979323846264;',
+            '    vec4 ownColor = texture2D(uSampler, vTextureCoord);',
+            '    vec4 curColor;',
+            '    float totalAlpha = 0.0;',
+            '    float maxTotalAlpha = 0.0;',
+            '    float cosAngle;',
+            '    float sinAngle;',
+            '    for (float angle = 0.0; angle <= PI * 2.0; angle += ' + (1 / quality / distance).toFixed(7) + ') {',
+            '       cosAngle = cos(angle);',
+            '       sinAngle = sin(angle);',
+            '       for (float curDistance = 1.0; curDistance <= ' + distance.toFixed(7) + '; curDistance++) {',
+            '           curColor = texture2D(uSampler, vec2(vTextureCoord.x + cosAngle * curDistance * px.x, vTextureCoord.y + sinAngle * curDistance * px.y));',
+            '           totalAlpha += (distance - curDistance) * curColor.a;',
+            '           maxTotalAlpha += (distance - curDistance);',
+            '       }',
+            '    }',
+            '    maxTotalAlpha = max(maxTotalAlpha, 0.0001);',
+
+            '    ownColor.a = max(ownColor.a, 0.0001);',
+            '    ownColor.rgb = ownColor.rgb / ownColor.a;',
+            '    float outerGlowAlpha = (totalAlpha / maxTotalAlpha)  * outerStrength * (1. - ownColor.a);',
+            '    float innerGlowAlpha = ((maxTotalAlpha - totalAlpha) / maxTotalAlpha) * innerStrength * ownColor.a;',
+            '    float resultAlpha = (ownColor.a + outerGlowAlpha);',
+
+            '    gl_FragColor = vec4(mix(mix(ownColor.rgb, glowColor.rgb, innerGlowAlpha / ownColor.a), glowColor.rgb, outerGlowAlpha / resultAlpha) * resultAlpha, resultAlpha);',
+            '}'
+        ].join('\n'),
+        // custom uniforms
+        {
+            distance: { type: '1f', value: distance },
+            outerStrength: { type: '1f', value: 0 },
+            innerStrength: { type: '1f', value: 0 },
+            glowColor: { type: '4f', value: new Float32Array([0, 0, 0, 1]) },
+            pixelWidth: { type: '1f', value: 0 },
+            pixelHeight: { type: '1f', value: 0 }
+        }
+    );
+
+    quality = Math.pow(quality, 1/3);
+    this.quality = quality;
+
+    this.uniforms.distance.value *= quality;
+
+    viewWidth *= quality;
+    viewHeight *= quality;
+
+    this.color = color;
+    this.outerStrength = outerStrength;
+    this.innerStrength = innerStrength;
+    this.viewWidth = viewWidth;
+    this.viewHeight = viewHeight;
+}
+
+GlowFilter$1.prototype = Object.create(PIXI.AbstractFilter.prototype);
+GlowFilter$1.prototype.constructor = GlowFilter$1;
+var GlowFilter_1 = GlowFilter$1;
+
+Object.defineProperties(GlowFilter$1.prototype, {
+    color: {
+        get: function () {
+            return PIXI.utils.rgb2hex(this.uniforms.glowColor.value);
+        },
+        set: function(value) {
+            PIXI.utils.hex2rgb(value, this.uniforms.glowColor.value);
+        }
+    },
+
+    outerStrength: {
+        get: function () {
+            return this.uniforms.outerStrength.value;
+        },
+        set: function (value) {
+            this.uniforms.outerStrength.value = value;
+        }
+    },
+
+    innerStrength: {
+        get: function () {
+            return this.uniforms.innerStrength.value;
+        },
+        set: function (value) {
+            this.uniforms.innerStrength.value = value;
+        }
+    },
+
+    viewWidth: {
+        get: function () {
+            return 1 / this.uniforms.pixelWidth.value;
+        },
+        set: function(value) {
+            this.uniforms.pixelWidth.value = 1 / value;
+        }
+    },
+
+    viewHeight: {
+        get: function () {
+            return 1 / this.uniforms.pixelHeight.value;
+        },
+        set: function(value) {
+            this.uniforms.pixelHeight.value = 1 / value;
+        }
+    }
+});
+
+/**
+ * OutlineFilter, originally by mishaa
+ * http://www.html5gamedevs.com/topic/10640-outline-a-sprite-change-certain-colors/?p=69966
+ * http://codepen.io/mishaa/pen/emGNRB
+ *
+ * @class
+ * @param viewWidth {number} The width of the view to draw to, usually renderer.width.
+ * @param viewHeight {number} The height of the view to draw to, usually renderer.height.
+ * @param thickness {number} The tickness of the outline.
+ * @param color {number} The color of the glow.
+ *
+ * @example
+ *  someSprite.shader = new OutlineFilter(renderer.width, renderer.height, 9, 0xFF0000);
+ */
+function OutlineFilter$1(viewWidth, viewHeight, thickness, color) {
+    PIXI.AbstractFilter.call(this,
+        // vertex shader
+        null,
+        // fragment shader
+        [
+            'precision mediump float;',
+
+            'varying vec2 vTextureCoord;',
+            'uniform sampler2D uSampler;',
+
+            'uniform float thickness;',
+            'uniform vec4 outlineColor;',
+            'uniform float pixelWidth;',
+            'uniform float pixelHeight;',
+            'vec2 px = vec2(pixelWidth, pixelHeight);',
+
+            'void main(void) {',
+            '    const float PI = 3.14159265358979323846264;',
+            '    vec4 ownColor = texture2D(uSampler, vTextureCoord);',
+            '    vec4 curColor;',
+            '    float maxAlpha = 0.;',
+            '    for (float angle = 0.; angle < PI * 2.; angle += ' + (1 / thickness).toFixed(7) + ') {',
+            '        curColor = texture2D(uSampler, vec2(vTextureCoord.x + thickness * px.x * cos(angle), vTextureCoord.y + thickness * px.y * sin(angle)));',
+            '        maxAlpha = max(maxAlpha, curColor.a);',
+            '    }',
+            '    float resultAlpha = max(maxAlpha, ownColor.a);',
+            '    gl_FragColor = vec4((ownColor.rgb + outlineColor.rgb * (1. - ownColor.a)) * resultAlpha, resultAlpha);',
+            '}'
+        ].join('\n'),
+        // custom uniforms
+        {
+            thickness: { type: '1f', value: thickness },
+            outlineColor: { type: '4f', value: new Float32Array([0, 0, 0, 1]) },
+            pixelWidth: { type: '1f', value: null },
+            pixelHeight: { type: '1f', value: null },
+        }
+    );
+
+    this.color = color;
+    this.viewWidth = viewWidth;
+    this.viewHeight = viewHeight;
+}
+
+OutlineFilter$1.prototype = Object.create(PIXI.AbstractFilter.prototype);
+OutlineFilter$1.prototype.constructor = OutlineFilter$1;
+var OutlineFilter_1 = OutlineFilter$1;
+
+Object.defineProperties(OutlineFilter$1.prototype, {
+    color: {
+        get: function () {
+            return PIXI.utils.rgb2hex(this.uniforms.outlineColor.value);
+        },
+        set: function (value) {
+            PIXI.utils.hex2rgb(value, this.uniforms.outlineColor.value);
+        }
+    },
+
+    viewWidth: {
+        get: function () {
+            return 1 / this.uniforms.pixelWidth.value;
+        },
+        set: function(value) {
+            this.uniforms.pixelWidth.value = 1 / value;
+        }
+    },
+
+    viewHeight: {
+        get: function () {
+            return 1 / this.uniforms.pixelHeight.value;
+        },
+        set: function(value) {
+            this.uniforms.pixelHeight.value = 1 / value;
+        }
+    }
+});
+
+/**
+* @author Julien CLEREL @JuloxRox
+* original filter https://github.com/evanw/glfx.js/blob/master/src/filters/warp/bulgepinch.js by Evan Wallace : http://madebyevan.com/
+*/
+
+/**
+* @filter Bulge / Pinch
+* @description Bulges or pinches the image in a circle.
+* @param center The x and y coordinates of the center of the circle of effect.
+* @param radius The radius of the circle of effect.
+* @param strength -1 to 1 (-1 is strong pinch, 0 is no effect, 1 is strong bulge)
+*
+* @class BulgePinchFilter
+* @extends AbstractFilter
+* @constructor
+*/
+
+function BulgePinchFilter$1() {
+    PIXI.AbstractFilter.call(this,
+        // vertex shader
+        null,
+        // fragment shader
+        [
+            'precision mediump float;',
+            'uniform float radius;',
+            'uniform float strength;',
+            'uniform vec2 center;',
+            'uniform sampler2D uSampler;',
+            'uniform vec4 dimensions;',
+            'varying vec2 vTextureCoord;',
+
+            'void main()',
+            '{',
+                'vec2 coord = vTextureCoord * dimensions.xy;',
+                'coord -= center;',
+                'float distance = length(coord);',
+                'if (distance < radius) {',
+                    'float percent = distance / radius;',
+                    'if (strength > 0.0) {',
+                        'coord *= mix(1.0, smoothstep(0.0, radius /     distance, percent), strength * 0.75);',
+                    '} else {',
+                        'coord *= mix(1.0, pow(percent, 1.0 + strength * 0.75) * radius / distance, 1.0 - percent);',
+                    '}',
+                '}',
+                'coord += center;',
+                'gl_FragColor = texture2D(uSampler, coord / dimensions.xy);',
+                'vec2 clampedCoord = clamp(coord, vec2(0.0), dimensions.xy);',
+                'if (coord != clampedCoord) {',
+                    'gl_FragColor.a *= max(0.0, 1.0 - length(coord - clampedCoord));',
+                '}',
+            '}'
+        ].join('\n'),
+        // custom uniforms
+        {
+            dimensions: { type: '4f', value: [0,0,0,0] },
+            radius: { type: '1f', value: 100 },
+            strength: { type: '1f', value: 0.5 },
+            center: { type: 'v2', value: {x: 150, y: 150} }
+        }
+    );
+}
+
+BulgePinchFilter$1.prototype = Object.create(PIXI.AbstractFilter.prototype);
+BulgePinchFilter$1.prototype.constructor = BulgePinchFilter$1;
+var BulgePinchFilter_1 = BulgePinchFilter$1;
+
+Object.defineProperties(BulgePinchFilter$1.prototype, {
+    /**
+     * The radius of the circle of effect.
+     *
+     * @property radius
+     * @type Number
+     */
+    radius: {
+        get: function ()
+        {
+            return this.uniforms.radius.value;
+        },
+        set: function (value)
+        {
+            this.uniforms.radius.value = value;
+        }
+    },
+    /**
+     * The strength of the effect. -1 to 1 (-1 is strong pinch, 0 is no effect, 1 is strong bulge)
+     *
+     * @property strength
+     * @type Number
+     */
+    strength: {
+        get: function ()
+        {
+            return this.uniforms.strength.value;
+        },
+        set: function (value)
+        {
+            this.uniforms.strength.value = value;
+        }
+    },
+    /**
+     * The x and y coordinates of the center of the circle of effect.
+     *
+     * @property center
+     * @type Point
+     */
+    center: {
+        get: function ()
+        {
+            return this.uniforms.center.value;
+        },
+        set: function (value)
+        {
+            this.uniforms.center.value = value;
+        }
+    }
+});
+
+/**
+ * ColoreReplaceFilter, originally by mishaa, updated by timetocode
+ * http://www.html5gamedevs.com/topic/10640-outline-a-sprite-change-certain-colors/?p=69966
+ *
+ * @class
+ * @param originalColor {FloatArray32} The color that will be changed, as a 3 component RGB e.g. new Float32Array(1.0, 1.0, 1.0)
+ * @param newColor {FloatArray32} The resulting color, as a 3 component RGB e.g. new Float32Array(1.0, 0.5, 1.0)
+ * @param epsilon {float} Tolerance/sensitivity of the floating-point comparison between colors (lower = more exact, higher = more inclusive)
+ *
+ * @example
+ *  // replaces true red with true blue
+ *  someSprite.shader = new ColorReplaceFilter(
+ *   new Float32Array([1, 0, 0]),
+ *   new Float32Array([0, 0, 1]),
+ *   0.001
+ *  );
+ *  // replaces the RGB color 220, 220, 220 with the RGB color 225, 200, 215
+ *  someOtherSprite.shader = new ColorReplaceFilter(
+ *   new Float32Array([220/255.0, 220/255.0, 220/255.0]),
+ *   new Float32Array([225/255.0, 200/255.0, 215/255.0]),
+ *   0.001
+ *  );
+ *
+ */
+function ColorReplaceFilter$1(originalColor, newColor, epsilon) {
+  PIXI.AbstractFilter.call(this,
+    // vertex shader
+    null,
+    // fragment shader
+    [
+      'precision mediump float;',
+      'varying vec2 vTextureCoord;',
+      'uniform sampler2D texture;',
+      'uniform vec3 originalColor;',
+      'uniform vec3 newColor;',
+      'uniform float epsilon;',
+      'void main(void) {',
+      '  vec4 currentColor = texture2D(texture, vTextureCoord);',
+      '  vec3 colorDiff = originalColor - (currentColor.rgb / max(currentColor.a, 0.0000000001));',
+      '  float colorDistance = length(colorDiff);',
+      '  float doReplace = step(colorDistance, epsilon);',
+      '  gl_FragColor = vec4(mix(currentColor.rgb, (newColor + colorDiff) * currentColor.a, doReplace), currentColor.a);',
+      '}'
+    ].join('\n'),
+    // custom unifroms
+    {
+      originalColor: { type: '3f', value: originalColor },
+      newColor: { type: '3f', value: newColor },
+      epsilon: { type: '1f', value: epsilon }
+    }
+  );
+}
+
+ColorReplaceFilter$1.prototype = Object.create(PIXI.AbstractFilter.prototype);
+ColorReplaceFilter$1.prototype.constructor = ColorReplaceFilter$1;
+var ColorReplaceFilter_1 = ColorReplaceFilter$1;
+
+Object.defineProperty(ColorReplaceFilter$1.prototype, 'originalColor', {
+  set: function (value) {
+    var r = ((value & 0xFF0000) >> 16) / 255,
+        g = ((value & 0x00FF00) >> 8) / 255,
+        b = (value & 0x0000FF) / 255;
+    this.uniforms.originalColor.value = { x: r, y: g, z: b };
+    this.dirty = true;
+  }
+});
+
+Object.defineProperty(ColorReplaceFilter$1.prototype, 'newColor', {
+  set: function (value) {
+    var r = ((value & 0xFF0000) >> 16) / 255,
+        g = ((value & 0x00FF00) >> 8) / 255,
+        b = (value & 0x0000FF) / 255;
+    this.uniforms.newColor.value = { x: r, y: g, z: b };
+    this.dirty = true;
+  }
+});
+
+Object.defineProperty(ColorReplaceFilter$1.prototype, 'epsilon', {
+  set: function (value) {
+    this.uniforms.epsilon.value = value;
+    this.dirty = true;
+  }
+});
+
+/**
+* SimpleLightmap, originally by Oza94
+* http://www.html5gamedevs.com/topic/20027-pixijs-simple-lightmapping/
+* http://codepen.io/Oza94/pen/EPoRxj
+*
+* @class
+* @param lightmapTexture {PIXI.Texture} a texture where your lightmap is rendered
+* @param ambientColor {Array} An RGBA array of the ambient color
+* @param [resolution] {Array} An array for X/Y resolution
+*
+* @example
+*  var lightmapTex = new PIXI.RenderTexture(renderer, 400, 300);
+*
+*  // ... render lightmap on lightmapTex
+*
+*  stageContainer.filters = [
+*    new SimpleLightmapFilter(lightmapTex, [0.3, 0.3, 0.7, 0.5], [1.0, 1.0])
+*  ];
+*/
+function SimpleLightmapFilter$1(lightmapTexture, ambientColor, resolution) {
+    PIXI.AbstractFilter.call(
+        this,
+        null,
+        [
+            'precision mediump float;',
+            'varying vec4 vColor;',
+            'varying vec2 vTextureCoord;',
+            'uniform sampler2D u_texture; //diffuse map',
+            'uniform sampler2D u_lightmap;   //light map',
+            'uniform vec2 resolution; //resolution of screen',
+            'uniform vec4 ambientColor; //ambient RGB, alpha channel is intensity ',
+            'void main() {',
+            '    vec4 diffuseColor = texture2D(u_texture, vTextureCoord);',
+            '    vec2 lighCoord = (gl_FragCoord.xy / resolution.xy);',
+            '    vec4 light = texture2D(u_lightmap, vTextureCoord);',
+            '    vec3 ambient = ambientColor.rgb * ambientColor.a;',
+            '    vec3 intensity = ambient + light.rgb;',
+            '    vec3 finalColor = diffuseColor.rgb * intensity;',
+            '    gl_FragColor = vColor * vec4(finalColor, diffuseColor.a);',
+            '}'
+        ].join('\n'),
+        {
+            u_lightmap: {
+                type: 'sampler2D',
+                value: lightmapTexture
+            },
+            resolution: {
+                type: '2f',
+                value: new Float32Array(resolution || [1.0, 1.0])
+            },
+            ambientColor: {
+                type: '4f',
+                value: new Float32Array(ambientColor)
+            }
+        });
+}
+
+SimpleLightmapFilter$1.prototype = Object.create(PIXI.AbstractFilter.prototype);
+SimpleLightmapFilter$1.prototype.constructor = SimpleLightmapFilter$1;
+
+Object.defineProperties(SimpleLightmapFilter$1.prototype, {
+    texture: {
+        get: function () {
+            return this.uniforms.u_lightmap.value;
+        },
+        set: function (value) {
+            this.uniforms.u_lightmap.value = value;
+        }
+    },
+    color: {
+        get: function () {
+            return this.uniforms.ambientColor.value;
+        },
+        set: function (value) {
+            this.uniforms.ambientColor.value = new Float32Array(value);
+        }
+    },
+    resolution: {
+        get: function () {
+            return this.uniforms.resolution.value;
+        },
+        set: function (value) {
+            this.uniforms.resolution.value = new Float32Array(value);
+        }
+    }
+});
+
+var SimpleLightmapFilter_1 = SimpleLightmapFilter$1;
+
+var index$1 = createCommonjsModule(function (module) {
+module.exports = {
+    GlowFilter: GlowFilter_1,
+    OutlineFilter: OutlineFilter_1,
+    BulgePinchFilter: BulgePinchFilter_1,
+    ColorReplaceFilter: ColorReplaceFilter_1,
+    SimpleLightmapFilter:
+        SimpleLightmapFilter_1
+};
+
+for (var filter in module.exports) {
+    PIXI.filters[filter] = module.exports[filter];
+}
+});
+
 /* global PIXI */
 var PI2 = Math.PI * 2;
+
+var entityId$1 = void 0;
+var position = void 0;
+var sprite = void 0;
 
 // See also: http://phrogz.net/JS/wheeldelta.html
 var wheelDistance = function wheelDistance(evt) {
@@ -22486,7 +23043,7 @@ var ViewportPixi = function (_Core$System) {
     key: 'defaultOptions',
     value: function defaultOptions() {
       return {
-        lineWidth: 2.5,
+        lineWidth: 5,
         zoom: 1.0,
         zoomMin: 0.1,
         zoomMax: 10.0,
@@ -22511,9 +23068,10 @@ var ViewportPixi = function (_Core$System) {
       this.container.appendChild(this.canvas);
       this.stage = new PIXI.Container();
 
-      //this.filter = new PIXI.filters.FXAAFilter();
-      //this.filter.blur = 1;
-      //this.stage.filters = [ this.filter ];
+      this.stage.filters = [
+        // new PIXI.filters.VoidFilter(),
+        // new PIXI.filters.BlurFilter(1, 1, 5)
+      ];
 
       this.backdrop = new PIXI.Graphics();
       this.stage.addChild(this.backdrop);
@@ -22653,6 +23211,12 @@ var ViewportPixi = function (_Core$System) {
 
       var sprites = this.world.get('Sprite');
 
+      for (entityId$1 in sprites) {
+        position = this.world.get('Position', entityId$1);
+        sprite = sprites[entityId$1];
+        sprite.visible = position.right > this.visibleLeft && position.left < this.visibleRight && position.bottom > this.visibleTop && position.top < this.visibleBottom;
+      }
+
       var toRemove = Object.keys(this.graphics).filter(function (key) {
         return !(key in sprites);
       });
@@ -22674,8 +23238,8 @@ var ViewportPixi = function (_Core$System) {
       this.followEntity();
       this.drawBackdrop(timeDelta);
 
-      for (var entityId in this.graphics) {
-        this.drawSprite(this.graphics[entityId], entityId, timeDelta);
+      for (var _entityId in this.graphics) {
+        this.drawSprite(this.graphics[_entityId], _entityId, timeDelta);
       }
 
       this.stage.setTransform(this.container.offsetWidth / 2 - this.cameraX * this.zoom, this.container.offsetHeight / 2 - this.cameraY * this.zoom, this.zoom, this.zoom);
@@ -22688,6 +23252,10 @@ var ViewportPixi = function (_Core$System) {
     key: 'drawSprite',
     value: function drawSprite(ctx, entityId, timeDelta) {
       var sprite = this.world.get('Sprite', entityId);
+      if (!sprite) {
+        return;
+      }
+
       var position = this.world.get('Position', entityId);
 
       var spriteFn = getSprite(sprite.name);
@@ -22718,10 +23286,10 @@ var ViewportPixi = function (_Core$System) {
       }
       if (this.followEntityId) {
         // Adjust the viewport center offset to the entity position
-        var position = this.world.get('Position', this.followEntityId);
-        if (position) {
-          this.cameraX = position.x;
-          this.cameraY = position.y;
+        var _position = this.world.get('Position', this.followEntityId);
+        if (_position) {
+          this.cameraX = _position.x;
+          this.cameraY = _position.y;
           this.setCursor(this.cursorRawX, this.cursorRawY);
         }
       }
@@ -22742,7 +23310,7 @@ var ViewportPixi = function (_Core$System) {
 
       ctx.visible = true;
       ctx.clear();
-      ctx.lineStyle(1, this.options.gridColor);
+      ctx.lineStyle(5, this.options.gridColor);
       ctx.position.x = this.visibleLeft;
       ctx.position.y = this.visibleTop;
 
@@ -22779,7 +23347,8 @@ var CanvasSprite = function (_Core$Component) {
         size: 100,
         width: null,
         height: null,
-        drawn: false
+        drawn: false,
+        visible: false
       };
     }
   }, {
@@ -22862,6 +23431,71 @@ registerSprite('enemywing', function (g, sprite /*, entityId*/) {
   g.lineTo(-50, 0);
 });
 
+// Linear interpolation from v0 to v1 over t[0..1]
+function lerp(v0, v1, t) {
+  return (1 - t) * v0 + t * v1;
+}
+
+var repulsorSides = 8;
+var repulsorPoints = [];
+for (var idx$2 = 0; idx$2 < repulsorSides; idx$2++) {
+  var rot = idx$2 * (PI2 / repulsorSides);
+  repulsorPoints.push(Math.cos(rot));
+  repulsorPoints.push(Math.sin(rot));
+}
+repulsorPoints.push(repulsorPoints[0]);
+repulsorPoints.push(repulsorPoints[1]);
+
+registerSprite('repulsor', function (g, sprite, entityId, timeDelta) {
+  g.clear();
+  g.lineStyle(5 / (sprite.size / 100), 0x228822);
+
+  g.moveTo(-50, 0);
+  g.lineTo(-37.5, -50);
+  g.lineTo(-25, -50);
+  g.lineTo(-6.25, 25);
+  g.lineTo(6.25, 25);
+  g.lineTo(25, -50);
+  g.lineTo(37.5, -50);
+  g.lineTo(50, 0);
+  g.lineTo(37.5, 50);
+  g.lineTo(25, 50);
+  g.lineTo(6.25, -25);
+  g.lineTo(-6.25, -25);
+  g.lineTo(-25, 50);
+  g.lineTo(-37.5, 50);
+  g.lineTo(-50, 0);
+
+  if (!sprite.drawn) {
+    var t = Math.random() * 1.2;
+    sprite.rings = [{ t: t, delay: 0, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1.5 }, { t: t, delay: 0.3, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1.5 }, { t: t, delay: 0.6, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1.5 }];
+  }
+
+  sprite.rings.forEach(function (ring) {
+    if (ring.delay > 0) {
+      return ring.delay -= timeDelta;
+    }
+    ring.t += timeDelta;
+    if (ring.t >= ring.endT) {
+      ring.t = 0;
+    }
+
+    if (!sprite.visible) {
+      return;
+    }
+
+    var r = lerp(ring.startR, ring.endR, ring.t / ring.endT);
+    var a = lerp(ring.startO, ring.endO, ring.t / ring.endT);
+
+    g.lineStyle(5 / (sprite.size / 100), 0x228822, a);
+
+    g.moveTo(-r, 0);
+    g.drawPolygon(repulsorPoints.map(function (p) {
+      return r * p;
+    }));
+  });
+});
+
 registerSprite('hero', function (g, sprite /*, entityId*/) {
   if (sprite.drawn) {
     return;
@@ -22897,10 +23531,10 @@ registerSprite('asteroid', function (ctx, sprite /*, entityId*/) {
   var points = [];
 
   for (idx = 0; idx < NUM_POINTS; idx++) {
-    var rot = idx * ROTATION;
+    var _rot = idx * ROTATION;
     var dist = Math.random() * (MAX_RADIUS - MIN_RADIUS) + MIN_RADIUS;
-    points.push(dist * Math.cos(rot));
-    points.push(dist * Math.sin(rot));
+    points.push(dist * Math.cos(_rot));
+    points.push(dist * Math.sin(_rot));
   }
   points.push(points[0]);
   points.push(points[1]);
@@ -22923,7 +23557,7 @@ registerSprite('mine', function (g, sprite /*, entityId*/) {
     var MIN_RADIUS = 10;
     sprite.legs = [];
     var even = false;
-    for (var idx = 0; idx < NUM_POINTS; idx++) {
+    for (var _idx = 0; _idx < NUM_POINTS; _idx++) {
       var dist = even ? 10 : Math.random() * (MAX_RADIUS - MIN_RADIUS) + MIN_RADIUS;
       sprite.legs.push(dist);
       even = !even;
@@ -22942,7 +23576,7 @@ registerSprite('mine', function (g, sprite /*, entityId*/) {
   points.push(points[1]);
 
   g.clear();
-  g.lineStyle(2.5 / (sprite.size / 100), 0xFF2222);
+  g.lineStyle(5 / (sprite.size / 100), 0xFF2222);
   g.drawPolygon(points);
 });
 
@@ -23315,9 +23949,9 @@ var Position = function (_Component) {
 
 registerComponent('Position', Position);
 
-var entityId$1 = void 0;
-var sprite = void 0;
-var position = void 0;
+var entityId$2 = void 0;
+var sprite$1 = void 0;
+var position$1 = void 0;
 var positions = void 0;
 
 var PositionSystem = function (_System) {
@@ -23368,19 +24002,19 @@ var PositionSystem = function (_System) {
     value: function updateBounds() {
       this.bounds.left = this.bounds.top = this.bounds.right = this.bounds.bottom = null;
       positions = this.getMatchingComponents();
-      for (entityId$1 in positions) {
-        position = positions[entityId$1];
-        if (this.bounds.left === null || position.left < this.bounds.left) {
-          this.bounds.left = position.left;
+      for (entityId$2 in positions) {
+        position$1 = positions[entityId$2];
+        if (this.bounds.left === null || position$1.left < this.bounds.left) {
+          this.bounds.left = position$1.left;
         }
-        if (this.bounds.top === null || position.top < this.bounds.top) {
-          this.bounds.top = position.top;
+        if (this.bounds.top === null || position$1.top < this.bounds.top) {
+          this.bounds.top = position$1.top;
         }
-        if (this.bounds.right === null || position.right > this.bounds.right) {
-          this.bounds.right = position.right;
+        if (this.bounds.right === null || position$1.right > this.bounds.right) {
+          this.bounds.right = position$1.right;
         }
-        if (this.bounds.bottom === null || position.bottom > this.bounds.bottom) {
-          this.bounds.bottom = position.bottom;
+        if (this.bounds.bottom === null || position$1.bottom > this.bounds.bottom) {
+          this.bounds.bottom = position$1.bottom;
         }
       }
       this.bounds.width = this.bounds.right - this.bounds.left;
@@ -23389,17 +24023,17 @@ var PositionSystem = function (_System) {
   }, {
     key: 'updateComponent',
     value: function updateComponent(timeDelta, entityId, position) {
-      sprite = this.world.get('Sprite', entityId);
-      if (!sprite) {
+      sprite$1 = this.world.get('Sprite', entityId);
+      if (!sprite$1) {
         return;
       }
 
-      var halfWidth = sprite.width / 2;
-      var halfHeight = sprite.height / 2;
+      var halfWidth = sprite$1.width / 2;
+      var halfHeight = sprite$1.height / 2;
 
       position.entityId = entityId;
-      position.width = sprite.width;
-      position.height = sprite.height;
+      position.width = sprite$1.width;
+      position.height = sprite$1.height;
       position.left = position.x - halfWidth;
       position.top = position.y - halfHeight;
       position.right = position.x + halfWidth;
@@ -23417,14 +24051,14 @@ var PositionSystem = function (_System) {
 
       g.lineStyle(4, 0x882222);
       positions = this.getMatchingComponents();
-      for (entityId$1 in positions) {
-        position = positions[entityId$1];
-        sprite = this.world.get('Sprite', entityId$1);
-        g.drawCircle(position.x, position.y, sprite.width / 2);
-        g.moveTo(position.x - 20, position.y);
-        g.lineTo(position.x + 20, position.y);
-        g.moveTo(position.x, position.y - 20);
-        g.lineTo(position.x, position.y + 20);
+      for (entityId$2 in positions) {
+        position$1 = positions[entityId$2];
+        sprite$1 = this.world.get('Sprite', entityId$2);
+        g.drawCircle(position$1.x, position$1.y, sprite$1.width / 2);
+        g.moveTo(position$1.x - 20, position$1.y);
+        g.lineTo(position$1.x + 20, position$1.y);
+        g.moveTo(position$1.x, position$1.y - 20);
+        g.lineTo(position$1.x, position$1.y + 20);
       }
 
       g.lineStyle(4, 0x228822);
@@ -24184,9 +24818,9 @@ registerComponent('Collidable', Collidable);
 
 var match = void 0;
 var matches$1 = void 0;
-var entityId$2 = void 0;
+var entityId$3 = void 0;
 var entityId2 = void 0;
-var position$1 = void 0;
+var position$2 = void 0;
 var aCollidable = void 0;
 var bCollidable = void 0;
 var dx = void 0;
@@ -24230,17 +24864,17 @@ var CollisionSystem = function (_Core$System) {
     key: 'update',
     value: function update() /* timeDelta */{
       matches$1 = this.getMatchingComponents();
-      for (entityId$2 in matches$1) {
-        match = matches$1[entityId$2];
+      for (entityId$3 in matches$1) {
+        match = matches$1[entityId$3];
         match.inCollision = false;
         for (entityId2 in match.inCollisionWith) {
           delete match.inCollisionWith[entityId2];
         }
       }
-      for (entityId$2 in matches$1) {
-        position$1 = this.world.get('Position', entityId$2);
-        if (position$1) {
-          this.positionSystem.quadtree.iterate(position$1, this.checkCollisionBound, position$1);
+      for (entityId$3 in matches$1) {
+        position$2 = this.world.get('Position', entityId$3);
+        if (position$2) {
+          this.positionSystem.quadtree.iterate(position$2, this.checkCollisionBound, position$2);
         }
       }
     }
