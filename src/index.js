@@ -25,7 +25,7 @@ const world = window.world = new Core.World({
       container: '#game',
       canvas: '#viewport',
       followName: 'hero1',
-      zoom: 0.5
+      zoom: 0.3
     },
     DrawStats: {},
     MemoryStats: {},
@@ -40,8 +40,8 @@ const world = window.world = new Core.World({
     Bounce: {},
     HordeSpawn: {
       offscreenTTL: 0.5,
-      spawnMargin: 150,
-      minCount: 150,
+      spawnMargin: 125,
+      minCount: 100,
       spawn: (x, y) => {
         const MIN_SIZE=100;
         const MAX_SIZE=300;
@@ -49,11 +49,11 @@ const world = window.world = new Core.World({
         world.insert({
           Sprite: { name: 'mine', size: size},
           Health: { max: 4 * size * size },
-          Collidable: {},
+          Collidable: { },
           Bounce: { mass: 4 * size * size },
           Position: { x: x, y: y, rotation: (Math.PI * 2) * Math.random() },
           Motion: { dx: 0, dy: 0, drotation: (Math.PI * 2) * Math.random() },
-          Thruster: { deltaV: 600 + Math.random() * 100, maxV: 300 + Math.random() * 200 },
+          Thruster: { deltaV: 2400 + Math.random() * 100, maxV: 1200 + Math.random() * 200 },
           Seeker: { targetName: 'hero1', radPerSec: 0.5 + Math.random() * 0.2 },
           HordeSpawn: { }
         });
@@ -69,21 +69,18 @@ world.insert({
   Bounce: { mass: 7000 },
   Position: { x: 0, y: 0, rotation: -(Math.PI / 2) },
   Motion: {},
-  Thruster: { deltaV: 1400, maxV: 950, active: false },
+  Thruster: { deltaV: 2800, maxV: 1400, active: false },
   PlayerInputSteering: { radPerSec: Math.PI }
 });
 
 let x = 0;
-for (let y = 0; y > -18000; y -= 600) {
+for (let y = 0; y > -15000; y -= 600) {
   world.insert({
     Name: { name: `repulsor${y}` },
-    Sprite: { name: 'repulsor', color: 0xff3333 },
+    Sprite: { name: 'repulsor' },
     Position: { x, y },
-    Motion: {
-      drotation: (Math.random() < 0.5 ? -1 : 1) *
-                 (Math.PI / (2 + 2 * Math.random()))
-    },
-    Repulsor: {}
+    Motion: { },
+    Repulsor: { range: 600, force: 300 }
   });
   x += (-300 + Math.random() * 600);
 }

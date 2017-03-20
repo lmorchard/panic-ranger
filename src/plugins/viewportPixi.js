@@ -1,6 +1,9 @@
 /* global PIXI */
 import * as Core from '../lib/core';
 
+import filters from 'pixi-filters';
+import extraFilters from 'pixi-extra-filters';
+
 const PI2 = Math.PI * 2;
 
 let entityId, position, sprite;
@@ -19,7 +22,7 @@ export class ViewportPixi extends Core.System {
 
   defaultOptions() {
     return {
-      lineWidth: 2.5,
+      lineWidth: 5,
       zoom: 1.0,
       zoomMin: 0.1,
       zoomMax: 10.0,
@@ -45,9 +48,10 @@ export class ViewportPixi extends Core.System {
     this.container.appendChild(this.canvas);
     this.stage = new PIXI.Container();
 
-    //this.filter = new PIXI.filters.FXAAFilter();
-    //this.filter.blur = 1;
-    //this.stage.filters = [ this.filter ];
+    this.stage.filters = [
+      // new PIXI.filters.VoidFilter(),
+      // new PIXI.filters.BlurFilter(1, 1, 5)
+    ];
 
     this.backdrop = new PIXI.Graphics();
     this.stage.addChild(this.backdrop);
@@ -266,7 +270,7 @@ export class ViewportPixi extends Core.System {
 
     ctx.visible = true;
     ctx.clear();
-    ctx.lineStyle(1, this.options.gridColor);
+    ctx.lineStyle(5, this.options.gridColor);
     ctx.position.x = this.visibleLeft;
     ctx.position.y = this.visibleTop;
 
@@ -366,9 +370,19 @@ function lerp(v0, v1, t) {
   return (1-t)*v0 + t*v1;
 }
 
+const repulsorSides = 8;
+const repulsorPoints = [];
+for (let idx = 0; idx < repulsorSides; idx++) {
+  const rot = idx * (PI2 / repulsorSides);
+  repulsorPoints.push(Math.cos(rot));
+  repulsorPoints.push(Math.sin(rot));
+}
+repulsorPoints.push(repulsorPoints[0]);
+repulsorPoints.push(repulsorPoints[1]);
+
 registerSprite('repulsor', (g, sprite, entityId, timeDelta) => {
   g.clear();
-  g.lineStyle(2.5 / (sprite.size / 100), 0x228822);
+  g.lineStyle(5 / (sprite.size / 100), 0x228822);
 
   g.moveTo(-50,     0);
   g.lineTo(-37.5, -50);
@@ -387,29 +401,29 @@ registerSprite('repulsor', (g, sprite, entityId, timeDelta) => {
   g.lineTo(-50,     0);
 
   if (!sprite.drawn) {
-    const d = Math.random() * 500;
+    const t = Math.random() * 1.2;
     sprite.rings = [
-      { t: 0, delay: d + 0,   startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 2000 },
-      { t: 0, delay: d + 200, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 2000 },
-      { t: 0, delay: d + 400, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 2000 }
+      { t: t, delay: 0,   startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1.5 },
+      { t: t, delay: 0.3, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1.5 },
+      { t: t, delay: 0.6, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1.5 }
     ];
   }
 
-  const dt = timeDelta * 1000;
   sprite.rings.forEach(ring => {
-    if (ring.delay > 0) { return ring.delay -= dt; }
-
-    ring.t += dt;
+    if (ring.delay > 0) { return ring.delay -= timeDelta; }
+    ring.t += timeDelta;
     if (ring.t >= ring.endT) { ring.t = 0; }
+
+    if (!sprite.visible) { return; }
 
     const r = lerp(ring.startR, ring.endR, ring.t / ring.endT);
     const a = lerp(ring.startO, ring.endO, ring.t / ring.endT);
 
-    if (!sprite.visible) { return; }
-    g.lineStyle(2.5 / (sprite.size / 100), 0x228822, a);
-    g.moveTo(0 + r, 0);
-    g.arc(0, 0, r, 0, PI2);
-   });
+    g.lineStyle(5 / (sprite.size / 100), 0x228822, a);
+
+    g.moveTo(-r, 0);
+    g.drawPolygon(repulsorPoints.map(p => r * p));
+  });
 });
 
 registerSprite('hero', (g, sprite/*, entityId*/) => {
@@ -484,6 +498,6 @@ registerSprite('mine', (g, sprite/*, entityId*/) => {
   points.push(points[1]);
 
   g.clear();
-  g.lineStyle(2.5 / (sprite.size / 100), 0xFF2222);
+  g.lineStyle(5 / (sprite.size / 100), 0xFF2222);
   g.drawPolygon(points);
 });
