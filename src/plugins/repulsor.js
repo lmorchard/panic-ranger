@@ -3,6 +3,7 @@ import { Component, System, registerComponent, registerSystem } from '../lib/cor
 export class Repulsor extends Component {
     static defaults() {
       return {
+        active: true,
         range: 500,
         force: 200
       };
@@ -11,7 +12,7 @@ export class Repulsor extends Component {
 
 registerComponent('Repulsor', Repulsor);
 
-let components, component, entityId, entityId2, position, repulsor, repulsorPosition,
+let components, component, entityId, position, repulsor, repulsorPosition,
     neighborSprite, neighborPosition, neighborMotion, repelAngle, repelForce,
     dist;
 
@@ -34,23 +35,21 @@ export class RepulsorSystem extends System {
   }
 
   updateComponent(timeDelta, entityId, component) {
+    if (!component.active) { return; }
+
     position = this.world.get('Position', entityId);
 
     queryBounds.left = position.left - component.range;
-    queryBounds.right = position.right - component.range;
+    queryBounds.right = position.right + component.range;
     queryBounds.top = position.top - component.range;
-    queryBounds.bottom = position.bottom - component.range;
+    queryBounds.bottom = position.bottom + component.range;
 
-    components = this.world.get('Position');
-    for (entityId2 in components) {
-      component = components[entityId2];
-      this.applyRepulsion(component, entityId);
-    }
-
-    //this.positionSystem.quadtree.iterate(queryBounds, this.applyRepulsionBound, entityId);
+    this.positionSystem.quadtree.iterate(queryBounds, this.applyRepulsionBound, entityId);
   }
 
   applyRepulsion(neighbor, repulsorId) {
+    if (entityId === neighbor.entityId) { return; }
+
     neighborSprite = this.world.get('Sprite', neighbor.entityId);
     if (neighborSprite.name !== 'mine') { return; }
 
