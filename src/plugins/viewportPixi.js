@@ -230,6 +230,7 @@ export class ViewportPixi extends Core.System {
     ctx.scale.x = ctx.scale.y = sprite.size / 100;
     ctx.lineStyle(this.lineWidth / (sprite.size / 100), 0xFFFFFF);
     spriteFn(ctx, sprite, entityId, timeDelta);
+    spriteFn(ctx, sprite, entityId, timeDelta, this.world);
 
     sprite.drawn = true;
     return ctx;
@@ -381,6 +382,7 @@ repulsorPoints.push(repulsorPoints[0]);
 repulsorPoints.push(repulsorPoints[1]);
 
 registerSprite('repulsor', (g, sprite, entityId, timeDelta) => {
+registerSprite('repulsor', (g, sprite, entityId, timeDelta, world) => {
   g.clear();
   g.lineStyle(5 / (sprite.size / 100), 0x228822);
 
@@ -407,6 +409,12 @@ registerSprite('repulsor', (g, sprite, entityId, timeDelta) => {
       { t: t, delay: 0.3, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1.5 },
       { t: t, delay: 0.6, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1.5 }
     ];
+  }
+
+  const repulsor = world.get('Repulsor', entityId);
+
+  if (repulsor) {
+    sprite.rings.forEach(ring => ring.endR = repulsor.range);
   }
 
   sprite.rings.forEach(ring => {
