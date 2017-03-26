@@ -1,12 +1,13 @@
 /* global PIXI */
 import * as Core from '../lib/core';
+import { lerp } from '../lib/utils';
 
-import filters from 'pixi-filters';
-import extraFilters from 'pixi-extra-filters';
+// import filters from 'pixi-filters';
+// import extraFilters from 'pixi-extra-filters';
 
 const PI2 = Math.PI * 2;
 
-let entityId, position, sprite;
+let idx, p, entityId, position, sprite;
 
 // See also: http://phrogz.net/JS/wheeldelta.html
 const wheelDistance = function(evt){
@@ -167,7 +168,7 @@ export class ViewportPixi extends Core.System {
     // this.cursorChanged === true, but for some reason that's not working
     this.world.publish('mouseMove', this.cursorPosition);
 
-    const sprites = this.world.get('Sprite');
+    const sprites = this.world.get('Sprite') || {};
 
     for (entityId in sprites) {
       position = this.world.get('Position', entityId);
@@ -229,7 +230,6 @@ export class ViewportPixi extends Core.System {
     ctx.rotation = position.rotation + (Math.PI / 2);
     ctx.scale.x = ctx.scale.y = sprite.size / 100;
     ctx.lineStyle(this.lineWidth / (sprite.size / 100), 0xFFFFFF);
-    spriteFn(ctx, sprite, entityId, timeDelta);
     spriteFn(ctx, sprite, entityId, timeDelta, this.world);
 
     sprite.drawn = true;
@@ -320,13 +320,18 @@ export function getSprite(name) {
   return spriteRegistry[name];
 }
 
-registerSprite('default', (ctx, sprite/*, entityId*/) => {
-  if (sprite.drawn) { return; }
+const defaultShape = [ -50, 0, 50, 0, 0, 0, 0, -50, 0, 50, 0, 0 ];
+for (let idx = 0; idx < 8; idx++) {
+  const rot = idx * (PI2 / 8);
+  defaultShape.push(50 * Math.cos(rot));
+  defaultShape.push(50 * Math.sin(rot));
+}
+defaultShape.push(50);
+defaultShape.push(0);
 
-  ctx.arc(0, 0, 50, 0, PI2);
-  ctx.moveTo(0, 0);
-  ctx.lineTo(0, -50);
-  ctx.moveTo(0, 0);
+registerSprite('default', (g, sprite/*, entityId*/) => {
+  if (sprite.drawn) { return; }
+  g.drawPolygon(defaultShape);
 });
 
 registerSprite('sun', (ctx, sprite/*, entityId*/) => {
@@ -366,11 +371,23 @@ registerSprite('enemywing', (g, sprite/*, entityId*/) => {
   g.lineTo(-50, 0);
 });
 
-// Linear interpolation from v0 to v1 over t[0..1]
-function lerp(v0, v1, t) {
-  return (1-t)*v0 + t*v1;
-}
-
+const repulsorShape = [
+ -50,  0,
+ -37.5, -50,
+ -25, -50,
+ -6.25, 25,
+ 6.25, 25,
+ 25, -50,
+ 37.5, -50,
+ 50,  0,
+ 37.5, 50,
+ 25, 50,
+ 6.25, -25,
+ -6.25, -25,
+ -25, 50,
+ -37.5, 50,
+ -50, 0
+];
 const repulsorSides = 8;
 const repulsorPoints = [];
 for (let idx = 0; idx < repulsorSides; idx++) {
@@ -381,45 +398,28 @@ for (let idx = 0; idx < repulsorSides; idx++) {
 repulsorPoints.push(repulsorPoints[0]);
 repulsorPoints.push(repulsorPoints[1]);
 
-registerSprite('repulsor', (g, sprite, entityId, timeDelta) => {
 registerSprite('repulsor', (g, sprite, entityId, timeDelta, world) => {
-  g.clear();
-  g.lineStyle(5 / (sprite.size / 100), 0x228822);
-
-  g.moveTo(-50,     0);
-  g.lineTo(-37.5, -50);
-  g.lineTo(-25,   -50);
-  g.lineTo(-6.25,  25);
-  g.lineTo( 6.25,  25);
-  g.lineTo( 25,   -50);
-  g.lineTo( 37.5, -50);
-  g.lineTo( 50,     0);
-  g.lineTo( 37.5,  50);
-  g.lineTo( 25,    50);
-  g.lineTo( 6.25, -25);
-  g.lineTo(-6.25, -25);
-  g.lineTo(-25,    50);
-  g.lineTo(-37.5,  50);
-  g.lineTo(-50,     0);
-
   if (!sprite.drawn) {
-    const t = Math.random() * 1.2;
+    const t = Math.floor(Math.random() * 15) * 100;
     sprite.rings = [
-      { t: t, delay: 0,   startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1.5 },
-      { t: t, delay: 0.3, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1.5 },
-      { t: t, delay: 0.6, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1.5 }
+      { t: t,       startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1500 },
+      { t: t + 250, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1500 },
+      { t: t + 500, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1500 }
     ];
   }
 
   const repulsor = world.get('Repulsor', entityId);
-
   if (repulsor) {
     sprite.rings.forEach(ring => ring.endR = repulsor.range);
   }
 
+  g.clear();
+  g.lineStyle(5 / (sprite.size / 100), 0x228822);
+  g.drawPolygon(repulsorShape);
+
+  const dt = Math.floor(timeDelta * 1000);
   sprite.rings.forEach(ring => {
-    if (ring.delay > 0) { return ring.delay -= timeDelta; }
-    ring.t += timeDelta;
+    ring.t += dt;
     if (ring.t >= ring.endT) { ring.t = 0; }
 
     if (!sprite.visible) { return; }
@@ -428,32 +428,34 @@ registerSprite('repulsor', (g, sprite, entityId, timeDelta, world) => {
     const a = lerp(ring.startO, ring.endO, ring.t / ring.endT);
 
     g.lineStyle(5 / (sprite.size / 100), 0x228822, a);
-
     g.moveTo(-r, 0);
     g.drawPolygon(repulsorPoints.map(p => r * p));
   });
 });
 
+const heroShape = [
+  -50, 0,
+  -37.5, -37.5,
+  0, -50,
+  37.5, -37.5,
+  50, 0,
+  37.5, 50,
+  25, 50,
+  12.5, 12.5,
+  5, 25,
+  -5, 25,
+  -12.5, 12.5,
+  -25, 50,
+  -37.5, 50,
+  -50, 0
+];
+
 registerSprite('hero', (g, sprite/*, entityId*/) => {
   if (sprite.drawn) { return; }
-
-  g.moveTo(-50, 0);
-  g.lineTo(-37.5, -37.5);
-  g.lineTo(0, -50);
-  g.lineTo(37.5, -37.5);
-  g.lineTo(50, 0);
-  g.lineTo(37.5, 50);
-  g.lineTo(25, 50);
-  g.lineTo(12.5, 12.5);
-  g.lineTo(5, 25);
-  g.lineTo(-5, 25);
-  g.lineTo(-12.5, 12.5);
-  g.lineTo(-25, 50);
-  g.lineTo(-37.5, 50);
-  g.lineTo(-50, 0);
+  g.drawPolygon(heroShape);
 });
 
-registerSprite('asteroid', (ctx, sprite/*, entityId*/) => {
+registerSprite('asteroid', (g, sprite/*, entityId*/) => {
   if (sprite.drawn) { return; }
 
   const NUM_POINTS = 10 + Math.floor(8 * Math.random());
@@ -473,39 +475,104 @@ registerSprite('asteroid', (ctx, sprite/*, entityId*/) => {
   points.push(points[0]);
   points.push(points[1]);
 
-  ctx.drawPolygon(points);
+  g.drawPolygon(points);
 });
 
 registerSprite('mine', (g, sprite/*, entityId*/) => {
-  if (sprite.drawn && Math.random() > 0.1) { return; }
-
   if (!sprite.drawn) {
     let NUM_POINTS = 10 + Math.floor(10 * Math.random());
     if (NUM_POINTS % 2 !== 0) { NUM_POINTS++; }
-
+    const ROTATION = PI2 / NUM_POINTS;
     const MAX_RADIUS = 60;
     const MIN_RADIUS = 10;
-    sprite.legs = [];
+
     let even = false;
+
+    sprite.legs = [];
     for (let idx = 0; idx < NUM_POINTS; idx++) {
       const dist = even ? 10 : (Math.random() * (MAX_RADIUS - MIN_RADIUS)) + MIN_RADIUS;
-      sprite.legs.push(dist);
+      const rot = idx * ROTATION;
+      sprite.legs.push(dist * Math.cos(rot));
+      sprite.legs.push(dist * Math.sin(rot));
       even = !even;
     }
+    sprite.legs.push(sprite.legs[0]);
+    sprite.legs.push(sprite.legs[1]);
   }
 
-  const points = [];
-  const ROTATION = PI2 / sprite.legs.length;
-  sprite.legs.forEach((dist, idx) => {
-    const shakeDist = dist * (0.9 + 0.5 * Math.random());
-    const rot = idx * ROTATION;
-    points.push(shakeDist * Math.cos(rot));
-    points.push(shakeDist * Math.sin(rot));
-  });
-  points.push(points[0]);
-  points.push(points[1]);
+  if (sprite.drawn && Math.random() > 0.15) { return; }
 
   g.clear();
   g.lineStyle(5 / (sprite.size / 100), 0xFF2222);
-  g.drawPolygon(points);
+  g.drawPolygon(sprite.legs.map(p => p * (0.9 + 0.5 * Math.random())));
+});
+
+registerSprite('explosion', (g, sprite, entityId, timeDelta) => {
+
+  if (!sprite.drawn) {
+    Object.assign(sprite, {
+      ttl: 2.0,
+      radius: 100,
+      maxParticles: 25,
+      maxParticleSize: 4,
+      maxVelocity: 300,
+      age: 0,
+      alpha: 0,
+      stop: false,
+      particles: []
+    });
+    for (idx = 0; idx < sprite.maxParticles; idx++) {
+      sprite.particles.push({ free: true });
+    }
+  }
+
+  for (idx = 0; idx < sprite.particles.length; idx++) {
+    p = sprite.particles[idx];
+
+    if (!sprite.stop && p.free) {
+
+      p.velocity = sprite.maxVelocity * Math.random();
+      p.angle = (Math.PI * 2) * Math.random();
+      p.dx = 0 - (p.velocity * Math.sin(p.angle));
+      p.dy = p.velocity * Math.cos(p.angle);
+      p.distance = p.x = p.y = 0;
+      p.maxDistance = sprite.radius * Math.random();
+      p.size = sprite.maxParticleSize;
+      p.free = false;
+
+    } else if (!p.free) {
+
+      p.x += p.dx * timeDelta;
+      p.y += p.dy * timeDelta;
+
+      p.distance += p.velocity * timeDelta;
+      if (p.distance >= p.maxDistance) {
+        p.distance = p.maxDistance;
+        p.free = true;
+      }
+
+    }
+
+  }
+
+  sprite.age += timeDelta;
+
+  if (sprite.age >= sprite.ttl) {
+    sprite.stop = true;
+  }
+
+  sprite.alpha = Math.max(0, 1 - (sprite.age / sprite.ttl));
+
+  g.clear();
+
+  for (idx = 0; idx < sprite.particles.length; idx++) {
+    p = sprite.particles[idx];
+    if (p.free) { continue; }
+
+    g.lineStyle(5 / (sprite.size / 100), sprite.color,
+      (1 - (p.distance / p.maxDistance)) * sprite.alpha);
+    g.moveTo(0, 0);
+    g.lineTo(p.x, p.y);
+  }
+
 });

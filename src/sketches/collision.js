@@ -30,6 +30,7 @@ const world = window.world = new Core.World({
     DrawStats: {},
     MemoryStats: {},
     DatGui: {},
+    Position: {},
     Motion: {},
     Thruster: {},
     Seeker: {},
