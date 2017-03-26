@@ -147,7 +147,7 @@ var componentName = void 0;
 var timeNow = void 0;
 var timeDelta = void 0;
 var componentAttrs = void 0;
-var matches = void 0;
+var matches$1 = void 0;
 var idx = void 0;
 var item = void 0;
 var handler = void 0;
@@ -479,9 +479,9 @@ var System = function () {
   }, {
     key: 'update',
     value: function update(timeDelta) {
-      matches = this.getMatchingComponents();
-      for (entityId in matches) {
-        this.updateComponent(timeDelta, entityId, matches[entityId]);
+      matches$1 = this.getMatchingComponents();
+      for (entityId in matches$1) {
+        this.updateComponent(timeDelta, entityId, matches$1[entityId]);
       }
     }
   }, {
@@ -542,151 +542,6 @@ function registerSystem(systemName, system) {
 function getSystem(systemName) {
   return systemRegistry[systemName];
 }
-
-/*
-  Originally by Vitalii [Nayjest] Stepanenko <gmail@vitaliy.in>
-  Tweaky & fixes by Les Orchard <me@lmorchard.com>
-*/
-
-function Vector2D(x, y) {
-  this.x = x || 0;
-  this.y = y || 0;
-}
-
-Vector2D.cloneFrom = function (object) {
-  return new Vector2D(object.x, object.y);
-};
-
-Vector2D.fromArray = function (array) {
-  return new Vector2D(array[0], array[1]);
-};
-
-Vector2D.zero = new Vector2D(0, 0);
-
-Vector2D.prototype.add = function (vector) {
-  this.x += vector.x;
-  this.y += vector.y;
-  return this;
-};
-
-Vector2D.prototype.addScalar = function (val) {
-  this.x += val;
-  this.y += val;
-  return this;
-};
-
-Vector2D.prototype.eq = function (vector) {
-  return vector.x === this.x && vector.y === this.y;
-};
-
-Vector2D.prototype.subtract = function (vector) {
-  this.x -= vector.x;
-  this.y -= vector.y;
-  return this;
-};
-
-Vector2D.prototype.clone = function () {
-  return new Vector2D(this.x, this.y);
-};
-
-Vector2D.prototype.set = function (vector) {
-  this.x = vector.x;
-  this.y = vector.y;
-  return this;
-};
-
-Vector2D.prototype.setValues = function (_at_x, _at_y) {
-  this.x = _at_x;
-  this.y = _at_y;
-  return this;
-};
-
-Vector2D.prototype.dist = function (vector) {
-  return Math.sqrt((vector.x - this.x) * (vector.x - this.x) + (vector.y - this.y) * (vector.y - this.y));
-};
-
-Vector2D.prototype.normalise = function () {
-  return this.normalize();
-};
-
-Vector2D.prototype.normalize = function () {
-  if (!this.isZero()) {
-    var m = this.magnitude();
-    this.x /= m;
-    this.y /= m;
-  }
-  return this;
-};
-
-Vector2D.prototype.isZero = function () {
-  return this.x === 0 && this.y === 0;
-};
-
-Vector2D.prototype.reverse = function () {
-  this.x = -this.x;
-  this.y = -this.y;
-  return this;
-};
-
-Vector2D.prototype.magnitude = function () {
-  return Math.sqrt(this.x * this.x + this.y * this.y);
-};
-
-Vector2D.prototype.toArray = function () {
-  return [this.x, this.y];
-};
-
-Vector2D.prototype.angle = function () {
-  return Math.atan2(this.y, this.x);
-};
-
-Vector2D.prototype.rotate = function (angle) {
-  var cos = Math.cos(angle);
-  var sin = Math.sin(angle);
-  return this.setValues(this.x * cos - this.y * sin, this.x * sin + this.y * cos);
-};
-
-Vector2D.prototype.angleTo = function (vector) {
-  return Math.atan2(vector.y - this.y, vector.x - this.x);
-};
-
-Vector2D.prototype.rotateAround = function (point, angle) {
-  return this.subtract(point).rotate(angle).add(point);
-};
-
-Vector2D.prototype.multiplyScalar = function (val) {
-  this.x *= val;
-  this.y *= val;
-  return this;
-};
-
-Vector2D.prototype.multiply = function (vector) {
-  this.x *= vector.x;
-  this.y *= vector.y;
-  return this;
-};
-
-Vector2D.prototype.divide = function (vector) {
-  this.x /= vector.x;
-  this.y /= vector.y;
-  return this;
-};
-
-Vector2D.prototype.divideScalar = function (val) {
-  this.x /= val;
-  this.y /= val;
-  return this;
-};
-
-Vector2D.prototype.round = function () {
-  this.x = Math.round(this.x);
-  this.y = Math.round(this.y);
-  return this;
-};
-
-Vector2D.prototype.dot = function (vector) {
-  return this.x * vector.x + this.y * vector.y;
-};
 
 function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
@@ -5972,32 +5827,6 @@ var Name = function (_Core$Component) {
 
 registerComponent('Name', Name);
 
-var Health = function (_Core$Component) {
-  inherits(Health, _Core$Component);
-
-  function Health() {
-    classCallCheck(this, Health);
-    return possibleConstructorReturn(this, (Health.__proto__ || Object.getPrototypeOf(Health)).apply(this, arguments));
-  }
-
-  createClass(Health, null, [{
-    key: 'defaults',
-    value: function defaults() {
-      return { max: 1000, current: null, show_bar: true };
-    }
-  }, {
-    key: 'create',
-    value: function create(attrs) {
-      var c = get$1(Health.__proto__ || Object.getPrototypeOf(Health), 'create', this).call(this, attrs);
-      c.current = c.max;
-      return c;
-    }
-  }]);
-  return Health;
-}(Component);
-
-registerComponent('Health', Health);
-
 /**
  * @author       Timo Hausmann
  * @author       Richard Davey <rich@photonstorm.com>
@@ -6515,788 +6344,115 @@ var MotionSystem = function (_Core$System) {
 }(System);
 registerSystem('Motion', MotionSystem);
 
-var Thruster = function (_Core$Component) {
-  inherits(Thruster, _Core$Component);
+var Expiration = function (_Core$Component) {
+  inherits(Expiration, _Core$Component);
 
-  function Thruster() {
-    classCallCheck(this, Thruster);
-    return possibleConstructorReturn(this, (Thruster.__proto__ || Object.getPrototypeOf(Thruster)).apply(this, arguments));
+  function Expiration() {
+    classCallCheck(this, Expiration);
+    return possibleConstructorReturn(this, (Expiration.__proto__ || Object.getPrototypeOf(Expiration)).apply(this, arguments));
   }
 
-  createClass(Thruster, null, [{
+  createClass(Expiration, null, [{
     key: 'defaults',
     value: function defaults() {
-      return {
-        active: true,
-        stop: false,
-        useBrakes: true,
-        deltaV: 0,
-        maxV: 0
-      };
+      return { ttl: 0, age: 0 };
     }
   }]);
-  return Thruster;
+  return Expiration;
 }(Component);
-registerComponent('Thruster', Thruster);
+registerComponent('Expiration', Expiration);
 
-var ThrusterSystem = function (_Core$System) {
-  inherits(ThrusterSystem, _Core$System);
+var ExpirationSystem = function (_Core$System) {
+  inherits(ExpirationSystem, _Core$System);
 
-  function ThrusterSystem() {
-    classCallCheck(this, ThrusterSystem);
-    return possibleConstructorReturn(this, (ThrusterSystem.__proto__ || Object.getPrototypeOf(ThrusterSystem)).apply(this, arguments));
+  function ExpirationSystem() {
+    classCallCheck(this, ExpirationSystem);
+    return possibleConstructorReturn(this, (ExpirationSystem.__proto__ || Object.getPrototypeOf(ExpirationSystem)).apply(this, arguments));
   }
 
-  createClass(ThrusterSystem, [{
+  createClass(ExpirationSystem, [{
     key: 'matchComponent',
     value: function matchComponent() {
-      return 'Thruster';
-    }
-  }, {
-    key: 'initialize',
-    value: function initialize() {
-      this.vInertia = new Vector2D();
-      this.vThrust = new Vector2D();
-      this.vBrakes = new Vector2D();
+      return 'Expiration';
     }
   }, {
     key: 'updateComponent',
-    value: function updateComponent(timeDelta, entityId, thruster) {
-
-      if (!thruster.active) {
-        return;
+    value: function updateComponent(timeDelta, entityId, expiration) {
+      expiration.age += timeDelta;
+      if (expiration.age >= expiration.ttl) {
+        this.world.destroy(entityId);
       }
-
-      var pos = this.world.get('Position', entityId);
-      var motion = this.world.get('Motion', entityId);
-      if (!pos || !motion) {
-        return;
-      }
-
-      // Inertia is current motion
-      this.vInertia.setValues(motion.dx, motion.dy);
-
-      // delta-v available for the current tick
-      var tickDeltaV = timeDelta * thruster.deltaV;
-
-      if (!thruster.stop) {
-        // Create thrust vector per rotation and add to inertia.
-        this.vThrust.setValues(tickDeltaV, 0);
-        this.vThrust.rotate(pos.rotation);
-        this.vInertia.add(this.vThrust);
-      }
-
-      if (thruster.useBrakes) {
-        // Try to enforce the max_v limit with braking thrust.
-        var maxV = thruster.stop ? 0 : thruster.maxV;
-        var currV = this.vInertia.magnitude();
-        var overV = currV - maxV;
-        if (overV > 0) {
-          // Braking delta-v is max thruster output or remaining overage,
-          // whichever is smallest. Braking vector opposes inertia.
-          var brakingDv = Math.min(tickDeltaV, overV);
-          this.vBrakes.setValues(this.vInertia.x, this.vInertia.y);
-          this.vBrakes.normalize();
-          this.vBrakes.multiplyScalar(0 - brakingDv);
-          this.vInertia.add(this.vBrakes);
-        }
-        if (thruster.stop && currV === 0) {
-          thruster.active = false;
-        }
-      }
-
-      // Update inertia. Note that we've been careful only to make changes
-      // to inertia within the delta-v of the thruster. Other influences
-      // on inertia should be preserved.
-      motion.dx = this.vInertia.x;
-      motion.dy = this.vInertia.y;
     }
   }]);
-  return ThrusterSystem;
+  return ExpirationSystem;
 }(System);
-registerSystem('Thruster', ThrusterSystem);
-
-var Seeker = function (_Core$Component) {
-  inherits(Seeker, _Core$Component);
-
-  function Seeker() {
-    classCallCheck(this, Seeker);
-    return possibleConstructorReturn(this, (Seeker.__proto__ || Object.getPrototypeOf(Seeker)).apply(this, arguments));
-  }
-
-  createClass(Seeker, null, [{
-    key: 'defaults',
-    value: function defaults() {
-      return {
-        active: true,
-        targetName: null,
-        targetEntityId: null,
-        targetPosition: null,
-        acquisitionDelay: 0,
-        radPerSec: Math.PI
-      };
-    }
-  }]);
-  return Seeker;
-}(Component);
-
-registerComponent('Seeker', Seeker);
-
-var SeekerSystem = function (_Core$System) {
-  inherits(SeekerSystem, _Core$System);
-
-  function SeekerSystem() {
-    classCallCheck(this, SeekerSystem);
-    return possibleConstructorReturn(this, (SeekerSystem.__proto__ || Object.getPrototypeOf(SeekerSystem)).apply(this, arguments));
-  }
-
-  createClass(SeekerSystem, [{
-    key: 'matchComponent',
-    value: function matchComponent() {
-      return 'Seeker';
-    }
-  }, {
-    key: 'initialize',
-    value: function initialize() {
-      this.vSeeker = new Vector2D();
-      this.vTarget = new Vector2D();
-    }
-  }, {
-    key: 'updateComponent',
-    value: function updateComponent(timeDelta, entityId, seeker) {
-
-      if (!seeker.active) {
-        return;
-      }
-
-      // Look up the orbited entity ID, if only name given.
-      if (seeker.targetName && !seeker.targetEntityId) {
-        seeker.targetEntityId = getComponent('Name').findEntityByName(this.world, seeker.targetName);
-      }
-
-      // Process a delay before the seeker 'acquires' the target and
-      // starts steering. Makes missiles look interesting.
-      if (seeker.acquisitionDelay > 0) {
-        seeker.acquisitionDelay -= timeDelta;
-        return;
-      }
-
-      var position = this.world.get('Position', entityId);
-      var motion = this.world.get('Motion', entityId);
-      if (!position || !motion) {
-        return;
-      }
-
-      // Accept either a raw x/y coord or entity ID as target
-      var targetPosition = seeker.targetPosition;
-      if (!targetPosition) {
-        targetPosition = this.world.get('Position', seeker.targetEntityId);
-      }
-      if (!targetPosition) {
-        return;
-      }
-
-      // Set up the vectors for angle math...
-      this.vSeeker.setValues(position.x, position.y);
-      this.vTarget.setValues(targetPosition.x, targetPosition.y);
-
-      // Get the target angle, ensuring a 0..2*Math.PI range.
-      var targetAngle = this.vSeeker.angleTo(this.vTarget);
-      if (targetAngle < 0) {
-        targetAngle += 2 * Math.PI;
-      }
-
-      // Pick the direction from current to target angle
-      var direction = targetAngle < position.rotation ? -1 : 1;
-
-      // If the offset between the angles is more than half a circle, go
-      // the other way because it'll be shorter.
-      var offset = Math.abs(targetAngle - position.rotation);
-      if (offset > Math.PI) {
-        direction = 0 - direction;
-      }
-
-      // Work out the desired delta-rotation to steer toward target
-      var targetDr = direction * Math.min(seeker.radPerSec, offset / timeDelta);
-
-      // Calculate the delta-rotation impulse required to meet the goal,
-      // but constrain to the capability of the steering thrusters
-      var impulseDr = targetDr - motion.drotation;
-      if (Math.abs(impulseDr) > seeker.radPerSec) {
-        if (impulseDr > 0) {
-          impulseDr = seeker.radPerSec;
-        } else if (impulseDr < 0) {
-          impulseDr = 0 - seeker.radPerSec;
-        }
-      }
-      motion.drotation += impulseDr;
-    }
-  }]);
-  return SeekerSystem;
-}(System);
-
-registerSystem('Seeker', SeekerSystem);
-
-var Collidable = function (_Core$Component) {
-  inherits(Collidable, _Core$Component);
-
-  function Collidable() {
-    classCallCheck(this, Collidable);
-    return possibleConstructorReturn(this, (Collidable.__proto__ || Object.getPrototypeOf(Collidable)).apply(this, arguments));
-  }
-
-  createClass(Collidable, null, [{
-    key: 'defaults',
-    value: function defaults() {
-      return {
-        inCollision: false,
-        inCollisionWith: {}
-      };
-    }
-  }]);
-  return Collidable;
-}(Component);
-
-registerComponent('Collidable', Collidable);
-
-var match = void 0;
-var matches$1 = void 0;
-var entityId$3 = void 0;
-var entityId2 = void 0;
-var position$2 = void 0;
-var aCollidable = void 0;
-var bCollidable = void 0;
-var dx = void 0;
-var dy = void 0;
-var radii = void 0;
-
-var CollisionSystem = function (_Core$System) {
-  inherits(CollisionSystem, _Core$System);
-
-  function CollisionSystem() {
-    classCallCheck(this, CollisionSystem);
-    return possibleConstructorReturn(this, (CollisionSystem.__proto__ || Object.getPrototypeOf(CollisionSystem)).apply(this, arguments));
-  }
-
-  createClass(CollisionSystem, [{
-    key: 'defaultOptions',
-    value: function defaultOptions() {
-      return {
-        positionSystemName: 'Position'
-      };
-    }
-  }, {
-    key: 'matchComponent',
-    value: function matchComponent() {
-      return 'Collidable';
-    }
-  }, {
-    key: 'initialize',
-    value: function initialize() {
-      var _this3 = this;
-
-      this.positionSystem = this.world.getSystem(this.options.positionSystemName);
-      this.width = this.options.width;
-      this.height = this.options.height;
-      this.retrieveBounds = {};
-      this.checkCollisionBound = function (neighbor, component) {
-        return _this3.checkCollision(neighbor, component);
-      };
-    }
-  }, {
-    key: 'update',
-    value: function update() /* timeDelta */{
-      matches$1 = this.getMatchingComponents();
-      for (entityId$3 in matches$1) {
-        match = matches$1[entityId$3];
-        match.inCollision = false;
-        for (entityId2 in match.inCollisionWith) {
-          delete match.inCollisionWith[entityId2];
-        }
-      }
-      for (entityId$3 in matches$1) {
-        position$2 = this.world.get('Position', entityId$3);
-        if (position$2) {
-          this.positionSystem.quadtree.iterate(position$2, this.checkCollisionBound, position$2);
-        }
-      }
-    }
-  }, {
-    key: 'checkCollision',
-    value: function checkCollision(bPosition, aPosition) {
-      if (aPosition.entityId === bPosition.entityId) {
-        return;
-      }
-
-      aCollidable = this.world.get('Collidable', aPosition.entityId);
-      bCollidable = this.world.get('Collidable', bPosition.entityId);
-
-      if (!aCollidable || !bCollidable) {
-        return;
-      }
-
-      dx = aPosition.x - bPosition.x;
-      dy = aPosition.y - bPosition.y;
-
-      // TODO: Pluggable shape intersection detection here?
-
-      // Check collision circle via distance
-      radii = (aPosition.width + bPosition.width) / 2;
-      if (dx * dx + dy * dy > radii * radii) {
-        return;
-      }
-
-      aCollidable.inCollision = true;
-      aCollidable.inCollisionWith[bPosition.entityId] = 1;
-
-      bCollidable.inCollision = true;
-      bCollidable.inCollisionWith[aPosition.entityId] = 1;
-    }
-  }, {
-    key: 'draw',
-    value: function draw() /* timeDelta */{
-      var g = this.getDebugGraphics();
-      if (!g) {
-        return;
-      }
-
-      g.lineStyle(4, 0x999999);
-      var collidables = this.world.get('Collidable');
-      for (var _entityId in collidables) {
-        var collidable = collidables[_entityId];
-        var _position = this.world.get('Position', _entityId);
-
-        if (collidable.inCollision) {
-          g.drawCircle(_position.x, _position.y, 40);
-        }
-      }
-    }
-  }]);
-  return CollisionSystem;
-}(System);
-
-registerSystem('Collision', CollisionSystem);
-
-var BounceComponent = function (_Core$Component) {
-  inherits(BounceComponent, _Core$Component);
-
-  function BounceComponent() {
-    classCallCheck(this, BounceComponent);
-    return possibleConstructorReturn(this, (BounceComponent.__proto__ || Object.getPrototypeOf(BounceComponent)).apply(this, arguments));
-  }
-
-  createClass(BounceComponent, null, [{
-    key: 'defaults',
-    value: function defaults() {
-      return {
-        mass: 1000.0
-      };
-    }
-  }]);
-  return BounceComponent;
-}(Component);
-
-registerComponent('Bounce', BounceComponent);
-
-var BounceSystem = function (_Core$System) {
-  inherits(BounceSystem, _Core$System);
-
-  function BounceSystem() {
-    classCallCheck(this, BounceSystem);
-    return possibleConstructorReturn(this, (BounceSystem.__proto__ || Object.getPrototypeOf(BounceSystem)).apply(this, arguments));
-  }
-
-  createClass(BounceSystem, [{
-    key: 'matchComponent',
-    value: function matchComponent() {
-      return 'Bounce';
-    }
-  }, {
-    key: 'initialize',
-    value: function initialize() {
-      this.dn = new Vector2D();
-      this.dt = new Vector2D();
-      this.mt = new Vector2D();
-      this.v1 = new Vector2D();
-      this.v2 = new Vector2D();
-      this.v1n = new Vector2D();
-      this.v1t = new Vector2D();
-      this.v2n = new Vector2D();
-      this.v2t = new Vector2D();
-    }
-  }, {
-    key: 'update',
-    value: function update(timeDelta) {
-      var entities = this.world;
-      var matches = this.getMatchingComponents();
-
-      var pairs = {};
-      for (var aEntityId in matches) {
-
-        // const bounce = matches[aEntityId];
-        var aCollidable = entities.get('Collidable', aEntityId);
-
-        for (var bEntityId in aCollidable.inCollisionWith) {
-          var pair = [aEntityId, bEntityId];
-          pair.sort();
-          pairs[pair.join(':')] = pair;
-        }
-
-        // TODO: Process world boundary edge bounce?
-      }
-
-      for (var key in pairs) {
-        var _aEntityId = pairs[key][0];
-        var aBouncer = entities.get('Bounce', _aEntityId);
-        if (!aBouncer) {
-          continue;
-        }
-
-        var _bEntityId = pairs[key][1];
-        var bBouncer = entities.get('Bounce', _bEntityId);
-        if (!bBouncer) {
-          continue;
-        }
-
-        this.resolveElasticCollision(timeDelta, _aEntityId, aBouncer, _bEntityId, bBouncer);
-      }
-    }
-
-    // See also:
-    // http://en.m.wikipedia.org/wiki/Elastic_collision
-    // http://en.m.wikipedia.org/wiki/Dot_product
-    // https://github.com/Edifear/volleyball/blob/master/collision.html
-    // https://github.com/DominikWidomski/Processing/blob/master/sketch_canvas_red_particles/particles.pde#L47
-
-  }, {
-    key: 'resolveElasticCollision',
-    value: function resolveElasticCollision(timeDelta, aEntityId, aBouncer, bEntityId, bBouncer) {
-
-      var entities = this.world;
-
-      var aPosition = entities.get('Position', aEntityId);
-      var aSprite = entities.get('Sprite', aEntityId);
-      var aMotion = entities.get('Motion', aEntityId);
-
-      var bPosition = entities.get('Position', bEntityId);
-      var bSprite = entities.get('Sprite', bEntityId);
-      var bMotion = entities.get('Motion', bEntityId);
-
-      // First, back both entities off to try to prevent sticking
-      /*
-      aPosition.x -= aMotion.dx * timeDelta;
-      aPosition.y -= aMotion.dy * timeDelta;
-      bPosition.x -= bMotion.dx * timeDelta;
-      bPosition.y -= bMotion.dy * timeDelta;
-      const radii, dx, dy;
-      while (true) {
-        aPosition.x -= aMotion.dx * timeDelta;
-        aPosition.y -= aMotion.dy * timeDelta;
-        bPosition.x -= bMotion.dx * timeDelta;
-        bPosition.y -= bMotion.dy * timeDelta;
-         radii = (aSprite.size + bSprite.size) / 2;
-        dx = aPosition.x - bPosition.x;
-        dy = aPosition.y - bPosition.y;
-        if (dx*dx + dy*dy > radii*radii) { break; }
-      }
-      */
-
-      // Vector between entities
-      this.dn.setValues(aPosition.x - bPosition.x, aPosition.y - bPosition.y);
-
-      // Distance between entities
-      var delta = this.dn.magnitude();
-
-      // Normal vector of the collision plane
-      this.dn.normalize();
-
-      // Tangential vector of the collision plane
-      this.dt.setValues(this.dn.y, -this.dn.x);
-
-      // HACK: avoid divide by zero
-      if (delta === 0) {
-        bPosition.x += 0.01;
-      }
-
-      // Get total mass for entities
-      var m1 = aBouncer.mass;
-      var m2 = bBouncer.mass;
-      var M = m1 + m2;
-
-      // Minimum translation vector to push entities apart
-      this.mt.setValues(this.dn.x * (aSprite.width + bSprite.width - delta) * 1.1, this.dn.y * (aSprite.height + bSprite.height - delta) * 1.1);
-
-      // Velocity vectors of entities before collision
-      this.v1.setValues(aMotion ? aMotion.dx : 0, aMotion ? aMotion.dy : 0);
-      this.v2.setValues(bMotion ? bMotion.dx : 0, bMotion ? bMotion.dy : 0);
-
-      // split the velocity vector of the first entity into a normal
-      // and a tangential component in respect of the collision plane
-      this.v1n.setValues(this.dn.x * this.v1.dot(this.dn), this.dn.y * this.v1.dot(this.dn));
-      this.v1t.setValues(this.dt.x * this.v1.dot(this.dt), this.dt.y * this.v1.dot(this.dt));
-
-      // split the velocity vector of the second entity into a normal
-      // and a tangential component in respect of the collision plane
-      this.v2n.setValues(this.dn.x * this.v2.dot(this.dn), this.dn.y * this.v2.dot(this.dn));
-      this.v2t.setValues(this.dt.x * this.v2.dot(this.dt), this.dt.y * this.v2.dot(this.dt));
-
-      // calculate new velocity vectors of the entities, the tangential
-      // component stays the same, the normal component changes analog to
-      // the 1-Dimensional case
-
-      if (aMotion) {
-        var aFactor = (m1 - m2) / M * this.v1n.magnitude() + 2 * m2 / M * this.v2n.magnitude();
-        aMotion.dx = this.v1t.x + this.dn.x * aFactor;
-        aMotion.dy = this.v1t.y + this.dn.y * aFactor;
-        // @processDamage(eid, bEntityId, v_motion, bouncer, m1)
-      }
-
-      if (bMotion) {
-        var bFactor = (m2 - m1) / M * this.v2n.magnitude() + 2 * m1 / M * this.v1n.magnitude();
-        bMotion.dx = this.v2t.x - this.dn.x * bFactor;
-        bMotion.dy = this.v2t.y - this.dn.y * bFactor;
-        // @processDamage(eid, bEntityId, v_bMotion, c_bouncer, m2)
-      }
-    }
-  }]);
-  return BounceSystem;
-}(System);
-
-registerSystem('Bounce', BounceSystem);
-
-var PlayerInputSteering = function (_Component) {
-  inherits(PlayerInputSteering, _Component);
-
-  function PlayerInputSteering() {
-    classCallCheck(this, PlayerInputSteering);
-    return possibleConstructorReturn(this, (PlayerInputSteering.__proto__ || Object.getPrototypeOf(PlayerInputSteering)).apply(this, arguments));
-  }
-
-  createClass(PlayerInputSteering, null, [{
-    key: 'defaults',
-    value: function defaults() {
-      return {
-        active: true,
-        radPerSec: Math.PI * 2
-      };
-    }
-  }]);
-  return PlayerInputSteering;
-}(Component);
-
-registerComponent('PlayerInputSteering', PlayerInputSteering);
-
-var PI2$2 = Math.PI * 2;
-
-var PlayerInputSteeringSystem = function (_System) {
-  inherits(PlayerInputSteeringSystem, _System);
-
-  function PlayerInputSteeringSystem() {
-    classCallCheck(this, PlayerInputSteeringSystem);
-    return possibleConstructorReturn(this, (PlayerInputSteeringSystem.__proto__ || Object.getPrototypeOf(PlayerInputSteeringSystem)).apply(this, arguments));
-  }
-
-  createClass(PlayerInputSteeringSystem, [{
-    key: 'defaultOptions',
-    value: function defaultOptions() {
-      return {
-        gamepadDeadzone: 0.2
-      };
-    }
-  }, {
-    key: 'matchComponent',
-    value: function matchComponent() {
-      return 'PlayerInputSteering';
-    }
-  }, {
-    key: 'initialize',
-    value: function initialize() {
-      var _this3 = this;
-
-      this.gamepad = { active: false };
-      this.pointer = { active: false, x: 0, y: 0 };
-      this.keys = { active: false };
-      this.touch = { active: false, x: 0, y: 0 };
-
-      this.world.subscribe('mouseDown', function (msg, cursorPosition) {
-        return _this3.setPointer(true, cursorPosition);
-      }).subscribe('mouseUp', function (msg, cursorPosition) {
-        return _this3.setPointer(false, cursorPosition);
-      }).subscribe('mouseMove', function (msg, cursorPosition) {
-        return _this3.setPointer(_this3.pointer.active, cursorPosition);
-      });
-
-      var windowEvents = {
-        keydown: this.handleKeyDown,
-        keyup: this.handleKeyUp
-      };
-      Object.keys(windowEvents).forEach(function (k) {
-        return window.addEventListener(k, windowEvents[k].bind(_this3));
-      });
-    }
-  }, {
-    key: 'setPointer',
-    value: function setPointer(active, position) {
-      this.pointer.active = active;
-      this.pointer.x = position.x;
-      this.pointer.y = position.y;
-    }
-  }, {
-    key: 'update',
-    value: function update(timeDelta) {
-      this.updateGamepads(timeDelta);
-      this.updateKeyboard(timeDelta);
-      get$1(PlayerInputSteeringSystem.prototype.__proto__ || Object.getPrototypeOf(PlayerInputSteeringSystem.prototype), 'update', this).call(this, timeDelta);
-    }
-  }, {
-    key: 'updateComponent',
-    value: function updateComponent(timeDelta, entityId, steering) {
-      var thruster = this.world.get('Thruster', entityId);
-      var motion = this.world.get('Motion', entityId);
-
-      thruster.active = true;
-      thruster.stop = false;
-
-      if (this.keys.active) {
-        return this.updateComponentFromKeyboard(timeDelta, entityId, steering);
-      }
-
-      if (this.pointer.active) {
-        return this.updateComponentFromPointer(timeDelta, entityId, steering);
-      }
-
-      if (this.gamepad.active) {
-        return this.updateComponentFromGamepad(timeDelta, entityId, steering);
-      }
-
-      thruster.stop = true;
-      motion.drotation = 0;
-    }
-  }, {
-    key: 'updateComponentFromPointer',
-    value: function updateComponentFromPointer(timeDelta, entityId, steering) {
-      var position = this.world.get('Position', entityId);
-      this.updateMotionFromTargetAngle(timeDelta, entityId, steering, Math.atan2(this.pointer.y - position.y, this.pointer.x - position.x));
-    }
-  }, {
-    key: 'updateComponentFromGamepad',
-    value: function updateComponentFromGamepad(timeDelta, entityId, steering) {
-      this.updateMotionFromTargetAngle(timeDelta, entityId, steering, Math.atan2(this.gamepad.axis1, this.gamepad.axis0));
-    }
-  }, {
-    key: 'updateComponentFromKeyboard',
-    value: function updateComponentFromKeyboard(timeDelta, entityId, steering) {
-      var thruster = this.world.get('Thruster', entityId);
-      var motion = this.world.get('Motion', entityId);
-
-      var dleft = this.keys[65] || this.keys[37] || this.gamepad.button13;
-      var dright = this.keys[68] || this.keys[39] || this.gamepad.button14;
-      var dup = this.keys[87] || this.keys[38] || this.gamepad.button11;
-      // const ddown  = (this.keys[83] || this.keys[40] || this.gamepad.button12);
-
-      if (dup) {
-        thruster.active = true;
-      } else {
-        thruster.stop = true;
-      }
-
-      var direction = dleft ? -1 : dright ? 1 : 0;
-      var targetDr = direction * steering.radPerSec;
-      motion.drotation = targetDr;
-    }
-  }, {
-    key: 'updateGamepads',
-    value: function updateGamepads() {
-      var _this4 = this;
-
-      var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-
-      // TODO: specify which gamepad, i.e. for multiplayer
-      for (var i = 0; i < gamepads.length; i++) {
-        var gp = gamepads[i];
-        if (!gp || !gp.connected) continue;
-        gp.buttons.forEach(function (val, idx) {
-          return _this4.gamepad['button' + idx] = val.pressed;
-        });
-        gp.axes.forEach(function (val, idx) {
-          return _this4.gamepad['axis' + idx] = val;
-        });
-        break; // stop after the first gamepad
-      }
-
-      Object.keys(this.gamepad).forEach(function (k) {
-        if (!_this4.gamepad[k]) {
-          delete _this4.gamepad[k];
-        }
-      });
-
-      var axisX = this.gamepad.axis0;
-      var axisY = this.gamepad.axis1;
-      this.gamepad.active = (Math.abs(axisX) > 0 || Math.abs(axisY) > 0) && Math.sqrt(axisX * axisX + axisY * axisY) > this.options.gamepadDeadzone;
-    }
-  }, {
-    key: 'updateKeyboard',
-    value: function updateKeyboard() {
-      var dleft = this.keys[65] || this.keys[37] || this.gamepad.button13;
-      var dright = this.keys[68] || this.keys[39] || this.gamepad.button14;
-      var dup = this.keys[87] || this.keys[38] || this.gamepad.button11;
-      var ddown = this.keys[83] || this.keys[40] || this.gamepad.button12;
-
-      this.keys.active = dleft || dright || dup || ddown;
-    }
-  }, {
-    key: 'handleKeyDown',
-    value: function handleKeyDown(ev) {
-      this.keys[ev.keyCode] = true;
-      ev.preventDefault();
-    }
-  }, {
-    key: 'handleKeyUp',
-    value: function handleKeyUp(ev) {
-      delete this.keys[ev.keyCode];
-      ev.preventDefault();
-    }
-  }, {
-    key: 'updateMotionFromTargetAngle',
-    value: function updateMotionFromTargetAngle(timeDelta, entityId, steering, targetAngleRaw) {
-      var position = this.world.get('Position', entityId);
-      var motion = this.world.get('Motion', entityId);
-
-      var targetAngle = targetAngleRaw < 0 ? targetAngleRaw + PI2$2 : targetAngleRaw;
-
-      // Pick the direction from current to target angle
-      var direction = targetAngle < position.rotation ? -1 : 1;
-
-      // If the offset between the angles is more than half a circle, go
-      // the other way because it'll be shorter.
-      var offset = Math.abs(targetAngle - position.rotation);
-      if (offset > Math.PI) {
-        direction = 0 - direction;
-      }
-
-      // Work out the desired delta-rotation to steer toward target
-      var targetDr = direction * Math.min(steering.radPerSec, offset / timeDelta);
-
-      // Calculate the delta-rotation impulse required to meet the goal,
-      // but constrain to the capability of the steering thrusters
-      var impulseDr = targetDr - motion.drotation;
-      if (Math.abs(impulseDr) > steering.radPerSec) {
-        if (impulseDr > 0) {
-          impulseDr = steering.radPerSec;
-        } else if (impulseDr < 0) {
-          impulseDr = 0 - steering.radPerSec;
-        }
-      }
-
-      motion.drotation += impulseDr;
-    }
-  }]);
-  return PlayerInputSteeringSystem;
-}(System);
-
-registerSystem('PlayerInputSteering', PlayerInputSteeringSystem);
+registerSystem('Expiration', ExpirationSystem);
 
 var debug = true;
+
+var matches = void 0;
+
+var ExplosionSpawnerSystem = function (_System) {
+  inherits(ExplosionSpawnerSystem, _System);
+
+  function ExplosionSpawnerSystem() {
+    classCallCheck(this, ExplosionSpawnerSystem);
+    return possibleConstructorReturn(this, (ExplosionSpawnerSystem.__proto__ || Object.getPrototypeOf(ExplosionSpawnerSystem)).apply(this, arguments));
+  }
+
+  createClass(ExplosionSpawnerSystem, [{
+    key: 'defaultOptions',
+    value: function defaultOptions() {
+      return {
+        minCount: 150,
+        fieldSize: 1800
+      };
+    }
+  }, {
+    key: 'initialize',
+    value: function initialize() {
+      this.count = 0;
+    }
+  }, {
+    key: 'matchComponent',
+    value: function matchComponent() {
+      return 'Sprite';
+    }
+  }, {
+    key: 'update',
+    value: function update(timeDelta) {
+      matches = this.getMatchingComponents() || {};
+      this.count = Object.keys(matches).length;
+      for (var c = 0; c < this.options.minCount - this.count; c++) {
+        this.spawnExplosion();
+      }
+    }
+  }, {
+    key: 'spawnExplosion',
+    value: function spawnExplosion() {
+      var ttl = 0.5 + 2.0 * Math.random();
+      var colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0x00ffff, 0xffffff];
+      this.world.insert({
+        Sprite: {
+          name: 'explosion',
+          color: colors[Math.floor(Math.random() * colors.length)],
+          size: 100 + Math.random() * 500,
+          ttl: ttl
+        },
+        Expiration: {
+          ttl: ttl
+        },
+        Position: {
+          x: this.options.fieldSize * 2 * Math.random() - this.options.fieldSize,
+          y: this.options.fieldSize * 2 * Math.random() - this.options.fieldSize
+        }
+      });
+    }
+  }]);
+  return ExplosionSpawnerSystem;
+}(System);
+
+registerSystem('ExplosionSpawner', ExplosionSpawnerSystem);
 
 var world = window.world = new World({
   systems: {
@@ -7304,120 +6460,34 @@ var world = window.world = new World({
       debug: debug,
       container: '#game',
       canvas: '#viewport',
-      followName: 'hero1',
-      zoom: 0.5
+      zoom: 0.3
     },
     DrawStats: {},
     MemoryStats: {},
     DatGui: {},
-    Position: {},
     Motion: {},
-    Thruster: {},
-    Seeker: {},
-    PlayerInputSteering: {},
-    Collision: {},
-    Bounce: {}
+    Position: {},
+    Expiration: {},
+    ExplosionSpawner: {}
   }
 });
-
-world.insert({
-  Name: { name: 'hero1' },
-  Sprite: { name: 'hero', color: '#00f' },
-  Collidable: {},
-  Bounce: { mass: 7000 },
-  Position: { x: 0, y: 0 },
-  Thruster: { deltaV: 1200, maxV: 500, active: false },
-  Seeker: { radPerSec: Math.PI },
-  Motion: {},
-  PlayerInputSteering: { radPerSec: Math.PI }
-});
-
-function spawnAsteroid(x, y, width, height, dx, dy, dr, mass, health) {
-  world.insert({
-    Sprite: { name: 'asteroid', size: width },
-    Health: { max: health },
-    Collidable: {},
-    Bounce: { mass: mass },
-    Position: { x: x, y: y },
-    Motion: { dx: dx, dy: dy, drotation: dr }
-  });
-}
-
-function spawnField(centerX, centerY) {
-  var radius = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 300;
-  var MAX_ASTEROIDS = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 150;
-  var MAX_TRIES = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 5;
-  var MIN_SIZE = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 20;
-  var MAX_SIZE = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 300;
-  var MAX_GRAV = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 10;
-
-
-  var vCenter = new Vector2D(centerY, centerX);
-  var vSpawn = new Vector2D(0, 0);
-  var vGrav = new Vector2D(0, 0);
-  var inField = [];
-
-  for (var idx = 0; idx < MAX_ASTEROIDS; idx++) {
-    for (var c = 0; c < MAX_TRIES; c++) {
-
-      var _size = (MAX_SIZE - MIN_SIZE) * Math.random() + MIN_SIZE;
-      var rot = Math.PI * 4 * Math.random();
-      vSpawn.setValues(vCenter.x, vCenter.y - ((radius - 1) * Math.random() + 1));
-      vSpawn.rotateAround(vCenter, rot);
-
-      var isClear = true;
-      for (var fldIdx = 0; fldIdx < inField.length; fldIdx++) {
-        var item = inField[fldIdx];
-        if (Math.abs(vSpawn.x - item.x) * 2 >= (_size + item.width) * 1.025) {
-          continue;
-        }
-        if (Math.abs(vSpawn.y - item.y) * 2 >= (_size + item.height) * 1.025) {
-          continue;
-        }
-        isClear = false;
-        break;
-      }
-      if (!isClear) {
-        continue;
-      }
-
-      inField.push({ x: vSpawn.x, y: vSpawn.y, width: _size, height: _size });
-
-      vGrav.setValues(0, Math.random() * MAX_GRAV);
-      vGrav.rotate(rot);
-
-      spawnAsteroid(vSpawn.x, vSpawn.y, _size, _size, vGrav.x, vGrav.y, Math.PI * 0.25 * Math.random(), 4 * _size * _size, 4 * _size * _size);
-    }
-  }
-}
-
-var pos = 470;
-var size = 440;
-var num = 200;
-
-spawnField(-pos, -pos, size, num);
-spawnField(pos, pos, size, num);
-spawnField(pos, -pos, size, num);
-spawnField(-pos, pos, size, num);
-
 world.start();
 
 var vpSystem = world.getSystem('ViewportPixi');
 var guiSystem = world.getSystem('DatGui');
+var spawnSystem = world.getSystem('ExplosionSpawner');
 var gui = guiSystem.gui;
 
 gui.add(world, 'isPaused');
 gui.add(world, 'debug');
 gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
-gui.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
 
 var names = ['gridEnabled', 'followEnabled', 'cameraX', 'cameraY'];
 names.forEach(function (name) {
   gui.add(vpSystem, name).listen();
 });
 
-var cp = vpSystem.cursorPosition;
-gui.add(cp, 'x').listen();
-gui.add(cp, 'y').listen();
+gui.add(spawnSystem.options, 'minCount').listen();
+gui.add(spawnSystem, 'count').listen();
 
 }());
