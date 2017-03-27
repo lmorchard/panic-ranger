@@ -229,7 +229,7 @@ export class ViewportPixi extends Core.System {
     ctx.position.y = Math.floor(position.y);
     ctx.rotation = position.rotation + (Math.PI / 2);
     ctx.scale.x = ctx.scale.y = sprite.size / 100;
-    ctx.lineStyle(this.lineWidth / (sprite.size / 100), 0xFFFFFF);
+    ctx.lineStyle(this.lineWidth / (sprite.size / 100), sprite.color);
     spriteFn(ctx, sprite, entityId, timeDelta, this.world);
 
     sprite.drawn = true;
@@ -294,7 +294,7 @@ export class CanvasSprite extends Core.Component {
   static defaults() {
     return {
       name: null,
-      color: '#fff',
+      color: 0xffffff,
       size: 100,
       width: null,
       height: null,
@@ -400,7 +400,7 @@ repulsorPoints.push(repulsorPoints[1]);
 
 registerSprite('repulsor', (g, sprite, entityId, timeDelta, world) => {
   if (!sprite.drawn) {
-    const t = Math.floor(Math.random() * 15) * 100;
+    const t = 0; // Math.floor(Math.random() * 15) * 100;
     sprite.rings = [
       { t: t,       startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1500 },
       { t: t + 250, startR: 0, endR: 500, startO: 1.0, endO: 0.0, endT: 1500 },
@@ -520,7 +520,7 @@ registerSprite('explosion', (g, sprite, entityId, timeDelta) => {
       alpha: 0,
       stop: false,
       particles: []
-    });
+    }, sprite);
     for (idx = 0; idx < sprite.maxParticles; idx++) {
       sprite.particles.push({ free: true });
     }
