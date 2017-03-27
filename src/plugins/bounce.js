@@ -2,6 +2,7 @@ import * as Core from '../lib/core';
 
 import './position';
 import './motion';
+import { MSG_DAMAGE } from './health';
 
 import Vector2D from '../lib/Vector2D';
 
@@ -163,7 +164,7 @@ export class BounceSystem extends Core.System {
                     2 * m2 / M * this.v2n.magnitude();
       aMotion.dx = this.v1t.x + this.dn.x * aFactor;
       aMotion.dy = this.v1t.y + this.dn.y * aFactor;
-      // @processDamage(eid, bEntityId, v_motion, bouncer, m1)
+      this.processDamage(aEntityId, bEntityId, aMotion, aBouncer, m1);
     }
 
     if (bMotion) {
@@ -171,9 +172,29 @@ export class BounceSystem extends Core.System {
                     2 * m1 / M * this.v1n.magnitude();
       bMotion.dx = this.v2t.x - this.dn.x * bFactor;
       bMotion.dy = this.v2t.y - this.dn.y * bFactor;
-      // @processDamage(eid, bEntityId, v_bMotion, c_bouncer, m2)
+      this.processDamage(bEntityId, aEntityId, bMotion, bBouncer, m1);
     }
 
+  }
+
+  processDamage(eid, c_eid, v_motion, bouncer, m1) {
+    if (!bouncer.damage) { return; }
+
+    // Convert a fraction of the rebound velocity into damage by mass
+    const dmg = Math.sqrt(v_motion.dx * v_motion.dx + v_motion.dy * v_motion.dy) *
+                bouncer.damage * m1;
+
+    this.world.publish(MSG_DAMAGE, {
+      to: eid,
+      from: c_eid,
+      amount: dmg / 2
+    });
+
+    this.world.publish(MSG_DAMAGE, {
+      to: c_eid,
+      from: eid,
+      amount: dmg / 2
+    });
   }
 
 }

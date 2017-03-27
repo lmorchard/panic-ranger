@@ -15,6 +15,7 @@ import '../plugins/bounce';
 import '../plugins/repulsor';
 import '../plugins/playerInputSteering';
 import '../plugins/hordeSpawn';
+import '../plugins/spawn';
 
 const debug = true;
 
@@ -31,6 +32,7 @@ const world = window.world = new Core.World({
     MemoryStats: {},
     DatGui: {},
     PlayerInputSteering: {},
+    Health: {},
     Motion: {},
     Position: {},
     Thruster: {},
@@ -38,6 +40,7 @@ const world = window.world = new Core.World({
     Repulsor: {},
     Collision: {},
     Bounce: {},
+    Spawn: {},
     HordeSpawn: {
       offscreenTTL: 0.5,
       spawnMargin: 150,
@@ -49,8 +52,23 @@ const world = window.world = new Core.World({
         world.insert({
           Sprite: { name: 'mine', size: size},
           Health: { max: 4 * size * size },
+          Spawn: {
+            tombstone: (spawn, entityId) => {
+              const position = world.get('Position', entityId);
+              return {
+                Sprite: {
+                  name: 'explosion',
+                  size,
+                  color: 0xff0000,
+                  ttl: 0.5
+                },
+                Position: { x: position.x, y: position.y },
+                Spawn: { ttl: 0.5 }
+              };
+            }
+          },
           Collidable: { },
-          Bounce: { mass: 4 * size * size },
+          Bounce: { damage: 0.0001, mass: 4 * size * size },
           Position: { x: x, y: y, rotation: (Math.PI * 2) * Math.random() },
           Motion: { dx: 0, dy: 0, drotation: (Math.PI * 2) * Math.random() },
           Thruster: { deltaV: 1000 + Math.random() * 100, maxV: 400 + Math.random() * 200 },
@@ -64,9 +82,11 @@ const world = window.world = new Core.World({
 
 world.insert({
   Name: { name: 'hero1'},
-  Sprite: { name: 'hero', color: 0x0000ff },
+  Health: { max: 4000 },
+  Sprite: { name: 'hero', color: 0xffffff },
+  Spawn: {},
   Collidable: {},
-  Bounce: { mass: 7000 },
+  Bounce: { damage: 0.0001, mass: 7000 },
   Position: { x: 0, y: 0, rotation: -(Math.PI / 2) },
   Motion: {},
   Thruster: { deltaV: 2800, maxV: 1400, active: false },

@@ -1,5 +1,7 @@
 import { Component, System, registerComponent, registerSystem } from '../lib/core';
 
+import { MSG_DESTROY } from './spawn';
+
 // Commonly used temp variables, pre-declared early.
 let entityId, matches, sprite;
 
@@ -48,7 +50,7 @@ export class HordeSpawnSystem extends System {
     } else {
       hordespawn.age += timeDelta;
       if (hordespawn.age >= this.options.offscreenTTL) {
-        this.world.destroy(entityId);
+        this.world.publish(MSG_DESTROY, entityId);
       }
     }
   }

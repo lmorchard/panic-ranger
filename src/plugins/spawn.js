@@ -1,9 +1,9 @@
 import { Component, System, registerComponent, registerSystem } from '../lib/core';
 
-export const MSG_SPAWN = 'spawn';
-export const MSG_DESTROY = 'destroy';
-export const MSG_DESPAWN = 'despawn';
-export const MSG_CAPTURE_CAMERA = 'capture_camera';
+export const MSG_SPAWN = 'spawnSpawn';
+export const MSG_DESTROY = 'spawnDestroy';
+export const MSG_DESPAWN = 'spawnDespawn';
+export const MSG_CAPTURE_CAMERA = 'spawnCaptureCamera';
 
 let spawn;
 

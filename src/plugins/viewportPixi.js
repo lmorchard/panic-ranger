@@ -54,6 +54,9 @@ export class ViewportPixi extends Core.System {
       // new PIXI.filters.BlurFilter(1, 1, 5)
     ];
 
+    this.healthBarGraphics = new PIXI.Graphics();
+    this.stage.addChild(this.healthBarGraphics);
+
     this.backdrop = new PIXI.Graphics();
     this.stage.addChild(this.backdrop);
 
@@ -231,6 +234,18 @@ export class ViewportPixi extends Core.System {
     ctx.scale.x = ctx.scale.y = sprite.size / 100;
     ctx.lineStyle(this.lineWidth / (sprite.size / 100), sprite.color);
     spriteFn(ctx, sprite, entityId, timeDelta, this.world);
+
+    const health = this.world.get('Health', entityId);
+    if (health) {
+      const perc = (health.current / health.max);
+      ctx.lineStyle(1.0, 0x333333);
+      ctx.moveTo(-50, -57);
+      ctx.drawRect(-50, -57, 100, 5);
+      ctx.moveTo(-50, -57);
+      ctx.beginFill(0x00ff00, 1.0);
+      ctx.drawRect(-50, -57, 100 * perc, 5);
+      ctx.endFill();
+    }
 
     sprite.drawn = true;
     return ctx;
@@ -478,7 +493,7 @@ registerSprite('asteroid', (g, sprite/*, entityId*/) => {
   g.drawPolygon(points);
 });
 
-registerSprite('mine', (g, sprite/*, entityId*/) => {
+registerSprite('mine', (g, sprite, entityId, timeDelta, world) => {
   if (!sprite.drawn) {
     let NUM_POINTS = 10 + Math.floor(10 * Math.random());
     if (NUM_POINTS % 2 !== 0) { NUM_POINTS++; }
