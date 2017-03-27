@@ -7,57 +7,22 @@ import '../plugins/viewportPixi';
 import '../plugins/name';
 import '../plugins/position';
 import '../plugins/motion';
-import '../plugins/expiration';
+import { MSG_SPAWN, MSG_DESPAWN } from '../plugins/spawn';
 
-const debug = true;
+const DEBUG = true;
+const MIN_COUNT = 150;
+const FIELD_SIZE = 1500;
 
-let matches;
-
-class ExplosionSpawnerSystem extends System {
-  defaultOptions() {
-    return {
-      minCount: 250,
-      fieldSize: 1800
-    };
-  }
-  initialize() {
-    this.count = 0;
-  }
-  matchComponent() { return 'Sprite'; }
-  update(timeDelta) {
-    matches = this.getMatchingComponents() || {};
-    this.count = Object.keys(matches).length;
-    for (let c = 0; c < this.options.minCount - this.count; c++) {
-      this.spawnExplosion();
-    }
-  }
-  spawnExplosion() {
-    const ttl = 0.5 + 2.0 * Math.random();
-    const colors = [ 0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0x00ffff, 0xffffff ];
-    this.world.insert({
-      Sprite: {
-        name: 'explosion',
-        color: colors[Math.floor(Math.random() * colors.length)],
-        size: 100 + Math.random() * 500,
-        ttl
-      },
-      Expiration: {
-        ttl
-      },
-      Position: {
-        x: (this.options.fieldSize * 2 * Math.random()) - this.options.fieldSize,
-        y: (this.options.fieldSize * 2 * Math.random()) - this.options.fieldSize
-      }
-    });
-  }
-}
-
-registerSystem('ExplosionSpawner', ExplosionSpawnerSystem);
+const debugData = {
+  count: 0,
+  spawns: 0,
+  despawns: 0
+};
 
 const world = window.world = new World({
   systems: {
     ViewportPixi: {
-      debug: debug,
+      debug: DEBUG,
       container: '#game',
       canvas: '#viewport',
       zoom: 0.3
@@ -67,25 +32,60 @@ const world = window.world = new World({
     DatGui: {},
     Motion: {},
     Position: {},
-    Expiration: {},
-    ExplosionSpawner: {}
+    Spawn: {}
   }
 });
 world.start();
 
+const colors = [ 0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0x00ffff, 0xffffff ];
+
+function spawnExplosion() {
+  const x = (FIELD_SIZE * 2 * Math.random()) - FIELD_SIZE;
+  const y = (FIELD_SIZE * 2 * Math.random()) - FIELD_SIZE;
+  const ttl = 0.5 + 2.0 * Math.random();
+  const color = colors[Math.floor(Math.random() * colors.length)];
+
+  world.insert({
+    Sprite: { name: 'default', color },
+    Position: { x, y },
+    Spawn: {
+      ttl: Math.random(),
+      tombstone: {
+        Sprite: {
+          name: 'explosion',
+          size: 100 + Math.random() * 500,
+          color, ttl
+        },
+        Position: { x, y },
+        Spawn: { ttl }
+      }
+    }
+  });
+}
+
+for (let i = 0; i < MIN_COUNT; i++) {
+  spawnExplosion();
+}
+
+world.subscribe(MSG_SPAWN, (msg, entityId) => {
+  debugData.spawns++;
+});
+
+world.subscribe(MSG_DESPAWN, (msg, entityId) => {
+  debugData.despawns++;
+  debugData.count = Object.keys(world.get('Sprite') || {}).length;
+  for (let i = 0; i < MIN_COUNT - debugData.count; i++) {
+    spawnExplosion();
+  }
+});
+
 const vpSystem = world.getSystem('ViewportPixi');
 const guiSystem = world.getSystem('DatGui');
-const spawnSystem = world.getSystem('ExplosionSpawner');
 const gui = guiSystem.gui;
 
 gui.add(world, 'isPaused');
 gui.add(world, 'debug');
 gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
 
-const names = [ 'gridEnabled', 'followEnabled', 'cameraX', 'cameraY' ];
-names.forEach(function (name) {
-  gui.add(vpSystem, name).listen();
-});
-
-gui.add(spawnSystem.options, 'minCount').listen();
-gui.add(spawnSystem, 'count').listen();
+['gridEnabled'].forEach(name => gui.add(vpSystem, name).listen());
+['count', 'spawns', 'despawns'].forEach(name => gui.add(debugData, name).listen());
