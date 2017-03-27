@@ -1,4 +1,4 @@
-import { World, System, registerSystem } from '../lib/core';
+import { World } from '../lib/core';
 
 import '../plugins/drawStats';
 import '../plugins/memoryStats';
@@ -67,11 +67,11 @@ for (let i = 0; i < MIN_COUNT; i++) {
   spawnExplosion();
 }
 
-world.subscribe(MSG_SPAWN, (msg, entityId) => {
+world.subscribe(MSG_SPAWN, (/*msg, entityId*/) => {
   debugData.spawns++;
 });
 
-world.subscribe(MSG_DESPAWN, (msg, entityId) => {
+world.subscribe(MSG_DESPAWN, (/*msg, entityId*/) => {
   debugData.despawns++;
   debugData.count = Object.keys(world.get('Sprite') || {}).length;
   for (let i = 0; i < MIN_COUNT - debugData.count; i++) {
