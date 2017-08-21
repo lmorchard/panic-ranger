@@ -235,6 +235,7 @@ export class ViewportPixi extends Core.System {
     ctx.lineStyle(this.lineWidth / (sprite.size / 100), sprite.color);
     spriteFn(ctx, sprite, entityId, timeDelta, this.world);
 
+      /*
     const health = this.world.get('Health', entityId);
     if (health) {
       const perc = (health.current / health.max);
@@ -246,6 +247,7 @@ export class ViewportPixi extends Core.System {
       ctx.drawRect(-50, -57, 100 * perc, 5);
       ctx.endFill();
     }
+    */
 
     sprite.drawn = true;
     return ctx;
@@ -493,7 +495,7 @@ registerSprite('asteroid', (g, sprite/*, entityId*/) => {
   g.drawPolygon(points);
 });
 
-registerSprite('mine', (g, sprite, entityId, timeDelta, world) => {
+registerSprite('mine', (g, sprite/*, entityId, timeDelta, world*/) => {
   if (!sprite.drawn) {
     let NUM_POINTS = 10 + Math.floor(10 * Math.random());
     if (NUM_POINTS % 2 !== 0) { NUM_POINTS++; }

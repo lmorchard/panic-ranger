@@ -4,6 +4,7 @@ import './plugins/drawStats';
 import './plugins/memoryStats';
 import './plugins/datGui';
 import './plugins/viewportPixi';
+import './plugins/viewportCanvas';
 import './plugins/name';
 import './plugins/health';
 import './plugins/position';
@@ -20,7 +21,7 @@ const debug = true;
 
 const world = window.world = new Core.World({
   systems: {
-    ViewportPixi: {
+    ViewportCanvas: {
       debug: debug,
       container: '#game',
       canvas: '#viewport',
@@ -39,6 +40,7 @@ const world = window.world = new Core.World({
     Collision: {},
     Bounce: {},
     HordeSpawn: {
+      viewportSystemName: 'ViewportCanvas',
       offscreenTTL: 0.5,
       spawnMargin: 125,
       minCount: 100,
@@ -87,7 +89,7 @@ for (let y = 0; y > -15000; y -= 600) {
 
 world.start();
 
-const vpSystem = world.getSystem('ViewportPixi');
+const vpSystem = world.getSystem('ViewportCanvas');
 const spawnSystem = world.getSystem('HordeSpawn');
 const guiSystem = world.getSystem('DatGui');
 const gui = guiSystem.gui;

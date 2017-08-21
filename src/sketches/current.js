@@ -4,6 +4,7 @@ import '../plugins/drawStats';
 import '../plugins/memoryStats';
 import '../plugins/datGui';
 import '../plugins/viewportPixi';
+import '../plugins/viewportWebGL';
 import '../plugins/name';
 import '../plugins/health';
 import '../plugins/position';
@@ -21,10 +22,18 @@ const debug = true;
 
 const world = window.world = new Core.World({
   systems: {
+    /*
     ViewportPixi: {
       debug: debug,
       container: '#game',
       canvas: '#viewport',
+      followName: 'hero1',
+      zoom: 0.3
+    },
+    */
+    ViewportWebGL: {
+      debug: debug,
+      container: '#game',
       followName: 'hero1',
       zoom: 0.3
     },
@@ -42,6 +51,7 @@ const world = window.world = new Core.World({
     Bounce: {},
     Spawn: {},
     HordeSpawn: {
+      viewportSystemName: 'ViewportWebGL',
       offscreenTTL: 0.5,
       spawnMargin: 150,
       minCount: 100,
@@ -108,7 +118,7 @@ for (let y = 0; y > -15000; y -= 600) {
 
 world.start();
 
-const vpSystem = world.getSystem('ViewportPixi');
+const vpSystem = world.getSystem('ViewportWebGL');
 const spawnSystem = world.getSystem('HordeSpawn');
 const guiSystem = world.getSystem('DatGui');
 const gui = guiSystem.gui;
