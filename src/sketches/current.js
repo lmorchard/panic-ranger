@@ -51,6 +51,7 @@ const world = window.world = new Core.World({
     Bounce: {},
     Spawn: {},
     HordeSpawn: {
+      // viewportSystemName: 'ViewportPixi',
       viewportSystemName: 'ViewportWebGL',
       offscreenTTL: 0.5,
       spawnMargin: 150,
@@ -60,7 +61,7 @@ const world = window.world = new Core.World({
         const MAX_SIZE=300;
         const size = ((MAX_SIZE - MIN_SIZE) * Math.random()) + MIN_SIZE;
         world.insert({
-          Sprite: { name: 'mine', size: size},
+          Sprite: { name: 'mine', size: size, color: 0xff2222 },
           Health: { max: 4 * size * size },
           Spawn: {
             tombstone: (spawn, entityId) => {
@@ -108,7 +109,7 @@ let x = 0;
 for (let y = 0; y > -15000; y -= 600) {
   world.insert({
     Name: { name: `repulsor${y}` },
-    Sprite: { name: 'repulsor' },
+    Sprite: { name: 'repulsor', color: 0x228822 },
     Position: { x, y },
     Motion: { },
     Repulsor: { range: 600, force: 300 }

@@ -10,7 +10,35 @@ const TYPE_SIZES = {
   0x8B52: 4  // FLOAT_VEC4
 };
 
-let entityId, position, sprite, sceneSprite;
+const SHAPES = {
+  box: [
+    [-0.25, -0.25], [0.25, -0.25], [0.25, 0.25], [-0.25, 0.25], [-0.25, -0.25]
+  ],
+  repulsor: [
+    [-0.25, -0.25], [0.25, -0.25], [0.25, 0.25], [-0.25, 0.25], [-0.25, -0.25]
+  ],
+  star: [
+    [0, 1], [0.25, 0.25], [1, 0], [0.25, -0.25], [0, -1], [-0.25, -0.25],
+    [-1, 0], [-0.25, 0.25], [0, 1]
+  ],
+  explosion: [
+    [0, 1], [0.025, 0.025], [1, 0], [0.025, -0.025], [0, -1],
+    [-0.025, -0.025], [-1, 0], [-0.025, 0.025], [0, 1]
+  ],
+  plus: [
+    [0, 1], [0.0125, 0.0125], [1, 0], [0.0125, -0.0125], [0, -1],
+    [-0.0125, -0.0125], [-1, 0], [-0.0125, 0.0125], [0, 1]
+  ],
+  hero: [
+    [-0.75, -0.75], [-0.5, 0.0], [-0.25, 0.5], [0.0, 0.25], [0.25, 0.5],
+    [0.5, 0.0], [0.75, -0.75], [0.25, -0.25], [-0.25, -0.25], [-0.75, -0.75],
+  ],
+  enemy: [
+    [0.0, 1], [-0.75, -1], [0.0, 0.0], [0.75, -1], [0.0, 1]
+  ]
+};
+
+let entityId, position, sprites, sprite, sceneSprite;
 
 // See also: http://phrogz.net/JS/wheeldelta.html
 const wheelDistance = function(evt){
@@ -26,7 +54,7 @@ export class ViewportWebGL extends Core.System {
 
   defaultOptions() {
     return {
-      lineWidth: 5,
+      lineWidth: 2,
       zoom: 1.0,
       zoomMin: 0.1,
       zoomMax: 10.0,
@@ -46,12 +74,6 @@ export class ViewportWebGL extends Core.System {
     this.container.appendChild(this.canvas);
 
     this.initWebGL(this.canvas);
-
-    this.setUniforms({
-      uCameraZoom: [1 / 2000],
-      uCameraOrigin: [0, 0],
-      uLineWidth: [0.002],
-    });
 
     this.scene = {};
 
@@ -164,59 +186,70 @@ export class ViewportWebGL extends Core.System {
     // this.cursorChanged === true, but for some reason that's not working
     this.world.publish('mouseMove', this.cursorPosition);
 
-    const sprites = this.world.get('Sprite') || {};
+    sprites = this.world.get('Sprite') || {};
 
     // Delete any stage items not found in sprites
-    Object.keys(this.scene)
-      .filter(key => !(key in sprites))
-      .forEach(entityId => delete this.scene[entityId]);
+    for (entityId in this.scene) {
+      if (!(entityId in sprites)) {
+        delete this.scene[entityId];
+      }
+    }
 
     // Create items for any sprites not found in stage
-    Object.keys(sprites)
-      .filter(key => !(key in this.scene))
-      .forEach(entityId => this.scene[entityId] = {
-        shape: [
-          [0, 1], [0.25, 0.25], [1, 0], [0.25, -0.25], [0, -1], [-0.25, -0.25],
-          [-1, 0], [-0.25, 0.25], [0, 1]
-        ],
-        color: [0.3, 1.0, 0.3, 1.0],
-        position: [0, 0],
-        rotation: 0,
-        scale: 100.0
-      });
-
-    // Update all the stage items
     for (entityId in sprites) {
+      if (!(entityId in this.scene)) {
+        this.scene[entityId] = {
+          shape: [
+            [0, 1], [0.25, 0.25], [1, 0], [0.25, -0.25], [0, -1], [-0.25, -0.25],
+            [-1, 0], [-0.25, 0.25], [0, 1]
+          ],
+          color: [0.3, 1.0, 0.3, 1.0],
+          position: [0, 0],
+          rotation: 0,
+          scale: 100.0
+        };
+      }
+
       position = this.world.get('Position', entityId);
       sprite = sprites[entityId];
+
       sprite.visible = (
         (position.right > this.visibleLeft) &&
         (position.left < this.visibleRight) &&
         (position.bottom > this.visibleTop) &&
         (position.top < this.visibleBottom)
       );
+
       sceneSprite = this.scene[entityId];
+      sceneSprite.visible = sprite.visible;
+      sceneSprite.shape = SHAPES[sprite.name] || SHAPES.star;
       sceneSprite.position[0] = position.x;
       sceneSprite.position[1] = position.y;
       sceneSprite.rotation = position.rotation;
+      sceneSprite.scale = sprite.size;
+      sceneSprite.color = [
+        // TODO: this math is terrible
+        (sprite.color / 256 / 256) % 256,
+        (sprite.color / 256) % 256,
+        sprite.color % 256
+      ];
     }
   }
 
   draw() {
     this.followEntity();
 
-    this.setUniforms({
-      uCameraZoom: [this.zoom / 2000],
-      uCameraOrigin: [
-        (this.container.offsetWidth / 2) - (this.cameraX * this.zoom),
-        (this.container.offsetHeight / 2) - (this.cameraY * this.zoom),
-      ]
-    });
-
     this.canvas.width = this.container.offsetWidth;
     this.canvas.height = this.container.offsetHeight;
 
     // gl.uniform1f(uniforms.uTime, currDrawTime);
+    this.setUniforms({
+      uLineWidth: [0.001 * this.lineWidth],
+      uCameraZoom: [this.zoom],
+      uCameraOrigin: [this.cameraX, this.cameraY],
+      uViewportSize: [this.canvas.clientWidth, this.canvas.clientHeight]
+    });
+
     // this.drawBackdrop(timeDelta);
 
     // Re-allocate larger buffer if current is too small for the scene.
@@ -232,28 +265,6 @@ export class ViewportWebGL extends Core.System {
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, vertexCount);
   }
-
-  /*
-  drawSprite(ctx, entityId, timeDelta) {
-    const sprite = this.world.get('Sprite', entityId);
-    if (!sprite) { return; }
-
-    const position = this.world.get('Position', entityId);
-
-    let spriteFn = getSprite(sprite.name);
-    if (!spriteFn) { spriteFn = getSprite('default'); }
-
-    ctx.position.x = Math.floor(position.x);
-    ctx.position.y = Math.floor(position.y);
-    ctx.rotation = position.rotation + (Math.PI / 2);
-    ctx.scale.x = ctx.scale.y = sprite.size / 100;
-    ctx.lineStyle(this.lineWidth / (sprite.size / 100), sprite.color);
-    spriteFn(ctx, sprite, entityId, timeDelta, this.world);
-
-    sprite.drawn = true;
-    return ctx;
-  }
-  */
 
   followEntity() {
     if (!this.followEnabled) {
@@ -388,7 +399,7 @@ export class ViewportWebGL extends Core.System {
   fillBufferFromScene() {
     let vertexCount = 0;
     let bufferPos = 0;
-    let shape, position, scale, rotation,
+    let visible, shape, position, scale, rotation,
         deltaPosition, deltaScale, deltaRotation, color;
 
     const sceneKeys = Object.keys(this.scene);
@@ -418,10 +429,11 @@ export class ViewportWebGL extends Core.System {
 
     for (let spriteIdx = 0; spriteIdx < sceneItems.length; spriteIdx++) {
       ({
-        shape, position=[0.0, 0.0], scale=0, rotation=0,
+        visible, shape, position=[0.0, 0.0], scale=0, rotation=0,
         deltaPosition=[0.0, 0.0], deltaScale=0.0, deltaRotation=0.0,
         color=[1, 1, 1, 1]
       } = sceneItems[spriteIdx]);
+      if (!visible) { continue; }
       bufferVertex(1, 0);
       for (let shapeIdx = 1; shapeIdx < shape.length; shapeIdx += 1) {
         bufferVertex(shapeIdx, 0);
@@ -492,12 +504,17 @@ const SHADER_VERTEX = `
 // see also: http://m1el.github.io/woscope-how/
 precision mediump float;
 #define EPS 1E-6
+#define PI 3.141592653589793
+#define PI_2 6.283185307179586
+#define PI_H 1.5707963267948966
+#define PI_Q 0.7853981633974483
 
 uniform float uTime;
 uniform float uLineWidth;
 uniform float uCameraZoom;
 uniform float uCameraRotation;
 uniform vec2 uCameraOrigin;
+uniform vec2 uViewportSize;
 
 attribute float aIdx;
 attribute vec4 aLine;
@@ -512,31 +529,57 @@ varying float vLen;
 void main () {
   float c, s;
 
+  mat3 mViewportToClipSpace = mat3(
+    2.0 / uViewportSize.x, 0, 0,
+    0, -2.0 / uViewportSize.y, 0,
+    0, 0, 0
+  );
+
   c = cos(uCameraRotation);
   s = sin(uCameraRotation);
-  mat3 mCameraRotation = mat3(c, -s, 0.0, s, c, 0.0, 0.0, 0.0, 1.0);
-  mat3 mCameraOrigin = mat3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, uCameraOrigin.x, uCameraOrigin.y, 1.0);
-  mat3 mCameraZoom = mat3(uCameraZoom, 0.0, 0.0, 0.0, uCameraZoom, 0.0, 0.0, 0.0, 1.0);
+  mat3 mCameraRotation = mat3(
+    c, -s, 0.0,
+    s, c, 0.0,
+    0.0, 0.0, 1.0
+  );
 
-  c = cos(aTransform.w + (aDeltaTransform.w * uTime));
-  s = sin(aTransform.w + (aDeltaTransform.w * uTime));
+  mat3 mCameraOrigin = mat3(
+    1.0, 0.0, 0.0,
+    0.0, 1.0, 0.0,
+    -uCameraOrigin.x, -uCameraOrigin.y, 1.0
+  );
+
+  mat3 mCameraZoom = mat3(
+    uCameraZoom, 0.0, 0.0,
+    0.0, uCameraZoom, 0.0,
+    0.0, 0.0, 1.0
+  );
+
+  c = cos(-aTransform.w + PI_H + (aDeltaTransform.w * uTime));
+  s = sin(-aTransform.w + PI_H + (aDeltaTransform.w * uTime));
   mat3 mRotation = mat3(
     c, -s, 0.0,
     s, c, 0.0,
     0.0, 0.0, 1.0
   );
+
   mat3 mPosition = mat3(
     1.0, 0.0, 0.0,
     0.0, 1.0, 0.0,
     aTransform.x + (aDeltaTransform.x * uTime), aTransform.y + (aDeltaTransform.y * uTime), 1.0
   );
+
   mat3 mScale = mat3(
     aTransform.z + (aDeltaTransform.z * uTime), 0.0, 0.0,
     0.0, aTransform.z + (aDeltaTransform.z * uTime), 0.0,
     0.0, 0.0, 1.0
   );
 
-  mat3 mAll = mCameraZoom * mCameraOrigin * mCameraRotation * mPosition * mScale * mRotation;
+  // TODO: Move some of these matrices into JS?
+  mat3 mAll = mViewportToClipSpace
+    * mCameraZoom * mCameraRotation * mCameraOrigin
+    * mPosition * mScale * mRotation;
+
   vec2 tStart = (mAll * vec3(aLine.xy, 1)).xy;
   vec2 tEnd = (mAll * vec3(aLine.zw, 1)).xy;
 
