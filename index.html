@@ -1,11 +1,36 @@
 <!DOCTYPE html>
 <html>
  <head>
-  <link href="index.css" rel="stylesheet" />
+  <style type="text/css">
+    html, body { margin: 0; padding: 0; }
+    body { background: #000; color: #eee; overflow: hidden; }
+    #game { position: absolute; width: 640px; height: 480px; z-index: -999; }
+    section { margin: 1em; }
+    a { color: #fff; text-decoration: none }
+    a:hover { text-decoration: underline; }
+  </style>
  </head>
  <body>
-  <div id="game"></div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.2.2/pixi.min.js"></script>
-  <script src="index.js" type="text/javascript"></script>
- </body>
+  <section>
+    <h1>Panic Ranger - Sketches</h1>
+    <ul>
+      
+        <li><a href="./sketches/collision">collision</a></li>
+      
+        <li><a href="./sketches/current">current</a></li>
+      
+        <li><a href="./sketches/explosions">explosions</a></li>
+      
+        <li><a href="./sketches/pathfinding">pathfinding</a></li>
+      
+        <li><a href="./sketches/repulsors">repulsors</a></li>
+      
+        <li><a href="./sketches/seeker">seeker</a></li>
+      
+    </ul>
+  </section>
+  <section>
+    <div id="game"></div>
+  </section>
+ <script type="text/javascript" src="core.js"></script><script type="text/javascript" src="index.js"></script></body>
 </html>
