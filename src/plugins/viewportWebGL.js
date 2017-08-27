@@ -628,6 +628,28 @@ registerSprite('repulsor', (/*sprite, entityId, timeDelta, world*/) => {
   return repulsorShape;
 });
 
+registerSprite('asteroid', (sprite) => {
+  let idx;
+
+  if (!sprite.points) {
+    const NUM_POINTS = 7 + Math.floor(8 * Math.random());
+    const MAX_RADIUS = 0.50;
+    const MIN_RADIUS = 0.35;
+    const ROTATION = PI2 / NUM_POINTS;
+
+    sprite.points = [];
+    for (idx = 0; idx < NUM_POINTS; idx++) {
+      const rot = idx * ROTATION;
+      const dist = (Math.random() * (MAX_RADIUS - MIN_RADIUS)) + MIN_RADIUS;
+      sprite.points.push([dist * Math.cos(rot), dist * Math.sin(rot)]);
+    }
+
+    sprite.points.push(sprite.points[0]);
+  }
+
+  return sprite.points;
+});
+
 registerSprite('mine', (sprite/*, entityId, timeDelta, world*/) => {
   if (!sprite.drawn) {
     let NUM_POINTS = 10 + Math.floor(10 * Math.random());

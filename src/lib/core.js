@@ -1,5 +1,3 @@
-/* global PIXI */
-
 const TARGET_FPS = 60;
 const TARGET_DURATION = 1000 / TARGET_FPS;
 
@@ -298,20 +296,8 @@ export class System {
   draw(/* timeDelta */) { }
 
   getDebugGraphics() {
-    if (!this.world.debug) {
-      if (this.gDebug) { this.gDebug.visible = false; }
-      return;
-    }
-    if (!this.viewportSystem) {
-      this.viewportSystem = this.world.getSystem(this.options.viewportSystemName || 'ViewportPixi');
-      this.gDebug = new PIXI.Graphics();
-      this.viewportSystem.stage.addChild(this.gDebug);
-      this.gDebug.position.x = 0;
-      this.gDebug.position.y = 0;
-    }
-    this.gDebug.clear();
-    this.gDebug.visible = true;
-    return this.gDebug;
+    // TODO make this work again someday
+    return;
   }
 
   drawEnd(/* timeDelta */) { }

@@ -15,6 +15,7 @@ import '../plugins/bounce';
 import '../plugins/repulsor';
 import '../plugins/playerInputSteering';
 import '../plugins/hordeSpawn';
+import '../plugins/spawn';
 
 const debug = true;
 
@@ -30,6 +31,7 @@ const world = window.world = new Core.World({
     MemoryStats: {},
     DatGui: {},
     PlayerInputSteering: {},
+    Health: {},
     Motion: {},
     Position: {},
     Thruster: {},
@@ -37,23 +39,41 @@ const world = window.world = new Core.World({
     Repulsor: {},
     Collision: {},
     Bounce: {},
+    Spawn: {},
     HordeSpawn: {
       viewportSystemName: 'ViewportWebGL',
       offscreenTTL: 0.5,
-      spawnMargin: 150,
-      minCount: 100,
+      spawnMargin: 250,
+      minCount: 200,
       spawn: (x, y) => {
         const MIN_SIZE=100;
         const MAX_SIZE=300;
         const size = ((MAX_SIZE - MIN_SIZE) * Math.random()) + MIN_SIZE;
         world.insert({
-          Sprite: { name: 'mine', size: size},
+          Sprite: { name: 'mine', size: size, color: 0xff2222 },
           Health: { max: 4 * size * size },
+          Spawn: {
+          /*
+            tombstone: (spawn, entityId) => {
+              const position = world.get('Position', entityId);
+              return {
+                Sprite: {
+                  name: 'explosion',
+                  size,
+                  color: 0xff0000,
+                  ttl: 0.5
+                },
+                Position: { x: position.x, y: position.y },
+                Spawn: { ttl: 0.5 }
+              };
+            }
+          */
+          },
           Collidable: { },
-          Bounce: { mass: 4 * size * size },
+          Bounce: { /* damage: 0.0001, */ mass: 4 * size * size },
           Position: { x: x, y: y, rotation: (Math.PI * 2) * Math.random() },
           Motion: { dx: 0, dy: 0, drotation: (Math.PI * 2) * Math.random() },
-          Thruster: { deltaV: 1000 + Math.random() * 100, maxV: 400 + Math.random() * 200 },
+          Thruster: { deltaV: 2400 + Math.random() * 100, maxV: 1200 + Math.random() * 200 },
           Seeker: { targetName: 'hero1', radPerSec: 0.5 + Math.random() * 0.2 },
           HordeSpawn: { }
         });
@@ -64,9 +84,11 @@ const world = window.world = new Core.World({
 
 world.insert({
   Name: { name: 'hero1'},
-  Sprite: { name: 'hero', color: 0x0000ff },
+  Health: { max: 4000 },
+  Sprite: { name: 'hero', size: 150, color: 0x3333ff },
+  Spawn: {},
   Collidable: {},
-  Bounce: { mass: 7000 },
+  Bounce: { damage: 0.0001, mass: 7000 },
   Position: { x: 0, y: 0, rotation: -(Math.PI / 2) },
   Motion: {},
   Thruster: { deltaV: 2800, maxV: 1400, active: false },
@@ -78,7 +100,7 @@ let x = 0;
 for (let y = 0; y > -15000; y -= 600) {
   world.insert({
     Name: { name: `repulsor${y}` },
-    Sprite: { name: 'repulsor' },
+    Sprite: { name: 'repulsor', color: 0x228822 },
     Position: { x, y },
     Motion: { },
     Repulsor: { range: 600, force: 300 }

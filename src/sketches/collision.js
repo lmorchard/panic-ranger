@@ -24,6 +24,7 @@ const world = window.world = new Core.World({
       debug: debug,
       container: '#game',
       followName: 'hero1',
+      lineWidth: 1.5,
       zoom: 0.5
     },
     DrawStats: {},
@@ -41,13 +42,12 @@ const world = window.world = new Core.World({
 
 world.insert({
   Name: { name: 'hero1'},
-  Sprite: { name: 'hero', size: 100 },
+  Sprite: { name: 'hero', size: 100, color: 0x3333ff },
   Collidable: {},
   Bounce: { mass: 7000 },
   Position: { x: 0, y: 0 },
-  Thruster: { deltaV: 1200, maxV: 500, active: false },
-  Seeker: { radPerSec: Math.PI },
   Motion: {},
+  Thruster: { deltaV: 1200, maxV: 500, active: false },
   PlayerInputSteering: { radPerSec: Math.PI }
 });
 
