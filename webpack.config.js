@@ -18,12 +18,21 @@ const sketches = (IS_DEV && 'SKETCHES' in process.env)
       .filter(fn => path.extname(fn) === '.js')
       .map(fn => path.basename(fn, '.js'));
 
+const plugins = fs.readdirSync('./src/plugins')
+  .filter(fn => path.extname(fn) === '.js');
+
 class AfterBuildPlugin {
   constructor(cb) { this.cb = cb; }
   apply(compiler) { compiler.plugin('done', () => this.cb()); }
 };
 
-const entries = {};
+const entries = {
+  'core.js': [
+    './src/lib/core.js'
+  ].concat(
+    plugins.map(fn => `./src/plugins/${fn}`)
+  )
+};
 if (BUILD_INDEX) {
   entries['index.js'] = './src/index.js';
 }
@@ -32,14 +41,14 @@ sketches.forEach(name =>
 
 const htmlPlugins = sketches.map(name =>
   new HtmlWebpackPlugin({
-    chunks: [`sketches/${name}/index.js`],
+    chunks: ['core.js', `sketches/${name}/index.js`],
     template: './src/sketch.html.ejs',
     filename: `sketches/${name}/index.html`
   })
 );
 if (BUILD_INDEX) {
   htmlPlugins.push(new HtmlWebpackPlugin({
-    chunks: ['index.js'],
+    chunks: ['core.js', 'index.js'],
     template: './src/index.html.ejs',
     filename: 'index.html',
     sketches
@@ -55,7 +64,8 @@ module.exports = [
     entry: entries,
     output: {
       path: path.resolve(__dirname, 'dist'),
-      filename: '[name]'
+      filename: '[name]',
+      chunkFilename: '[id].bundle.js'
     },
     module: {
       loaders: [
@@ -72,9 +82,12 @@ module.exports = [
       ]
     },
     plugins: [].concat(
-      [new webpack.DefinePlugin({
-        'process.env.NODE_ENV': `"${process.env.NODE_ENV || 'dev'}"`
-      })],
+      [
+        new webpack.DefinePlugin({
+          'process.env.NODE_ENV': `"${process.env.NODE_ENV || 'dev'}"`
+        }),
+        new webpack.optimize.CommonsChunkPlugin('core.js')
+      ],
       htmlPlugins,
       [ new DashboardPlugin() ]
     )

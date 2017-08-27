@@ -6,16 +6,24 @@
 
 Welcome to the Panic, Ranger 23.
 
-This is the reason why portholes go dark on transition to hyperspace. Human minds are prone to failure when confronted by this strange seething mass of malevolence held just at bay.
+This is the reason why portholes go dark on transition to hyperspace. Human
+minds are prone to failure when confronted by this strange seething mass of
+malevolence held just at bay.
 
-Since you've beheld this reality and - for whatever reason - retained your sanity, you've been recruited to patrol the repulsor lanes of the Panic.
+Since you've beheld this reality and - for whatever reason - retained your
+sanity, you've been recruited to patrol the repulsor lanes of the Panic.
 
-Faster-than-light travel via hyperspace forms the spine of our civilization. It's your job to ensure the safety of ships passing through. Rescue those in trouble. Maintain elements of the lanes. Help expand our reach where possible.
+Faster-than-light travel via hyperspace forms the spine of our civilization.
+It's your job to ensure the safety of ships passing through. Rescue those in
+trouble. Maintain elements of the lanes. Help expand our reach where possible.
 
-And, if you happen to see anything weird out there - you know, weirder than usual - let us know. The Panic is not amenable to exploration, so your eyes are the best we have.
+And, if you happen to see anything weird out there - you know, weirder than
+usual - let us know. The Panic is not amenable to exploration, so your eyes are
+the best we have.
 
 Good luck.
 
 ### TODO
 
-
+* Extract common mouse handling from viewport systems
+* Ensure mouse handling works in a non-fullscreen canvas
