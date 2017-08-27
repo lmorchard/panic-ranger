@@ -7,7 +7,7 @@ import '../plugins/drawStats';
 import '../plugins/memoryStats';
 import '../plugins/datGui';
 import '../plugins/expiration';
-import '../plugins/viewportPixi';
+import '../plugins/viewportWebGL';
 import '../plugins/name';
 import '../plugins/health';
 import '../plugins/position';
@@ -24,7 +24,7 @@ const debug = true;
 
 const world = window.world = new Core.World({
   systems: {
-    ViewportPixi: {
+    ViewportWebGL: {
       debug: debug,
       container: '#game',
       // followName: 'hero1',
@@ -161,7 +161,7 @@ guiWorld.open();
 guiWorld.add(world, 'isPaused');
 guiWorld.add(world, 'debug');
 
-const vpSystem = world.getSystem('ViewportPixi');
+const vpSystem = world.getSystem('ViewportWebGL');
 const guiViewport = gui.addFolder('Viewport');
 guiViewport.open();
 guiViewport.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();

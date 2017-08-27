@@ -3,7 +3,6 @@ import * as Core from '../lib/core';
 import '../plugins/drawStats';
 import '../plugins/memoryStats';
 import '../plugins/datGui';
-import '../plugins/viewportPixi';
 import '../plugins/viewportWebGL';
 import '../plugins/name';
 import '../plugins/health';
@@ -22,15 +21,6 @@ const debug = true;
 
 const world = window.world = new Core.World({
   systems: {
-    /*
-    ViewportPixi: {
-      debug: debug,
-      container: '#game',
-      canvas: '#viewport',
-      followName: 'hero1',
-      zoom: 0.3
-    },
-    */
     ViewportWebGL: {
       debug: debug,
       container: '#game',
@@ -51,11 +41,10 @@ const world = window.world = new Core.World({
     Bounce: {},
     Spawn: {},
     HordeSpawn: {
-      // viewportSystemName: 'ViewportPixi',
       viewportSystemName: 'ViewportWebGL',
       offscreenTTL: 0.5,
-      spawnMargin: 150,
-      minCount: 100,
+      spawnMargin: 250,
+      minCount: 200,
       spawn: (x, y) => {
         const MIN_SIZE=100;
         const MAX_SIZE=300;
@@ -64,6 +53,7 @@ const world = window.world = new Core.World({
           Sprite: { name: 'mine', size: size, color: 0xff2222 },
           Health: { max: 4 * size * size },
           Spawn: {
+          /*
             tombstone: (spawn, entityId) => {
               const position = world.get('Position', entityId);
               return {
@@ -77,12 +67,13 @@ const world = window.world = new Core.World({
                 Spawn: { ttl: 0.5 }
               };
             }
+          */
           },
           Collidable: { },
-          Bounce: { damage: 0.0001, mass: 4 * size * size },
+          Bounce: { /* damage: 0.0001, */ mass: 4 * size * size },
           Position: { x: x, y: y, rotation: (Math.PI * 2) * Math.random() },
           Motion: { dx: 0, dy: 0, drotation: (Math.PI * 2) * Math.random() },
-          Thruster: { deltaV: 1000 + Math.random() * 100, maxV: 400 + Math.random() * 200 },
+          Thruster: { deltaV: 2400 + Math.random() * 100, maxV: 1200 + Math.random() * 200 },
           Seeker: { targetName: 'hero1', radPerSec: 0.5 + Math.random() * 0.2 },
           HordeSpawn: { }
         });
@@ -94,7 +85,7 @@ const world = window.world = new Core.World({
 world.insert({
   Name: { name: 'hero1'},
   Health: { max: 4000 },
-  Sprite: { name: 'hero', color: 0xffffff },
+  Sprite: { name: 'hero', size: 150, color: 0x3333ff },
   Spawn: {},
   Collidable: {},
   Bounce: { damage: 0.0001, mass: 7000 },

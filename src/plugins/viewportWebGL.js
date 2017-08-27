@@ -10,34 +10,6 @@ const TYPE_SIZES = {
   0x8B52: 4  // FLOAT_VEC4
 };
 
-const SHAPES = {
-  box: [
-    [-0.25, -0.25], [0.25, -0.25], [0.25, 0.25], [-0.25, 0.25], [-0.25, -0.25]
-  ],
-  repulsor: [
-    [-0.25, -0.25], [0.25, -0.25], [0.25, 0.25], [-0.25, 0.25], [-0.25, -0.25]
-  ],
-  star: [
-    [0, 1], [0.25, 0.25], [1, 0], [0.25, -0.25], [0, -1], [-0.25, -0.25],
-    [-1, 0], [-0.25, 0.25], [0, 1]
-  ],
-  explosion: [
-    [0, 1], [0.025, 0.025], [1, 0], [0.025, -0.025], [0, -1],
-    [-0.025, -0.025], [-1, 0], [-0.025, 0.025], [0, 1]
-  ],
-  plus: [
-    [0, 1], [0.0125, 0.0125], [1, 0], [0.0125, -0.0125], [0, -1],
-    [-0.0125, -0.0125], [-1, 0], [-0.0125, 0.0125], [0, 1]
-  ],
-  hero: [
-    [-0.75, -0.75], [-0.5, 0.0], [-0.25, 0.5], [0.0, 0.25], [0.25, 0.5],
-    [0.5, 0.0], [0.75, -0.75], [0.25, -0.25], [-0.25, -0.25], [-0.75, -0.75],
-  ],
-  enemy: [
-    [0.0, 1], [-0.75, -1], [0.0, 0.0], [0.75, -1], [0.0, 1]
-  ]
-};
-
 let entityId, position, sprites, sprite, sceneSprite;
 
 // See also: http://phrogz.net/JS/wheeldelta.html
@@ -141,7 +113,7 @@ export class ViewportWebGL extends Core.System {
   }
 
   onMouseUp(ev) {
-    this.setCursor(ev.clientX, ev.clientY);
+    this.setCursor(ev.clientX, ev.clientY, true);
     this.world.publish('mouseUp', this.cursorPosition);
   }
 
@@ -178,7 +150,7 @@ export class ViewportWebGL extends Core.System {
     this.visibleBottom = this.visibleTop + this.visibleHeight;
   }
 
-  update(/*timeDelta*/) {
+  update(timeDelta) {
     this.updateMetrics();
 
     this.setCursor(this.cursorRawX, this.cursorRawY);
@@ -197,21 +169,16 @@ export class ViewportWebGL extends Core.System {
 
     // Create items for any sprites not found in stage
     for (entityId in sprites) {
+      sprite = sprites[entityId];
+      position = this.world.get('Position', entityId);
+
       if (!(entityId in this.scene)) {
         this.scene[entityId] = {
-          shape: [
-            [0, 1], [0.25, 0.25], [1, 0], [0.25, -0.25], [0, -1], [-0.25, -0.25],
-            [-1, 0], [-0.25, 0.25], [0, 1]
-          ],
-          color: [0.3, 1.0, 0.3, 1.0],
-          position: [0, 0],
-          rotation: 0,
-          scale: 100.0
+          position: [0.0, 0.0],
+          shape: getSprite(sprite.name)(sprite, entityId, timeDelta)
         };
       }
-
-      position = this.world.get('Position', entityId);
-      sprite = sprites[entityId];
+      sceneSprite = this.scene[entityId];
 
       sprite.visible = (
         (position.right > this.visibleLeft) &&
@@ -220,18 +187,17 @@ export class ViewportWebGL extends Core.System {
         (position.top < this.visibleBottom)
       );
 
-      sceneSprite = this.scene[entityId];
       sceneSprite.visible = sprite.visible;
-      sceneSprite.shape = SHAPES[sprite.name] || SHAPES.star;
       sceneSprite.position[0] = position.x;
       sceneSprite.position[1] = position.y;
       sceneSprite.rotation = position.rotation;
       sceneSprite.scale = sprite.size;
       sceneSprite.color = [
         // TODO: this math is terrible
-        (sprite.color / 256 / 256) % 256,
-        (sprite.color / 256) % 256,
-        sprite.color % 256
+        (sprite.color / 256 / 256) % 256 / 256,
+        (sprite.color / 256) % 256 / 256,
+        sprite.color % 256 / 256,
+        1.0
       ];
     }
   }
@@ -261,7 +227,7 @@ export class ViewportWebGL extends Core.System {
     const vertexCount = this.fillBufferFromScene();
     this.gl.bufferData(this.gl.ARRAY_BUFFER, this.buffer, this.gl.STATIC_DRAW);
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
-    this.gl.clearColor(0, 0, 0, 1.0);
+    this.gl.clearColor(0, 0, 0, 0.5);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, vertexCount);
   }
@@ -456,50 +422,6 @@ export class ViewportWebGL extends Core.System {
 
 Core.registerSystem('ViewportWebGL', ViewportWebGL);
 
-export class WebGLSprite extends Core.Component {
-  static defaults() {
-    return {
-      name: null,
-      color: 0xffffff,
-      size: 100,
-      width: null,
-      height: null,
-      drawn: false,
-      visible: false
-    };
-  }
-  static create(attrs) {
-    const c = super.create(attrs);
-    if (!c.width) { c.width = c.size; }
-    if (!c.height) { c.height = c.size; }
-    return c;
-  }
-}
-
-Core.registerComponent('Sprite', WebGLSprite);
-
-const spriteRegistry = {};
-export function registerSprite(name, sprite) {
-  spriteRegistry[name] = sprite;
-}
-export function getSprite(name) {
-  return spriteRegistry[name];
-}
-
-const defaultShape = [ -50, 0, 50, 0, 0, 0, 0, -50, 0, 50, 0, 0 ];
-for (let idx = 0; idx < 8; idx++) {
-  const rot = idx * (PI2 / 8);
-  defaultShape.push(50 * Math.cos(rot));
-  defaultShape.push(50 * Math.sin(rot));
-}
-defaultShape.push(50);
-defaultShape.push(0);
-
-registerSprite('default', (g, sprite/*, entityId*/) => {
-  if (sprite.drawn) { return; }
-  g.drawPolygon(defaultShape);
-});
-
 const SHADER_VERTEX = `
 // see also: http://m1el.github.io/woscope-how/
 precision mediump float;
@@ -622,3 +544,121 @@ void main (void)
     gl_FragColor = vColor;
 }
 `;
+
+export class WebGLSprite extends Core.Component {
+  static defaults() {
+    return {
+      name: null,
+      color: 0xffffff,
+      size: 100,
+      width: null,
+      height: null,
+      drawn: false,
+      visible: false
+    };
+  }
+  static create(attrs) {
+    const c = super.create(attrs);
+    if (!c.width) { c.width = c.size; }
+    if (!c.height) { c.height = c.size; }
+    return c;
+  }
+}
+
+Core.registerComponent('Sprite', WebGLSprite);
+
+const spriteRegistry = {};
+export function registerSprite(name, sprite) {
+  spriteRegistry[name] = sprite;
+}
+export function getSprite(name) {
+  return name in spriteRegistry ? spriteRegistry[name] : spriteRegistry.default;
+}
+
+const defaultShape = [ [-0.5, 0], [0.5, 0], [0, 0], [0, -0.5], [0, 0.5], [0, 0] ];
+for (let idx = 0; idx < 8; idx++) {
+  const rot = idx * (PI2 / 8);
+  defaultShape.push([ 0.5 * Math.cos(rot), 0.5 * Math.sin(rot) ]);
+}
+defaultShape.push([ 0.5, 0 ]);
+
+registerSprite('default', (/*sprite, entityId*/) => {
+  return defaultShape;
+});
+
+const heroShape = [
+  [ 0.0,     0.5],
+  [ 0.125,   0.4167],
+  [ 0.25,    0.0],
+  [ 0.375,  -0.1667],
+  [ 0.25,   -0.5],
+  [ 0.125,  -0.5],
+  [ 0.0625, -0.25],
+  [-0.0625, -0.25],
+  [-0.125,  -0.5],
+  [-0.25,   -0.5],
+  [-0.375,  -0.1667],
+  [-0.25,    0.0],
+  [-0.125,   0.4167],
+  [ 0.0,     0.5],
+];
+registerSprite('hero', () => {
+  return heroShape;
+});
+
+const repulsorShape = [
+ [-0.50,    0.0],
+ [-0.375,  -0.50],
+ [-0.25,   -0.50],
+ [-0.0625,  0.25],
+ [ 0.0625,  0.25],
+ [ 0.25,   -0.50],
+ [ 0.375,  -0.50],
+ [ 0.50,    0.0],
+ [ 0.375,   0.50],
+ [ 0.25,    0.50],
+ [ 0.0625, -0.25],
+ [-0.0625, -0.25],
+ [-0.25,    0.50],
+ [-0.375,   0.50],
+ [-0.50,    0.0]
+];
+
+registerSprite('repulsor', (/*sprite, entityId, timeDelta, world*/) => {
+  return repulsorShape;
+});
+
+registerSprite('mine', (sprite/*, entityId, timeDelta, world*/) => {
+  if (!sprite.drawn) {
+    let NUM_POINTS = 10 + Math.floor(10 * Math.random());
+    if (NUM_POINTS % 2 !== 0) { NUM_POINTS++; }
+    const ROTATION = PI2 / NUM_POINTS;
+    const MAX_RADIUS = 0.6;
+    const MIN_RADIUS = 0.1;
+
+    let even = false;
+
+    sprite.legs = [];
+    for (let idx = 0; idx < NUM_POINTS; idx++) {
+      const dist = even ? 0.1 : (Math.random() * (MAX_RADIUS - MIN_RADIUS)) + MIN_RADIUS;
+      const rot = idx * ROTATION;
+      sprite.legs.push([ dist * Math.cos(rot), dist * Math.sin(rot) ]);
+      even = !even;
+    }
+    sprite.legs.push([ sprite.legs[0][0], sprite.legs[0][1] ]);
+    sprite.shape = sprite.legs;
+    sprite.drawn = true;
+  }
+
+  return sprite.shape;
+
+  /*
+  if (sprite.drawn && Math.random() < 0.15) {
+    sprite.shape = sprite.legs.map(p => [
+      p[0] * (0.9 + 0.5 * Math.random()),
+      p[1] * (0.9 + 0.5 * Math.random())
+    ]);
+  }
+  return sprite.shape;
+  */
+});

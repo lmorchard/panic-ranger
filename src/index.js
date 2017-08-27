@@ -1,3 +1,4 @@
+/*
 import * as Core from './lib/core';
 
 import './plugins/drawStats';
@@ -5,6 +6,7 @@ import './plugins/memoryStats';
 import './plugins/datGui';
 import './plugins/viewportPixi';
 import './plugins/viewportCanvas';
+import './plugins/viewportWebGL';
 import './plugins/name';
 import './plugins/health';
 import './plugins/position';
@@ -21,7 +23,7 @@ const debug = true;
 
 const world = window.world = new Core.World({
   systems: {
-    ViewportCanvas: {
+    ViewportWebGL: {
       debug: debug,
       container: '#game',
       canvas: '#viewport',
@@ -40,16 +42,16 @@ const world = window.world = new Core.World({
     Collision: {},
     Bounce: {},
     HordeSpawn: {
-      viewportSystemName: 'ViewportCanvas',
+      viewportSystemName: 'ViewportWebGL',
       offscreenTTL: 0.5,
       spawnMargin: 125,
-      minCount: 100,
+      minCount: 300,
       spawn: (x, y) => {
         const MIN_SIZE=100;
         const MAX_SIZE=300;
         const size = ((MAX_SIZE - MIN_SIZE) * Math.random()) + MIN_SIZE;
         world.insert({
-          Sprite: { name: 'mine', size: size},
+          Sprite: { name: 'mine', size: size, color: 0xff2222 },
           Health: { max: 4 * size * size },
           Collidable: { },
           Bounce: { mass: 4 * size * size },
@@ -66,7 +68,7 @@ const world = window.world = new Core.World({
 
 world.insert({
   Name: { name: 'hero1'},
-  Sprite: { name: 'hero', color: 0x0000ff },
+  Sprite: { name: 'hero', size: 150, color: 0x0000ff },
   Collidable: {},
   Bounce: { mass: 7000 },
   Position: { x: 0, y: 0, rotation: -(Math.PI / 2) },
@@ -79,7 +81,7 @@ let x = 0;
 for (let y = 0; y > -15000; y -= 600) {
   world.insert({
     Name: { name: `repulsor${y}` },
-    Sprite: { name: 'repulsor' },
+    Sprite: { name: 'repulsor', color: 0x228822 },
     Position: { x, y },
     Motion: { },
     Repulsor: { range: 600, force: 300 }
@@ -89,7 +91,7 @@ for (let y = 0; y > -15000; y -= 600) {
 
 world.start();
 
-const vpSystem = world.getSystem('ViewportCanvas');
+const vpSystem = world.getSystem('ViewportWebGL');
 const spawnSystem = world.getSystem('HordeSpawn');
 const guiSystem = world.getSystem('DatGui');
 const gui = guiSystem.gui;
@@ -109,3 +111,4 @@ gui.add(cp, 'x').listen();
 gui.add(cp, 'y').listen();
 
 gui.add(spawnSystem, 'spawnCount').listen();
+*/

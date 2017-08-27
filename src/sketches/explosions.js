@@ -3,7 +3,7 @@ import { World } from '../lib/core';
 import '../plugins/drawStats';
 import '../plugins/memoryStats';
 import '../plugins/datGui';
-import '../plugins/viewportPixi';
+import '../plugins/viewportWebGL';
 import '../plugins/name';
 import '../plugins/position';
 import '../plugins/motion';
@@ -21,10 +21,10 @@ const debugData = {
 
 const world = window.world = new World({
   systems: {
-    ViewportPixi: {
+    ViewportWebGL: {
       debug: DEBUG,
       container: '#game',
-      canvas: '#viewport',
+      WebGL: '#viewport',
       zoom: 0.3
     },
     DrawStats: {},
@@ -79,7 +79,7 @@ world.subscribe(MSG_DESPAWN, (/*msg, entityId*/) => {
   }
 });
 
-const vpSystem = world.getSystem('ViewportPixi');
+const vpSystem = world.getSystem('ViewportWebGL');
 const guiSystem = world.getSystem('DatGui');
 const gui = guiSystem.gui;
 

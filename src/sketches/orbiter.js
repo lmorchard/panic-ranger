@@ -1,7 +1,6 @@
 import { World } from '../lib/core';
 
-// import '../plugins/viewportCanvas';
-import '../plugins/viewportPixi';
+import '../plugins/viewportWebGL';
 import '../plugins/drawStats';
 import '../plugins/memoryStats';
 import '../plugins/datGui';
@@ -10,13 +9,11 @@ import '../plugins/position';
 import '../plugins/orbiter';
 import '../plugins/motion';
 
-const world = new World({
+const world = window.world = new World({
   systems: {
-    // ViewportCanvas: {
-    ViewportPixi: {
+    ViewportWebGL: {
       container: '#game',
-      canvas: '#viewport',
-      // followName: 'alpha'
+      zoom: 0.3
     },
     DrawStats: {},
     MemoryStats: {},
@@ -28,32 +25,28 @@ const world = new World({
 
 world.insert({
   Name: { name: 'sun'},
+  Sprite: { name: 'default' },
   Position: {}
 }, {
   Name: { name: 'alpha'},
+  Sprite: { name: 'default' },
   Position: { x: 250, y: 250 },
   Orbiter: { name: 'sun' }
 }, {
   Name: { name: 'beta'},
+  Sprite: { name: 'default' },
   Position: { x: -250, y: -250 },
   Orbiter: { name: 'sun' }
 }, {
   Name: { name: 'theta'},
+  Sprite: { name: 'default' },
   Position: { x: -250, y: 250 },
   Orbiter: { name: 'sun' }
 }, {
   Name: { name: 'whatever'},
+  Sprite: { name: 'default' },
   Position: { x: 250, y: -250 },
   Orbiter: { name: 'sun' }
-}/*, {
-  Name: { name: 'delta'},
-  Position: {},
-  Motion: { dx: move, dy: -move, drotation: -rot}
-}, {
-  Name: { name: 'gamma'},
-  Position: {},
-  Motion: { dx: -move, dy: move, drotation: -rot}
-}*/);
-
+});
 
 world.start();

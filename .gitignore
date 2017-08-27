@@ -1,5 +1,6 @@
 dist/
 *.sw?
+*~
 node_modules/
 
 # Windows image file caches

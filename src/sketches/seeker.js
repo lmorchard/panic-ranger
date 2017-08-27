@@ -6,7 +6,7 @@ import '../plugins/motion';
 import '../plugins/thruster';
 import '../plugins/orbiter';
 import '../plugins/seeker';
-import '../plugins/viewportPixi';
+import '../plugins/viewportCanvas';
 import '../plugins/drawStats';
 import '../plugins/memoryStats';
 import '../plugins/datGui';
@@ -15,7 +15,7 @@ const debug = true;
 
 const world = new Core.World({
   systems: {
-    ViewportPixi: {
+    ViewportCanvas: {
       debug: debug,
       container: '#game',
       followName: 'orbiter1',
@@ -34,23 +34,27 @@ const world = new Core.World({
 world.insert({
   Name: { name: 'sun'},
   Sprite: { name: 'asteroid', size: 300 },
-  Position: {},
+  Position: { x: 0, y: 0 },
   Motion: { dx: 0, dy: 0, drotation: Math.PI / 6 }
-}, {
+});
+world.insert({
   Name: { name: 'orbiter1'},
-  Sprite: { name: 'hero', color: '#00f' },
+  Sprite: { name: 'hero', size: 100 },
   Position: { x: 250, y: 250 },
+  Motion: {},
   Orbiter: { name: 'sun' }
-}, {
+});
+world.insert({
   Name: { name: 'chaser1'},
-  Sprite: { name: 'enemyscout', color: '#f00' },
+  Sprite: { name: 'enemyscout' },
   Position: {},
   Motion: {},
   Thruster: { deltaV: 400, maxV: 175 },
   Seeker: { targetName: 'orbiter1', radPerSec: 0.9 }
-}, {
+});
+world.insert({
   Name: { name: 'chaser2'},
-  Sprite: { name: 'enemyscout', color: '#0f0' },
+  Sprite: { name: 'enemyscout' },
   Position: {},
   Motion: {},
   Thruster: { deltaV: 600, maxV: 400 },
@@ -59,7 +63,7 @@ world.insert({
 
 world.start();
 
-const vpSystem = world.getSystem('ViewportPixi');
+const vpSystem = world.getSystem('ViewportCanvas');
 const guiSystem = world.getSystem('DatGui');
 const gui = guiSystem.gui;
 

@@ -5,7 +5,7 @@ import Vector2D from '../lib/Vector2D';
 import '../plugins/drawStats';
 import '../plugins/memoryStats';
 import '../plugins/datGui';
-import '../plugins/viewportPixi';
+import '../plugins/viewportWebGL';
 import '../plugins/name';
 import '../plugins/health';
 import '../plugins/position';
@@ -20,21 +20,20 @@ const debug = true;
 
 const world = window.world = new Core.World({
   systems: {
-    ViewportPixi: {
+    ViewportWebGL: {
       debug: debug,
       container: '#game',
-      canvas: '#viewport',
       followName: 'hero1',
       zoom: 0.5
     },
     DrawStats: {},
     MemoryStats: {},
     DatGui: {},
-    Position: {},
+    PlayerInputSteering: {},
     Motion: {},
+    Position: {},
     Thruster: {},
     Seeker: {},
-    PlayerInputSteering: {},
     Collision: {},
     Bounce: {}
   }
@@ -42,7 +41,7 @@ const world = window.world = new Core.World({
 
 world.insert({
   Name: { name: 'hero1'},
-  Sprite: { name: 'hero', color: '#00f' },
+  Sprite: { name: 'hero', size: 100 },
   Collidable: {},
   Bounce: { mass: 7000 },
   Position: { x: 0, y: 0 },
@@ -118,7 +117,7 @@ spawnField(-pos, pos, size, num);
 
 world.start();
 
-const vpSystem = world.getSystem('ViewportPixi');
+const vpSystem = world.getSystem('ViewportWebGL');
 const guiSystem = world.getSystem('DatGui');
 const gui = guiSystem.gui;
 
