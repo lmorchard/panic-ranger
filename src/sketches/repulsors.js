@@ -93,7 +93,7 @@ world.insert({
   Motion: {},
   Thruster: { deltaV: 2800, maxV: 1400, active: false },
   PlayerInputSteering: { radPerSec: Math.PI },
-  Repulsor: { range: 600, force: 300 }
+  // Repulsor: { range: 600, force: 300 }
 });
 
 let x = 0;

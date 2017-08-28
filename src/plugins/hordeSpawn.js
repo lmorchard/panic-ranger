@@ -19,6 +19,7 @@ export class HordeSpawnSystem extends System {
     return {
       viewportSystemName: 'ViewportPixi',
       minCount: 100,
+      maxFrameSpawn: 50,
       offscreenTTL: 1.0,
       spawnMargin: 100,
       spawn: () => {}
@@ -36,7 +37,13 @@ export class HordeSpawnSystem extends System {
     matches = this.getMatchingComponents() || {};
     this.spawnCount = Object.keys(matches).length;
     if (this.spawnCount < this.options.minCount) {
-      this.spawnOffscreen();
+      const cnt = Math.max(
+        this.options.maxFrameSpawn,
+        this.options.minCount - this.spawnCount
+      );
+      for (let i = 0; i < cnt; i++) {
+        this.spawnOffscreen();
+      }
     }
     for (entityId in matches) {
       this.updateComponent(timeDelta, entityId, matches[entityId]);
