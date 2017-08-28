@@ -25,5 +25,60 @@ Good luck.
 
 ### TODO
 
-* Extract common mouse handling from viewport systems
-* Ensure mouse handling works in a non-fullscreen canvas
+* bugs
+  * fatal err on collisions?
+
+* player stats
+  * anxiety level
+  * ship energy
+  * ship systems damage
+
+* friendly entities
+  * repulsors
+  * gates
+  * depots
+
+* unfriendly entities
+  * chitterers
+
+* gameplay goals
+  * gates linked by paths
+  * ships safely traversed
+
+* entity AI
+  * pathfinding between stargates via repulsor roads
+
+* powerups
+  * booze
+    * temporarily ignore anxiety level
+    * general reduction in ability in cooldown period
+  * charge
+    * temporary repulsor in front
+    * no steering forward speed boost
+
+* graphics
+  * GPU-only particle effects
+  * CRT vector webgl fragment shader - soft-edged beam; trails
+  * ship damage effects (more global?)
+    * color drop out
+    * vertical / horizontal collapse
+    * waviness
+    * glitched vectors
+    * blooming
+    * pincushion
+  * anxiety effects (color & baddie specific?)
+    * color smearing
+    * blurriness
+    * more random sprite jitter effects
+
+* sound & music
+  * theme song using 28 martian dialup?
+    * http://www.websynths.com/
+  * effects ala sfxr?
+    * https://github.com/ttencate/jfxr
+    * https://github.com/grumdrig/jsfxr
+
+* input
+  * Extract common mouse handling from viewport systems
+  * Ensure mouse handling works in a non-fullscreen canvas
+  * rotation follows mouse without need for thrust
