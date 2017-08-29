@@ -28,7 +28,7 @@ const world = window.world = new Core.World({
       zoom: 0.3
     },
     DrawStats: {},
-    MemoryStats: {},
+    // MemoryStats: {},
     DatGui: {},
     PlayerInputSteering: {},
     Health: {},
@@ -44,8 +44,8 @@ const world = window.world = new Core.World({
       viewportSystemName: 'ViewportWebGL',
       offscreenTTL: 0.5,
       spawnMargin: 250,
-      minCount: 250,
-      maxFrameSpawn: 25,
+      minCount: 150,
+      maxFrameSpawn: 15,
       spawn: (x, y) => {
         const MIN_SIZE=100;
         const MAX_SIZE=300;

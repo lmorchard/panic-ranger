@@ -175,10 +175,9 @@ export class ViewportWebGL extends Core.System {
       if (!(entityId in this.scene)) {
         this.scene[entityId] = {
           position: [0.0, 0.0],
-          shape: getSprite(sprite.name)(sprite, entityId, timeDelta)
+          shapes: WebGLSprite.init(sprite, entityId, timeDelta, this.world)
         };
       }
-      sceneSprite = this.scene[entityId];
 
       sprite.visible = (
         (position.right > this.visibleLeft) &&
@@ -187,6 +186,7 @@ export class ViewportWebGL extends Core.System {
         (position.top < this.visibleBottom)
       );
 
+      sceneSprite = this.scene[entityId];
       sceneSprite.visible = sprite.visible;
       sceneSprite.position[0] = position.x;
       sceneSprite.position[1] = position.y;
@@ -199,6 +199,7 @@ export class ViewportWebGL extends Core.System {
         sprite.color % 256 / 256,
         1.0
       ];
+      WebGLSprite.update(sceneSprite, sprite, entityId, timeDelta, this.world);
     }
   }
 
@@ -358,19 +359,18 @@ export class ViewportWebGL extends Core.System {
   }
 
   calculateBufferSizeForScene() {
-    return Object.values(this.scene).reduce((acc, item) =>
-      acc + (item.shape.length - 0.5) * this.vertexSize * 4, 0);
+    return Object.values(this.scene)
+      .reduce((acc, item) =>
+        item.shapes.reduce((acc, shape) =>
+          acc + (shape.length - 0.5) * this.vertexSize * 4, 0), 0);
   }
 
   fillBufferFromScene() {
     let vertexCount = 0;
     let bufferPos = 0;
     let visible, shape, position, scale, rotation,
-        deltaPosition, deltaScale, deltaRotation, color;
-
-    const sceneKeys = Object.keys(this.scene);
-    sceneKeys.sort();
-    const sceneItems = sceneKeys.map(key => this.scene[key]);
+        deltaPosition, deltaScale, deltaRotation, color,
+        lineIdx, shapesIdx, shapes;
 
     const bufferVertex = (shapeIdx, lineIdx) => {
       vertexCount++;
@@ -393,21 +393,26 @@ export class ViewportWebGL extends Core.System {
       this.buffer[bufferPos++] = color[3];
     };
 
-    for (let spriteIdx = 0; spriteIdx < sceneItems.length; spriteIdx++) {
+    const sceneKeys = Object.keys(this.scene);
+    sceneKeys.sort();
+    for (let sceneKeysIdx = 0; sceneKeysIdx < sceneKeys.length; sceneKeysIdx++) {
       ({
-        visible, shape, position=[0.0, 0.0], scale=0, rotation=0,
+        visible, shapes, position=[0.0, 0.0], scale=0, rotation=0,
         deltaPosition=[0.0, 0.0], deltaScale=0.0, deltaRotation=0.0,
         color=[1, 1, 1, 1]
-      } = sceneItems[spriteIdx]);
+      } = this.scene[sceneKeys[sceneKeysIdx]]);
       if (!visible) { continue; }
-      bufferVertex(1, 0);
-      for (let shapeIdx = 1; shapeIdx < shape.length; shapeIdx += 1) {
-        bufferVertex(shapeIdx, 0);
-        bufferVertex(shapeIdx, 1);
-        bufferVertex(shapeIdx, 2);
-        bufferVertex(shapeIdx, 3);
+      for (shapesIdx = 0; shapesIdx < shapes.length; shapesIdx++) {
+        shape = shapes[shapesIdx];
+        bufferVertex(1, 0);
+        for (lineIdx = 1; lineIdx < shape.length; lineIdx += 1) {
+          bufferVertex(lineIdx, 0);
+          bufferVertex(lineIdx, 1);
+          bufferVertex(lineIdx, 2);
+          bufferVertex(lineIdx, 3);
+        }
+        bufferVertex(shape.length - 1, 3);
       }
-      bufferVertex(shape.length - 1, 3);
     }
 
     return vertexCount;
@@ -563,17 +568,29 @@ export class WebGLSprite extends Core.Component {
     if (!c.height) { c.height = c.size; }
     return c;
   }
+  static register(name, handler) {
+    if (!WebGLSprite.registry) { WebGLSprite.registry = {}; }
+    WebGLSprite.registry[name] = handler;
+  }
+  static getHandler(name) {
+    return name in WebGLSprite.registry
+      ? WebGLSprite.registry[name]
+      : WebGLSprite.registry.default;
+  }
+  static init(sprite, entityId, timeDelta, world) {
+    return WebGLSprite
+      .getHandler(sprite.name)
+      .init(sprite, entityId, timeDelta, world);
+  }
+  static update(sceneSprite, sprite, entityId, timeDelta, world) {
+    const handler = WebGLSprite.getHandler(sprite.name);
+    return 'update' in handler
+      ? handler.update(sceneSprite, sprite, entityId, timeDelta, world)
+      : false;
+  }
 }
 
 Core.registerComponent('Sprite', WebGLSprite);
-
-const spriteRegistry = {};
-export function registerSprite(name, sprite) {
-  spriteRegistry[name] = sprite;
-}
-export function getSprite(name) {
-  return name in spriteRegistry ? spriteRegistry[name] : spriteRegistry.default;
-}
 
 const defaultShape = [ [-0.5, 0], [0.5, 0], [0, 0], [0, -0.5], [0, 0.5], [0, 0] ];
 for (let idx = 0; idx < 8; idx++) {
@@ -582,76 +599,89 @@ for (let idx = 0; idx < 8; idx++) {
 }
 defaultShape.push([ 0.5, 0 ]);
 
-registerSprite('default', (/*sprite, entityId*/) => {
-  return defaultShape;
+WebGLSprite.register('default', {
+  init() { return defaultShape; }
 });
 
-const heroShape = [
-  [ 0.0,     0.5],
-  [ 0.125,   0.4167],
-  [ 0.25,    0.0],
-  [ 0.375,  -0.1667],
-  [ 0.25,   -0.5],
-  [ 0.125,  -0.5],
-  [ 0.0625, -0.25],
-  [-0.0625, -0.25],
-  [-0.125,  -0.5],
-  [-0.25,   -0.5],
-  [-0.375,  -0.1667],
-  [-0.25,    0.0],
-  [-0.125,   0.4167],
-  [ 0.0,     0.5],
+const heroShapes = [
+  [
+    [ 0.0,     0.5],
+    [ 0.125,   0.4167],
+    [ 0.25,    0.0],
+    [ 0.375,  -0.1667],
+    [ 0.25,   -0.5],
+    [ 0.125,  -0.5],
+    [ 0.0625, -0.25],
+    [-0.0625, -0.25],
+    [-0.125,  -0.5],
+    [-0.25,   -0.5],
+    [-0.375,  -0.1667],
+    [-0.25,    0.0],
+    [-0.125,   0.4167],
+    [ 0.0,     0.5],
+  ]
 ];
-registerSprite('hero', () => {
-  return heroShape;
+WebGLSprite.register('hero', {
+  init() { return heroShapes; }
 });
 
-const repulsorShape = [
- [-0.50,    0.0],
- [-0.375,  -0.50],
- [-0.25,   -0.50],
- [-0.0625,  0.25],
- [ 0.0625,  0.25],
- [ 0.25,   -0.50],
- [ 0.375,  -0.50],
- [ 0.50,    0.0],
- [ 0.375,   0.50],
- [ 0.25,    0.50],
- [ 0.0625, -0.25],
- [-0.0625, -0.25],
- [-0.25,    0.50],
- [-0.375,   0.50],
- [-0.50,    0.0]
+const repulsorSides = 8;
+const repulsorPoints = [];
+for (let idx = 0; idx < repulsorSides; idx++) {
+  const rot = idx * (PI2 / repulsorSides);
+  repulsorPoints.push([ Math.cos(rot), Math.sin(rot) ]);
+}
+repulsorPoints.push(repulsorPoints[0]);
+
+const repulsorShapes = [
+  repulsorPoints.map(p => [p[0] * 1, p[1] * 1]),
+  repulsorPoints.map(p => [p[0] * 2, p[1] * 2]),
+  repulsorPoints.map(p => [p[0] * 3, p[1] * 3]),
+  [
+    [-0.50,    0.0],
+    [-0.375,  -0.50],
+    [-0.25,   -0.50],
+    [-0.0625,  0.25],
+    [ 0.0625,  0.25],
+    [ 0.25,   -0.50],
+    [ 0.375,  -0.50],
+    [ 0.50,    0.0],
+    [ 0.375,   0.50],
+    [ 0.25,    0.50],
+    [ 0.0625, -0.25],
+    [-0.0625, -0.25],
+    [-0.25,    0.50],
+    [-0.375,   0.50],
+    [-0.50,    0.0]
+  ]
 ];
-
-registerSprite('repulsor', (/*sprite, entityId, timeDelta, world*/) => {
-  return repulsorShape;
+WebGLSprite.register('repulsor', {
+  init() { return repulsorShapes; }
 });
 
-registerSprite('asteroid', (sprite) => {
-  let idx;
-
-  if (!sprite.points) {
+WebGLSprite.register('asteroid', {
+  init(sprite) {
     const NUM_POINTS = 7 + Math.floor(8 * Math.random());
     const MAX_RADIUS = 0.50;
     const MIN_RADIUS = 0.35;
     const ROTATION = PI2 / NUM_POINTS;
 
-    sprite.points = [];
-    for (idx = 0; idx < NUM_POINTS; idx++) {
+    sprite.shape = [];
+    for (let idx = 0; idx < NUM_POINTS; idx++) {
       const rot = idx * ROTATION;
       const dist = (Math.random() * (MAX_RADIUS - MIN_RADIUS)) + MIN_RADIUS;
-      sprite.points.push([dist * Math.cos(rot), dist * Math.sin(rot)]);
+      sprite.shape.push([dist * Math.cos(rot), dist * Math.sin(rot)]);
     }
 
-    sprite.points.push(sprite.points[0]);
+    sprite.shape.push(sprite.shape[0]);
+    return [
+      sprite.shape
+    ];
   }
-
-  return sprite.points;
 });
 
-registerSprite('mine', (sprite/*, entityId, timeDelta, world*/) => {
-  if (!sprite.drawn) {
+WebGLSprite.register('mine', {
+  init(sprite) {
     let NUM_POINTS = 10 + Math.floor(10 * Math.random());
     if (NUM_POINTS % 2 !== 0) { NUM_POINTS++; }
     const ROTATION = PI2 / NUM_POINTS;
@@ -670,17 +700,19 @@ registerSprite('mine', (sprite/*, entityId, timeDelta, world*/) => {
     sprite.legs.push([ sprite.legs[0][0], sprite.legs[0][1] ]);
     sprite.shape = sprite.legs;
     sprite.drawn = true;
-  }
 
-  return sprite.shape;
-
-  /*
-  if (sprite.drawn && Math.random() < 0.15) {
-    sprite.shape = sprite.legs.map(p => [
-      p[0] * (0.9 + 0.5 * Math.random()),
-      p[1] * (0.9 + 0.5 * Math.random())
-    ]);
+    return [
+      sprite.shape
+    ];
+  },
+  update(/* sceneSprite, sprite, entityId, timeDelta, world */) {
+    /*
+    if (sprite.drawn && Math.random() < 0.15) {
+      sceneSprite.shape = sprite.legs.map(p => [
+        p[0] * (0.9 + 0.5 * Math.random()),
+        p[1] * (0.9 + 0.5 * Math.random())
+      ]);
+    }
+    */
   }
-  return sprite.shape;
-  */
 });
