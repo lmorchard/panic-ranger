@@ -160,12 +160,15 @@ export class ViewportWebGL extends Core.System {
 
     sprites = this.world.get('Sprite') || {};
 
-    // Delete any stage items not found in sprites
+    // Delete any stage items not found in sprites, unless they're particles
+    // with "_" prefix
     for (entityId in this.scene) {
-      if (!(entityId in sprites)) {
+      if (entityId.charAt(0) !== '_' && !(entityId in sprites)) {
         delete this.scene[entityId];
       }
     }
+
+    this.updateBackdrop(timeDelta);
 
     // Create items for any sprites not found in stage
     for (entityId in sprites) {
@@ -217,8 +220,6 @@ export class ViewportWebGL extends Core.System {
       uViewportSize: [this.canvas.clientWidth, this.canvas.clientHeight]
     });
 
-    // this.drawBackdrop(timeDelta);
-
     // Re-allocate larger buffer if current is too small for the scene.
     const bufferSize = this.calculateBufferSizeForScene();
     if (bufferSize > this.buffer.length) {
@@ -254,43 +255,51 @@ export class ViewportWebGL extends Core.System {
     }
   }
 
-  /*
-  drawBackdrop() {
-    const ctx = this.backdrop;
-
+  updateBackdrop() {
     if (!this.gridEnabled) {
-      ctx.visible = false;
+      delete this.scene._backdrop;
       return;
     }
+
+    if (!this.scene._backdrop) {
+      this.scene._backdrop = {
+        visible: true,
+        position: [0.0, 0.0],
+        color: [1.0, 1.0, 1.0, 0.2],
+        scale: 1,
+        shapes: []
+      };
+    }
+
+    const sceneSprite = this.scene._backdrop;
 
     const gridSize = this.options.gridSize;
     const gridOffsetX = this.visibleLeft % gridSize;
     const gridOffsetY = this.visibleTop % gridSize;
 
-    ctx.visible = true;
-    ctx.clear();
-    ctx.lineStyle(5, this.options.gridColor);
-    ctx.position.x = this.visibleLeft;
-    ctx.position.y = this.visibleTop;
+    sceneSprite.position[0] = this.visibleLeft;
+    sceneSprite.position[1] = this.visibleTop;
+    sceneSprite.rotation = Math.PI / 2;
+    sceneSprite.shapes.length = 0;
 
     for (let x = -gridOffsetX; x < this.visibleWidth; x += gridSize) {
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, this.visibleHeight + gridSize);
+      sceneSprite.shapes.push([[x, 0], [x, this.visibleHeight + gridSize]]);
     }
-
     for (let y = -gridOffsetY; y < this.visibleHeight; y += gridSize) {
-      ctx.moveTo(0, y);
-      ctx.lineTo(this.visibleWidth + gridSize, y);
+      sceneSprite.shapes.push([[0, y], [this.visibleWidth + gridSize, y]]);
     }
   }
-  */
 
   initWebGL(canvas) {
     const gl = this.gl = canvas.getContext('webgl', {
       antialias: true,
       preserveDrawingBuffer: true,
-      premultipliedAlpha: true
+      premultipliedAlpha: false
     });
+
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.enable(gl.BLEND);
+    gl.disable(gl.DEPTH_TEST);
 
     const program = this.createProgram(
       this.createShader(gl.VERTEX_SHADER, SHADER_VERTEX),
@@ -426,129 +435,6 @@ export class ViewportWebGL extends Core.System {
 }
 
 Core.registerSystem('ViewportWebGL', ViewportWebGL);
-
-const SHADER_VERTEX = `
-// see also: http://m1el.github.io/woscope-how/
-precision mediump float;
-#define EPS 1E-6
-#define PI 3.141592653589793
-#define PI_2 6.283185307179586
-#define PI_H 1.5707963267948966
-#define PI_Q 0.7853981633974483
-
-uniform float uTime;
-uniform float uLineWidth;
-uniform float uCameraZoom;
-uniform float uCameraRotation;
-uniform vec2 uCameraOrigin;
-uniform vec2 uViewportSize;
-
-attribute float aIdx;
-attribute vec4 aLine;
-attribute vec4 aTransform;
-attribute vec4 aDeltaTransform;
-attribute vec4 aColor;
-
-varying vec4 uvl;
-varying vec4 vColor;
-varying float vLen;
-
-void main () {
-  float c, s;
-
-  mat3 mViewportToClipSpace = mat3(
-    2.0 / uViewportSize.x, 0, 0,
-    0, -2.0 / uViewportSize.y, 0,
-    0, 0, 0
-  );
-
-  c = cos(uCameraRotation);
-  s = sin(uCameraRotation);
-  mat3 mCameraRotation = mat3(
-    c, -s, 0.0,
-    s, c, 0.0,
-    0.0, 0.0, 1.0
-  );
-
-  mat3 mCameraOrigin = mat3(
-    1.0, 0.0, 0.0,
-    0.0, 1.0, 0.0,
-    -uCameraOrigin.x, -uCameraOrigin.y, 1.0
-  );
-
-  mat3 mCameraZoom = mat3(
-    uCameraZoom, 0.0, 0.0,
-    0.0, uCameraZoom, 0.0,
-    0.0, 0.0, 1.0
-  );
-
-  c = cos(-aTransform.w + PI_H + (aDeltaTransform.w * uTime));
-  s = sin(-aTransform.w + PI_H + (aDeltaTransform.w * uTime));
-  mat3 mRotation = mat3(
-    c, -s, 0.0,
-    s, c, 0.0,
-    0.0, 0.0, 1.0
-  );
-
-  mat3 mPosition = mat3(
-    1.0, 0.0, 0.0,
-    0.0, 1.0, 0.0,
-    aTransform.x + (aDeltaTransform.x * uTime), aTransform.y + (aDeltaTransform.y * uTime), 1.0
-  );
-
-  mat3 mScale = mat3(
-    aTransform.z + (aDeltaTransform.z * uTime), 0.0, 0.0,
-    0.0, aTransform.z + (aDeltaTransform.z * uTime), 0.0,
-    0.0, 0.0, 1.0
-  );
-
-  // TODO: Move some of these matrices into JS?
-  mat3 mAll = mViewportToClipSpace
-    * mCameraZoom * mCameraRotation * mCameraOrigin
-    * mPosition * mScale * mRotation;
-
-  vec2 tStart = (mAll * vec3(aLine.xy, 1)).xy;
-  vec2 tEnd = (mAll * vec3(aLine.zw, 1)).xy;
-
-  float tang;
-  vec2 current;
-  float idx = aIdx;
-  if (idx >= 2.0) {
-    current = tEnd;
-    tang = 1.0;
-  } else {
-    current = tStart;
-    tang = -1.0;
-  }
-
-  float side = (mod(idx, 2.0)-0.5)*2.0;
-  vec2 dir = tEnd-tStart;
-
-  vColor = aColor;
-
-  uvl.xy = vec2(tang, side);
-  uvl.w = floor(aIdx / 4.0 + 0.5);
-  uvl.z = length(dir);
-  if (uvl.z > EPS) {
-    dir = dir / uvl.z;
-  } else {
-    // If the segment is too short draw a square;
-    dir = vec2(1.0, 0.0);
-  }
-  vec2 norm = vec2(-dir.y, dir.x);
-  gl_Position = vec4((current+(tang*dir+norm*side)*uLineWidth),0.0,1.0);
-}
-`;
-
-const SHADER_FRAGMENT = `
-precision mediump float;
-varying vec4 vColor;
-
-void main (void)
-{
-    gl_FragColor = vColor;
-}
-`;
 
 export class WebGLSprite extends Core.Component {
   static defaults() {
@@ -716,3 +602,126 @@ WebGLSprite.register('mine', {
     */
   }
 });
+
+const SHADER_VERTEX = `
+// see also: http://m1el.github.io/woscope-how/
+precision mediump float;
+#define EPS 1E-6
+#define PI 3.141592653589793
+#define PI_2 6.283185307179586
+#define PI_H 1.5707963267948966
+#define PI_Q 0.7853981633974483
+
+uniform float uTime;
+uniform float uLineWidth;
+uniform float uCameraZoom;
+uniform float uCameraRotation;
+uniform vec2 uCameraOrigin;
+uniform vec2 uViewportSize;
+
+attribute float aIdx;
+attribute vec4 aLine;
+attribute vec4 aTransform;
+attribute vec4 aDeltaTransform;
+attribute vec4 aColor;
+
+varying vec4 uvl;
+varying vec4 vColor;
+varying float vLen;
+
+void main () {
+  float c, s;
+
+  mat3 mViewportToClipSpace = mat3(
+    2.0 / uViewportSize.x, 0, 0,
+    0, -2.0 / uViewportSize.y, 0,
+    0, 0, 0
+  );
+
+  c = cos(uCameraRotation);
+  s = sin(uCameraRotation);
+  mat3 mCameraRotation = mat3(
+    c, -s, 0.0,
+    s, c, 0.0,
+    0.0, 0.0, 1.0
+  );
+
+  mat3 mCameraOrigin = mat3(
+    1.0, 0.0, 0.0,
+    0.0, 1.0, 0.0,
+    -uCameraOrigin.x, -uCameraOrigin.y, 1.0
+  );
+
+  mat3 mCameraZoom = mat3(
+    uCameraZoom, 0.0, 0.0,
+    0.0, uCameraZoom, 0.0,
+    0.0, 0.0, 1.0
+  );
+
+  c = cos(-aTransform.w + PI_H + (aDeltaTransform.w * uTime));
+  s = sin(-aTransform.w + PI_H + (aDeltaTransform.w * uTime));
+  mat3 mRotation = mat3(
+    c, -s, 0.0,
+    s, c, 0.0,
+    0.0, 0.0, 1.0
+  );
+
+  mat3 mPosition = mat3(
+    1.0, 0.0, 0.0,
+    0.0, 1.0, 0.0,
+    aTransform.x + (aDeltaTransform.x * uTime), aTransform.y + (aDeltaTransform.y * uTime), 1.0
+  );
+
+  mat3 mScale = mat3(
+    aTransform.z + (aDeltaTransform.z * uTime), 0.0, 0.0,
+    0.0, aTransform.z + (aDeltaTransform.z * uTime), 0.0,
+    0.0, 0.0, 1.0
+  );
+
+  // TODO: Move some of these matrices into JS?
+  mat3 mAll = mViewportToClipSpace
+    * mCameraZoom * mCameraRotation * mCameraOrigin
+    * mPosition * mScale * mRotation;
+
+  vec2 tStart = (mAll * vec3(aLine.xy, 1)).xy;
+  vec2 tEnd = (mAll * vec3(aLine.zw, 1)).xy;
+
+  float tang;
+  vec2 current;
+  float idx = aIdx;
+  if (idx >= 2.0) {
+    current = tEnd;
+    tang = 1.0;
+  } else {
+    current = tStart;
+    tang = -1.0;
+  }
+
+  float side = (mod(idx, 2.0)-0.5)*2.0;
+  vec2 dir = tEnd-tStart;
+
+  vColor = aColor;
+
+  uvl.xy = vec2(tang, side);
+  uvl.w = floor(aIdx / 4.0 + 0.5);
+  uvl.z = length(dir);
+  if (uvl.z > EPS) {
+    dir = dir / uvl.z;
+  } else {
+    // If the segment is too short draw a square;
+    dir = vec2(1.0, 0.0);
+  }
+  vec2 norm = vec2(-dir.y, dir.x);
+  gl_Position = vec4((current+(tang*dir+norm*side)*uLineWidth),0.0,1.0);
+}
+`;
+
+const SHADER_FRAGMENT = `
+precision mediump float;
+varying vec4 vColor;
+
+void main (void)
+{
+    gl_FragColor = vColor;
+}
+`;
