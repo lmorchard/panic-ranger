@@ -41,6 +41,10 @@ Good luck.
 * unfriendly entities
   * chitterers
 
+* misc
+  * horde spawn
+    * avoid areas near entities, repulsor fields
+
 * gameplay goals
   * gates linked by paths
   * ships safely traversed
