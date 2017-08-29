@@ -1,12 +1,179 @@
-webpackJsonp([2],{156:/*!*****************************************!*\
+webpackJsonp([2],{
+
+/***/ 156:
+/*!*****************************************!*\
   !*** multi ./src/sketches/repulsors.js ***!
   \*****************************************/
 /*! no static exports found */
 /*! all exports used */
-function(e,a,o){e.exports=o(/*! ./src/sketches/repulsors.js */157)},157:/*!***********************************!*\
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(/*! ./src/sketches/repulsors.js */157);
+
+
+/***/ }),
+
+/***/ 157:
+/*!***********************************!*\
   !*** ./src/sketches/repulsors.js ***!
   \***********************************/
 /*! exports provided:  */
 /*! all exports used */
-function(e,a,o){"use strict";Object.defineProperty(a,"__esModule",{value:!0});var t=o(/*! ../lib/core */0),r=(o(/*! ../plugins/drawStats */19),o(/*! ../plugins/memoryStats */20),o(/*! ../plugins/datGui */18),o(/*! ../plugins/viewportWebGL */30),o(/*! ../plugins/name */21),o(/*! ../plugins/health */26),o(/*! ../plugins/position */7),o(/*! ../plugins/motion */8),o(/*! ../plugins/thruster */29),o(/*! ../plugins/seeker */28),o(/*! ../plugins/collision */37),o(/*! ../plugins/bounce */35),o(/*! ../plugins/repulsor */59),o(/*! ../plugins/playerInputSteering */39),o(/*! ../plugins/hordeSpawn */58),o(/*! ../plugins/spawn */27),window.world=new t.World({systems:{ViewportWebGL:{debug:!0,container:"#game",followName:"hero1",zoom:.3},DrawStats:{},MemoryStats:{},DatGui:{},PlayerInputSteering:{},Health:{},Motion:{},Position:{},Thruster:{},Seeker:{},Repulsor:{},Collision:{},Bounce:{},Spawn:{},HordeSpawn:{viewportSystemName:"ViewportWebGL",offscreenTTL:.5,spawnMargin:250,minCount:200,spawn:function(e,a){var o=200*Math.random()+100;r.insert({Sprite:{name:"mine",size:o,color:16720418},Health:{max:4*o*o},Spawn:{},Collidable:{},Bounce:{mass:4*o*o},Position:{x:e,y:a,rotation:2*Math.PI*Math.random()},Motion:{dx:0,dy:0,drotation:2*Math.PI*Math.random()},Thruster:{deltaV:2400+100*Math.random(),maxV:1200+200*Math.random()},Seeker:{targetName:"hero1",radPerSec:.5+.2*Math.random()},HordeSpawn:{}})}}}}));r.insert({Name:{name:"hero1"},Health:{max:4e3},Sprite:{name:"hero",size:150,color:3355647},Spawn:{},Collidable:{},Bounce:{damage:1e-4,mass:7e3},Position:{x:0,y:0,rotation:-Math.PI/2},Motion:{},Thruster:{deltaV:2800,maxV:1400,active:!1},PlayerInputSteering:{radPerSec:Math.PI}});for(var n=0,i=0;i>-15e3;i-=600)r.insert({Name:{name:"repulsor"+i},Sprite:{name:"repulsor",color:2263074},Position:{x:n,y:i},Motion:{},Repulsor:{range:600,force:300}}),n+=600*Math.random()-300;r.start();var s=r.getSystem("ViewportWebGL"),d=r.getSystem("HordeSpawn"),l=r.getSystem("DatGui"),m=l.gui;m.add(r,"isPaused"),m.add(r,"debug"),m.add(s,"zoom",s.options.zoomMin,s.options.zoomMax).listen(),m.add(s,"lineWidth",1,4).step(.5).listen(),["gridEnabled","followEnabled","cameraX","cameraY"].forEach(function(e){m.add(s,e).listen()});var p=s.cursorPosition;m.add(p,"x").listen(),m.add(p,"y").listen(),m.add(d,"spawnCount").listen()}},[156]);
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_core__ = __webpack_require__(/*! ../lib/core */ 0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_viewportWebGL__ = __webpack_require__(/*! ../plugins/viewportWebGL */ 30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_health__ = __webpack_require__(/*! ../plugins/health */ 26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__plugins_collision__ = __webpack_require__(/*! ../plugins/collision */ 37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugins_bounce__ = __webpack_require__(/*! ../plugins/bounce */ 35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugins_repulsor__ = __webpack_require__(/*! ../plugins/repulsor */ 59);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__plugins_playerInputSteering__ = __webpack_require__(/*! ../plugins/playerInputSteering */ 39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__plugins_hordeSpawn__ = __webpack_require__(/*! ../plugins/hordeSpawn */ 58);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__plugins_spawn__ = __webpack_require__(/*! ../plugins/spawn */ 27);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var debug = true;
+
+var world = window.world = new __WEBPACK_IMPORTED_MODULE_0__lib_core__["World"]({
+  systems: {
+    ViewportWebGL: {
+      debug: debug,
+      container: '#game',
+      followName: 'hero1',
+      zoom: 0.3
+    },
+    DrawStats: {},
+    MemoryStats: {},
+    DatGui: {},
+    PlayerInputSteering: {},
+    Health: {},
+    Motion: {},
+    Position: {},
+    Thruster: {},
+    Seeker: {},
+    Repulsor: {},
+    Collision: {},
+    Bounce: {},
+    Spawn: {},
+    HordeSpawn: {
+      viewportSystemName: 'ViewportWebGL',
+      offscreenTTL: 0.5,
+      spawnMargin: 250,
+      minCount: 200,
+      spawn: function spawn(x, y) {
+        var MIN_SIZE = 100;
+        var MAX_SIZE = 300;
+        var size = (MAX_SIZE - MIN_SIZE) * Math.random() + MIN_SIZE;
+        world.insert({
+          Sprite: { name: 'mine', size: size, color: 0xff2222 },
+          Health: { max: 4 * size * size },
+          Spawn: {
+            /*
+              tombstone: (spawn, entityId) => {
+                const position = world.get('Position', entityId);
+                return {
+                  Sprite: {
+                    name: 'explosion',
+                    size,
+                    color: 0xff0000,
+                    ttl: 0.5
+                  },
+                  Position: { x: position.x, y: position.y },
+                  Spawn: { ttl: 0.5 }
+                };
+              }
+            */
+          },
+          Collidable: {},
+          Bounce: { /* damage: 0.0001, */mass: 4 * size * size },
+          Position: { x: x, y: y, rotation: Math.PI * 2 * Math.random() },
+          Motion: { dx: 0, dy: 0, drotation: Math.PI * 2 * Math.random() },
+          Thruster: { deltaV: 2400 + Math.random() * 100, maxV: 1200 + Math.random() * 200 },
+          Seeker: { targetName: 'hero1', radPerSec: 0.5 + Math.random() * 0.2 },
+          HordeSpawn: {}
+        });
+      }
+    }
+  }
+});
+
+world.insert({
+  Name: { name: 'hero1' },
+  Health: { max: 4000 },
+  Sprite: { name: 'hero', size: 150, color: 0x3333ff },
+  Spawn: {},
+  Collidable: {},
+  Bounce: { damage: 0.0001, mass: 7000 },
+  Position: { x: 0, y: 0, rotation: -(Math.PI / 2) },
+  Motion: {},
+  Thruster: { deltaV: 2800, maxV: 1400, active: false },
+  PlayerInputSteering: { radPerSec: Math.PI }
+  // Repulsor: { range: 600, force: 300 }
+});
+
+var x = 0;
+for (var y = 0; y > -15000; y -= 600) {
+  world.insert({
+    Name: { name: 'repulsor' + y },
+    Sprite: { name: 'repulsor', color: 0x228822 },
+    Position: { x: x, y: y },
+    Motion: {},
+    Repulsor: { range: 600, force: 300 }
+  });
+  x += -300 + Math.random() * 600;
+}
+
+world.start();
+
+var vpSystem = world.getSystem('ViewportWebGL');
+var spawnSystem = world.getSystem('HordeSpawn');
+var guiSystem = world.getSystem('DatGui');
+var gui = guiSystem.gui;
+
+gui.add(world, 'isPaused');
+gui.add(world, 'debug');
+gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
+gui.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
+
+var names = ['gridEnabled', 'followEnabled', 'cameraX', 'cameraY'];
+names.forEach(function (name) {
+  gui.add(vpSystem, name).listen();
+});
+
+var cp = vpSystem.cursorPosition;
+gui.add(cp, 'x').listen();
+gui.add(cp, 'y').listen();
+
+gui.add(spawnSystem, 'spawnCount').listen();
+
+/***/ })
+
+},[156]);
 //# sourceMappingURL=index.js.map

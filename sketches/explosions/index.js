@@ -1,12 +1,137 @@
-webpackJsonp([3],{149:/*!******************************************!*\
+webpackJsonp([3],{
+
+/***/ 149:
+/*!******************************************!*\
   !*** multi ./src/sketches/explosions.js ***!
   \******************************************/
 /*! no static exports found */
 /*! all exports used */
-function(t,o,n){t.exports=n(/*! ./src/sketches/explosions.js */150)},150:/*!************************************!*\
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(/*! ./src/sketches/explosions.js */150);
+
+
+/***/ }),
+
+/***/ 150:
+/*!************************************!*\
   !*** ./src/sketches/explosions.js ***!
   \************************************/
 /*! exports provided:  */
 /*! all exports used */
-function(t,o,n){"use strict";function e(){var t=2*d*Math.random()-d,o=2*d*Math.random()-d,n=.5+2*Math.random(),e=c[Math.floor(Math.random()*c.length)];p.insert({Sprite:{name:"default",color:e},Position:{x:t,y:o},Spawn:{ttl:Math.random(),tombstone:{Sprite:{name:"explosion",size:100+500*Math.random(),color:e,ttl:n},Position:{x:t,y:o},Spawn:{ttl:n}}}})}Object.defineProperty(o,"__esModule",{value:!0});var a=n(/*! babel-runtime/core-js/object/keys */38),s=n.n(a),r=n(/*! ../lib/core */0),i=(n(/*! ../plugins/drawStats */19),n(/*! ../plugins/memoryStats */20),n(/*! ../plugins/datGui */18),n(/*! ../plugins/viewportWebGL */30),n(/*! ../plugins/name */21),n(/*! ../plugins/position */7),n(/*! ../plugins/motion */8),n(/*! ../plugins/spawn */27)),d=1500,u={count:0,spawns:0,despawns:0},p=window.world=new r.World({systems:{ViewportWebGL:{debug:!0,container:"#game",WebGL:"#viewport",zoom:.3},DrawStats:{},MemoryStats:{},DatGui:{},Motion:{},Position:{},Spawn:{}}});p.start();for(var c=[16711680,65280,255,16776960,65535,16777215],l=0;l<150;l++)e();p.subscribe(i.MSG_SPAWN,function(){u.spawns++}),p.subscribe(i.MSG_DESPAWN,function(){u.despawns++,u.count=s()(p.get("Sprite")||{}).length;for(var t=0;t<150-u.count;t++)e()});var m=p.getSystem("ViewportWebGL"),w=p.getSystem("DatGui"),f=w.gui;f.add(p,"isPaused"),f.add(p,"debug"),f.add(m,"zoom",m.options.zoomMin,m.options.zoomMax).listen(),["gridEnabled"].forEach(function(t){return f.add(m,t).listen()}),["count","spawns","despawns"].forEach(function(t){return f.add(u,t).listen()})}},[149]);
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys__ = __webpack_require__(/*! babel-runtime/core-js/object/keys */ 38);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_core__ = __webpack_require__(/*! ../lib/core */ 0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_viewportWebGL__ = __webpack_require__(/*! ../plugins/viewportWebGL */ 30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_spawn__ = __webpack_require__(/*! ../plugins/spawn */ 27);
+
+
+
+
+
+
+
+
+
+
+
+
+var DEBUG = true;
+var MIN_COUNT = 150;
+var FIELD_SIZE = 1500;
+
+var debugData = {
+  count: 0,
+  spawns: 0,
+  despawns: 0
+};
+
+var world = window.world = new __WEBPACK_IMPORTED_MODULE_1__lib_core__["World"]({
+  systems: {
+    ViewportWebGL: {
+      debug: DEBUG,
+      container: '#game',
+      WebGL: '#viewport',
+      zoom: 0.3
+    },
+    DrawStats: {},
+    MemoryStats: {},
+    DatGui: {},
+    Motion: {},
+    Position: {},
+    Spawn: {}
+  }
+});
+world.start();
+
+var colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0x00ffff, 0xffffff];
+
+function spawnExplosion() {
+  var x = FIELD_SIZE * 2 * Math.random() - FIELD_SIZE;
+  var y = FIELD_SIZE * 2 * Math.random() - FIELD_SIZE;
+  var ttl = 0.5 + 2.0 * Math.random();
+  var color = colors[Math.floor(Math.random() * colors.length)];
+
+  world.insert({
+    Sprite: { name: 'default', color: color },
+    Position: { x: x, y: y },
+    Spawn: {
+      ttl: Math.random(),
+      tombstone: {
+        Sprite: {
+          name: 'explosion',
+          size: 100 + Math.random() * 500,
+          color: color, ttl: ttl
+        },
+        Position: { x: x, y: y },
+        Spawn: { ttl: ttl }
+      }
+    }
+  });
+}
+
+for (var i = 0; i < MIN_COUNT; i++) {
+  spawnExplosion();
+}
+
+world.subscribe(__WEBPACK_IMPORTED_MODULE_9__plugins_spawn__["MSG_SPAWN"], function () /*msg, entityId*/{
+  debugData.spawns++;
+});
+
+world.subscribe(__WEBPACK_IMPORTED_MODULE_9__plugins_spawn__["MSG_DESPAWN"], function () /*msg, entityId*/{
+  debugData.despawns++;
+  debugData.count = __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys___default()(world.get('Sprite') || {}).length;
+  for (var _i = 0; _i < MIN_COUNT - debugData.count; _i++) {
+    spawnExplosion();
+  }
+});
+
+var vpSystem = world.getSystem('ViewportWebGL');
+var guiSystem = world.getSystem('DatGui');
+var gui = guiSystem.gui;
+
+gui.add(world, 'isPaused');
+gui.add(world, 'debug');
+gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
+
+['gridEnabled'].forEach(function (name) {
+  return gui.add(vpSystem, name).listen();
+});
+['count', 'spawns', 'despawns'].forEach(function (name) {
+  return gui.add(debugData, name).listen();
+});
+
+/***/ })
+
+},[149]);
 //# sourceMappingURL=index.js.map

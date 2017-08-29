@@ -1,12 +1,116 @@
-webpackJsonp([1],{158:/*!**************************************!*\
+webpackJsonp([1],{
+
+/***/ 158:
+/*!**************************************!*\
   !*** multi ./src/sketches/seeker.js ***!
   \**************************************/
 /*! no static exports found */
 /*! all exports used */
-function(e,t,r){e.exports=r(/*! ./src/sketches/seeker.js */159)},159:/*!********************************!*\
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(/*! ./src/sketches/seeker.js */159);
+
+
+/***/ }),
+
+/***/ 159:
+/*!********************************!*\
   !*** ./src/sketches/seeker.js ***!
   \********************************/
 /*! exports provided:  */
 /*! all exports used */
-function(e,t,r){"use strict";Object.defineProperty(t,"__esModule",{value:!0});var o=r(/*! ../lib/core */0),a=(r(/*! ../plugins/name */21),r(/*! ../plugins/position */7),r(/*! ../plugins/motion */8),r(/*! ../plugins/thruster */29),r(/*! ../plugins/orbiter */73),r(/*! ../plugins/seeker */28),r(/*! ../plugins/viewportCanvas */76),r(/*! ../plugins/drawStats */19),r(/*! ../plugins/memoryStats */20),r(/*! ../plugins/datGui */18),new o.World({systems:{ViewportCanvas:{debug:!0,container:"#game",followName:"orbiter1",zoom:.5},DrawStats:{},MemoryStats:{},DatGui:{},Motion:{},Orbiter:{},Thruster:{},Seeker:{}}}));a.insert({Name:{name:"sun"},Sprite:{name:"asteroid",size:300},Position:{x:0,y:0},Motion:{dx:0,dy:0,drotation:Math.PI/6}}),a.insert({Name:{name:"orbiter1"},Sprite:{name:"hero",size:100},Position:{x:250,y:250},Motion:{},Orbiter:{name:"sun"}}),a.insert({Name:{name:"chaser1"},Sprite:{name:"enemyscout"},Position:{},Motion:{},Thruster:{deltaV:400,maxV:175},Seeker:{targetName:"orbiter1",radPerSec:.9}}),a.insert({Name:{name:"chaser2"},Sprite:{name:"enemyscout"},Position:{},Motion:{},Thruster:{deltaV:600,maxV:400},Seeker:{targetName:"orbiter1",radPerSec:2}}),a.start();var i=a.getSystem("ViewportCanvas"),n=a.getSystem("DatGui"),s=n.gui;s.add(i,"zoom",i.options.zoomMin,i.options.zoomMax).listen(),["debug","gridEnabled","cameraX","cameraY"].forEach(function(e){s.add(i,e).listen()})}},[158]);
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_core__ = __webpack_require__(/*! ../lib/core */ 0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_orbiter__ = __webpack_require__(/*! ../plugins/orbiter */ 73);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_viewportCanvas__ = __webpack_require__(/*! ../plugins/viewportCanvas */ 76);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 18);
+
+
+
+
+
+
+
+
+
+
+
+
+
+var debug = true;
+
+var world = new __WEBPACK_IMPORTED_MODULE_0__lib_core__["World"]({
+  systems: {
+    ViewportCanvas: {
+      debug: debug,
+      container: '#game',
+      followName: 'orbiter1',
+      zoom: 0.5
+    },
+    DrawStats: {},
+    MemoryStats: {},
+    DatGui: {},
+    Motion: {},
+    Orbiter: {},
+    Thruster: {},
+    Seeker: {}
+  }
+});
+
+world.insert({
+  Name: { name: 'sun' },
+  Sprite: { name: 'asteroid', size: 300 },
+  Position: { x: 0, y: 0 },
+  Motion: { dx: 0, dy: 0, drotation: Math.PI / 6 }
+});
+world.insert({
+  Name: { name: 'orbiter1' },
+  Sprite: { name: 'hero', size: 100 },
+  Position: { x: 250, y: 250 },
+  Motion: {},
+  Orbiter: { name: 'sun' }
+});
+world.insert({
+  Name: { name: 'chaser1' },
+  Sprite: { name: 'enemyscout' },
+  Position: {},
+  Motion: {},
+  Thruster: { deltaV: 400, maxV: 175 },
+  Seeker: { targetName: 'orbiter1', radPerSec: 0.9 }
+});
+world.insert({
+  Name: { name: 'chaser2' },
+  Sprite: { name: 'enemyscout' },
+  Position: {},
+  Motion: {},
+  Thruster: { deltaV: 600, maxV: 400 },
+  Seeker: { targetName: 'orbiter1', radPerSec: 2 }
+});
+
+world.start();
+
+var vpSystem = world.getSystem('ViewportCanvas');
+var guiSystem = world.getSystem('DatGui');
+var gui = guiSystem.gui;
+
+gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
+
+var names = ['debug', 'gridEnabled', 'cameraX', 'cameraY'];
+names.forEach(function (name) {
+  gui.add(vpSystem, name).listen();
+});
+
+/***/ })
+
+},[158]);
 //# sourceMappingURL=index.js.map
