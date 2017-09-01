@@ -85,8 +85,6 @@ export class ViewportWebGL extends Core.System {
     this.cameraX = 0;
     this.cameraY = 0;
 
-    this.debugDummySprite = { size: 100 };
-
     this.updateMetrics();
   }
 
@@ -229,8 +227,10 @@ export class ViewportWebGL extends Core.System {
     const vertexCount = this.fillBufferFromScene();
     this.gl.bufferData(this.gl.ARRAY_BUFFER, this.buffer, this.gl.STATIC_DRAW);
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
-    this.gl.clearColor(0, 0, 0, 0.5);
+
+    this.gl.clearColor(0, 0, 0, 0);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
     this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, vertexCount);
   }
 
@@ -265,8 +265,9 @@ export class ViewportWebGL extends Core.System {
       this.scene._backdrop = {
         visible: true,
         position: [0.0, 0.0],
-        color: [1.0, 1.0, 1.0, 0.2],
+        color: [1.0, 1.0, 1.0, 0.5],
         scale: 1,
+        rotation: Math.PI / 2,
         shapes: []
       };
     }
@@ -279,7 +280,6 @@ export class ViewportWebGL extends Core.System {
 
     sceneSprite.position[0] = this.visibleLeft;
     sceneSprite.position[1] = this.visibleTop;
-    sceneSprite.rotation = Math.PI / 2;
     sceneSprite.shapes.length = 0;
 
     for (let x = -gridOffsetX; x < this.visibleWidth; x += gridSize) {

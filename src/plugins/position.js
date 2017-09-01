@@ -1,6 +1,8 @@
 import { Component, System, registerComponent, registerSystem } from '../lib/core';
 import QuadTree from '../lib/QuadTree';
 
+const PI2 = Math.PI * 2;
+
 export class Position extends Component {
   static defaults() {
     return { x: 0, y: 0, rotation: 0 };
@@ -84,49 +86,53 @@ export class PositionSystem extends System {
     this.quadtree.insert(position);
   }
 
-  draw(/* timeDelta */) {
-    const g = this.getDebugGraphics();
-    if (!g) { return; }
-
-    g.lineStyle(4, 0x882222);
+  drawDebug(timeDelta, g) {
+    g.lineWidth = 4;
+    g.strokeStyle = '#882222';
     positions = this.getMatchingComponents();
     for (entityId in positions) {
       position = positions[entityId];
       sprite = this.world.get('Sprite', entityId);
-      g.drawCircle(position.x, position.y, sprite.width / 2);
+      g.moveTo(position.x, position.y);
+      g.arc(position.x, position.y, sprite.width / 2, 0, PI2);
       g.moveTo(position.x - 20, position.y);
       g.lineTo(position.x + 20, position.y);
       g.moveTo(position.x, position.y - 20);
       g.lineTo(position.x, position.y + 20);
     }
+    g.stroke();
 
-    g.lineStyle(4, 0x228822);
+    g.strokeStyle = '#228822';
     this.drawDebugQuadtreeNode(g, this.quadtree);
+    g.stroke();
 
-    g.lineStyle(4, 0xffff33);
+    g.strokeStyle = '#ffff33';
     g.moveTo(-20, 0);
     g.lineTo(20, 0);
     g.moveTo(0, -20);
     g.lineTo(0, 20);
     g.moveTo(0, 0);
-    g.drawRect(
+    g.rect(
       this.bounds.left,
       this.bounds.top,
       this.bounds.width,
       this.bounds.height
     );
+    g.stroke();
   }
 
   drawDebugQuadtreeNode(g, root) {
     if (!root) { return; }
 
-    g.lineStyle(4, 0x883388);
-    g.drawRect(root.bounds.left, root.bounds.top,
+    g.strokeStyle = '#883388';
+    g.rect(root.bounds.left, root.bounds.top,
                root.bounds.width, root.bounds.height);
 
-    g.lineStyle(4, 0x112222);
-    root.objects.forEach(body =>
-      g.drawRect(body.left, body.top, body.width, body.height));
+    g.strokeStyle = '#112222';
+    root.objects.forEach(body => {
+      g.moveTo(body.left, body.top);
+      g.rect(body.left, body.top, body.width, body.height)
+    });
 
     this.drawDebugQuadtreeNode(g, root.nodes[0]);
     this.drawDebugQuadtreeNode(g, root.nodes[1]);

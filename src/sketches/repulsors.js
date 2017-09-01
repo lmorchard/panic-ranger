@@ -28,7 +28,7 @@ const world = window.world = new Core.World({
       zoom: 0.3
     },
     DrawStats: {},
-    MemoryStats: {},
+    // MemoryStats: {},
     DatGui: {},
     PlayerInputSteering: {},
     Health: {},
@@ -44,7 +44,8 @@ const world = window.world = new Core.World({
       viewportSystemName: 'ViewportWebGL',
       offscreenTTL: 0.5,
       spawnMargin: 250,
-      minCount: 200,
+      minCount: 150,
+      maxFrameSpawn: 15,
       spawn: (x, y) => {
         const MIN_SIZE=100;
         const MAX_SIZE=300;
@@ -52,25 +53,9 @@ const world = window.world = new Core.World({
         world.insert({
           Sprite: { name: 'mine', size: size, color: 0xff2222 },
           Health: { max: 4 * size * size },
-          Spawn: {
-          /*
-            tombstone: (spawn, entityId) => {
-              const position = world.get('Position', entityId);
-              return {
-                Sprite: {
-                  name: 'explosion',
-                  size,
-                  color: 0xff0000,
-                  ttl: 0.5
-                },
-                Position: { x: position.x, y: position.y },
-                Spawn: { ttl: 0.5 }
-              };
-            }
-          */
-          },
+          Spawn: { },
           Collidable: { },
-          Bounce: { /* damage: 0.0001, */ mass: 4 * size * size },
+          Bounce: { mass: 4 * size * size },
           Position: { x: x, y: y, rotation: (Math.PI * 2) * Math.random() },
           Motion: { dx: 0, dy: 0, drotation: (Math.PI * 2) * Math.random() },
           Thruster: { deltaV: 2400 + Math.random() * 100, maxV: 1200 + Math.random() * 200 },
@@ -84,7 +69,7 @@ const world = window.world = new Core.World({
 
 world.insert({
   Name: { name: 'hero1'},
-  Health: { max: 4000 },
+  // Health: { max: 4000 },
   Sprite: { name: 'hero', size: 150, color: 0x3333ff },
   Spawn: {},
   Collidable: {},
@@ -93,7 +78,6 @@ world.insert({
   Motion: {},
   Thruster: { deltaV: 2800, maxV: 1400, active: false },
   PlayerInputSteering: { radPerSec: Math.PI },
-  // Repulsor: { range: 600, force: 300 }
 });
 
 let x = 0;

@@ -1,5 +1,7 @@
 import { Component, System, registerComponent, registerSystem } from '../lib/core';
 
+const PI2 = Math.PI * 2;
+
 export class Repulsor extends Component {
     static defaults() {
       return {
@@ -80,16 +82,14 @@ export class RepulsorSystem extends System {
     neighborMotion.dy += repelForce * Math.sin(repelAngle);
   }
 
-  draw(/* timeDelta */) {
-    const g = this.getDebugGraphics();
-    if (!g) { return; }
-
-    g.lineStyle(4, 0x882222);
+  drawDebug(timeDelta, g) {
+    g.lineWidth = 4;
+    g.strokeStyle = '#882222';
     components = this.getMatchingComponents();
     for (entityId in components) {
       component = components[entityId];
       position = this.world.get('Position', entityId);
-      g.drawCircle(position.x, position.y, component.range);
+      g.arc(position.x, position.y, component.range, 0, PI2);
     }
   }
 
