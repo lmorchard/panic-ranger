@@ -25,13 +25,16 @@ Good luck.
 
 ### TODO
 
+* map proximate repulsors in a graph for pathfinding by NPC ships
+  * player autopilot? (which can fail / perform badly)
+
 * bugs
   * fatal err on collisions?
 
 * player stats
-  * anxiety level
-  * ship energy
-  * ship systems damage
+  * willpower
+  * fuel
+  * systems damage
 
 * friendly entities
   * repulsors
@@ -40,6 +43,8 @@ Good luck.
 
 * unfriendly entities
   * chitterers
+  * rhinos
+  * pirates
 
 * misc
   * horde spawn
@@ -53,9 +58,13 @@ Good luck.
   * pathfinding between stargates via repulsor roads
 
 * powerups
+  * meds
+    * willpower changes (positive or negative) are slowed
+    * fuel drained instead
   * booze
-    * temporarily ignore anxiety level
+    * temporarily ignore willpower drop
     * general reduction in ability in cooldown period
+    * if back to safety before wears off, willpower drop is discarded
   * charge
     * temporary repulsor in front
     * no steering forward speed boost
