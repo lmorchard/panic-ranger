@@ -35,10 +35,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugins_collision__ = __webpack_require__(/*! ../plugins/collision */ 38);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugins_bounce__ = __webpack_require__(/*! ../plugins/bounce */ 34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugins_collision__ = __webpack_require__(/*! ../plugins/collision */ 37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugins_bounce__ = __webpack_require__(/*! ../plugins/bounce */ 33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__plugins_repulsor__ = __webpack_require__(/*! ../plugins/repulsor */ 49);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__plugins_playerInputSteering__ = __webpack_require__(/*! ../plugins/playerInputSteering */ 39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__plugins_playerInputSteering__ = __webpack_require__(/*! ../plugins/playerInputSteering */ 38);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__plugins_hordeSpawn__ = __webpack_require__(/*! ../plugins/hordeSpawn */ 48);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__plugins_spawn__ = __webpack_require__(/*! ../plugins/spawn */ 27);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__plugins_roadRunner__ = __webpack_require__(/*! ../plugins/roadRunner */ 69);
@@ -63,16 +63,16 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
-var debug = true;
+var debug = false;
 
 var world = window.world = new __WEBPACK_IMPORTED_MODULE_0__lib_core__["World"]({
   systems: {
     ViewportWebGL: {
       debug: debug,
       container: '#game',
-      followName: 'hero1',
-      zoom: 0.3,
-      lineWidth: 2.5
+      zoom: 0.125,
+      gridEnabled: false,
+      lineWidth: 2.0
     },
     DebugCanvas: {
       container: '#game',
@@ -103,10 +103,10 @@ var destinations = [];
 var placeRepulsor = function placeRepulsor(x, y) {
   return id = world.insert({
     Name: { name: 'repulsor' + y },
-    Sprite: { name: 'repulsor', color: 0x228822, size: 100 },
+    Sprite: { name: 'repulsor', color: 0x114411, size: 100 },
     Position: { x: x, y: y },
     Motion: {},
-    Repulsor: { range: 600, force: 300 },
+    // Repulsor: { range: 600, force: 300 },
     Road: { type: 'repulsor', range: 800 }
   });
 };
@@ -138,20 +138,56 @@ for (x = 600; x < 3000; x += 600) {
 }
 destinations.push(id);
 
-world.insert({
-  Name: { name: 'hero1' },
-  Sprite: { name: 'hero', size: 150, color: 0x3333ff },
-  Spawn: {},
-  Collidable: {},
-  Bounce: { damage: 0.0001, mass: 7000 },
-  Position: { x: 0, y: 0, rotation: -(Math.PI / 2) },
-  Motion: {},
-  Thruster: { deltaV: 2800, maxV: 1400, active: false },
-  PlayerInputSteering: { radPerSec: Math.PI },
-  Runner: { destination: '' + destinations[0] }
+var spawnPoints = destinations.map(function (id) {
+  return world.get('Position', id);
 });
 
-world.debug = true;
+function spawnSelfDrivingBus() {
+  var color = 0xffffff * Math.random();
+  var destination = '' + destinations[Math.floor(Math.random() * destinations.length)];
+  var _spawnPoints$Math$flo = spawnPoints[Math.floor(Math.random() * spawnPoints.length)],
+      x = _spawnPoints$Math$flo.x,
+      y = _spawnPoints$Math$flo.y;
+
+  x += 400 * Math.random() - 200;
+  y += 400 * Math.random() - 200;
+
+  return world.insert({
+    Name: { name: 'bus' + Math.random() },
+    Sprite: { name: 'hero', size: 150, color: color },
+    Spawn: {},
+    Collidable: {},
+    Bounce: { mass: 7000 },
+    Position: {
+      x: x, y: y,
+      rotation: Math.PI * 2 * Math.random()
+    },
+    Motion: {},
+    Thruster: { deltaV: 4000, maxV: 1500 },
+    Seeker: { radPerSec: Math.PI * 1.25, active: false },
+    Runner: { destination: destination }
+  });
+}
+
+// Spawn some initial entities
+for (var i = 0; i < 10; i++) {
+  setTimeout(spawnSelfDrivingBus, 1000 * Math.random());
+}
+
+// Spawn new entities when old ones reach their destinations
+world.subscribe(__WEBPACK_IMPORTED_MODULE_18__plugins_roadRunner__["MSG_DESTINATION_REACHED"], function (msg, entityId) {
+  world.publish(__WEBPACK_IMPORTED_MODULE_17__plugins_spawn__["MSG_DESTROY"], entityId);
+  setTimeout(spawnSelfDrivingBus, 1000 * Math.random());
+});
+
+world.subscribe(__WEBPACK_IMPORTED_MODULE_17__plugins_spawn__["MSG_DESPAWN"], function (msg, entityId) {
+  return console.log('DESPAWN', world.get('Name', entityId).name);
+});
+world.subscribe(__WEBPACK_IMPORTED_MODULE_17__plugins_spawn__["MSG_SPAWN"], function (msg, entityId) {
+  return console.log('SPAWN', world.get('Name', entityId).name);
+});
+
+world.debug = debug;
 
 world.start();
 
@@ -163,6 +199,7 @@ var gui = guiSystem.gui;
 var generalf = gui.addFolder('General');
 generalf.add(world, 'isPaused');
 generalf.add(world, 'debug');
+generalf.open();
 
 var vpf = gui.addFolder('Viewport');
 var names = ['gridEnabled', 'followEnabled', 'cameraX', 'cameraY'];
@@ -173,7 +210,7 @@ vpf.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).li
 vpf.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
 
 var rrf = gui.addFolder('RoadRunner');
-['debug', 'debugRange', 'debugRoads', 'debugText', 'debugPath'].forEach(function (name) {
+['debug', 'debugRange', 'debugRoads', 'debugPath'].forEach(function (name) {
   return rrf.add(roadRunnerSystem.options, name);
 });
 rrf.open();

@@ -35,9 +35,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugins_collision__ = __webpack_require__(/*! ../plugins/collision */ 38);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugins_bounce__ = __webpack_require__(/*! ../plugins/bounce */ 34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__plugins_playerInputSteering__ = __webpack_require__(/*! ../plugins/playerInputSteering */ 39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugins_collision__ = __webpack_require__(/*! ../plugins/collision */ 37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugins_bounce__ = __webpack_require__(/*! ../plugins/bounce */ 33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__plugins_playerInputSteering__ = __webpack_require__(/*! ../plugins/playerInputSteering */ 38);
 
 
 
