@@ -37,6 +37,7 @@ export class SpawnSystem extends System {
   matchComponent() { return 'Spawn'; }
 
   updateComponent(timeDelta, entityId, spawn) {
+    const name = this.world.get('Name', entityId);
     if (!spawn.spawned) {
       spawn.spawned = true;
       this.world.publish(MSG_SPAWN, entityId);
@@ -51,9 +52,13 @@ export class SpawnSystem extends System {
       }
     }
     if (spawn.destroy) {
+      console.log('destroy', name.name);
       if (spawn.tombstone !== null) {
-        this.world.insert((typeof spawn.tombstone === 'function') ?
-          spawn.tombstone(spawn, entityId) : spawn.tombstone);
+        const toInsert = (typeof spawn.tombstone === 'function')
+          ? spawn.tombstone(spawn, entityId)
+          : spawn.tombstone;
+        console.log('tombstone', JSON.stringify(toInsert));
+        this.world.insert(toInsert);
       }
       this.world.publish(MSG_DESPAWN, entityId);
       this.world.destroy(entityId);

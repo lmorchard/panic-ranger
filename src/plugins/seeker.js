@@ -30,8 +30,14 @@ export class SeekerSystem extends Core.System {
   }
 
   updateComponent(timeDelta, entityId, seeker) {
+    const position = this.world.get('Position', entityId);
+    const motion = this.world.get('Motion', entityId);
+    if (!position || !motion) { return; }
 
-    if (!seeker.active) { return; }
+    if (!seeker.active) {
+      motion.drotation = 0;
+      return;
+    }
 
     // Look up the orbited entity ID, if only name given.
     if (seeker.targetName && !seeker.targetEntityId) {
@@ -45,10 +51,6 @@ export class SeekerSystem extends Core.System {
       seeker.acquisitionDelay -= timeDelta;
       return;
     }
-
-    const position = this.world.get('Position', entityId);
-    const motion = this.world.get('Motion', entityId);
-    if (!position || !motion) { return; }
 
     // Accept either a raw x/y coord or entity ID as target
     let targetPosition = seeker.targetPosition;

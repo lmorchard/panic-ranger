@@ -4,12 +4,22 @@ export class DebugCanvas extends Core.System {
 
   defaultOptions() {
     return {
+      debugText: false
     };
   }
 
   initialize() {
     this.viewportSystem = this.world.getSystem(this.options.viewportSystemName);
     this.container = document.querySelector(this.options.container);
+
+    this.debugT = document.createElement('textarea');
+    document.body.appendChild(this.debugT);
+    Object.assign(this.debugT.style, {
+      width: '400px', height: '300px',
+      display: 'block', position: 'absolute',
+      zIndex: 1000, bottom: '0px', right: '0px',
+      color: '#fff', backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    });
 
     this.canvas = document.createElement('canvas');
     this.container.appendChild(this.canvas);
@@ -35,6 +45,9 @@ export class DebugCanvas extends Core.System {
   }
 
   update() {
+    this.debugT.style.display = (this.options.debugText)
+      ? 'block'
+      : 'none';
   }
 
   drawStart() {

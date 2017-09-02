@@ -1,13 +1,6 @@
 import * as Core from '../lib/core';
 
-function distance(aPosition, bPosition) {
-  return Math.sqrt(
-    Math.pow(bPosition.x - aPosition.x, 2) +
-    Math.pow(bPosition.y - aPosition.y, 2)
-  );
-}
-const digits = '0123456789abcdef';
-const randDigit = () => digits.charAt(Math.floor(Math.random() * digits.length));
+export const MSG_DESTINATION_REACHED = 'roadRunnerDestinationReached';
 
 export class Road extends Core.Component {
   static defaults() {
@@ -40,7 +33,6 @@ export class RoadRunnerSystem extends Core.System {
       debugRange: false,
       debugRoads: true,
       debugRunners: true,
-      debugText: false,
       debugPath: true,
       positionSystemName: 'Position'
     };
@@ -49,15 +41,6 @@ export class RoadRunnerSystem extends Core.System {
   initialize() {
     this.positionSystem = this.world.getSystem(this.options.positionSystemName);
     this.mapNeighbor = this.mapNeighbor.bind(this);
-
-    this.debugT = document.createElement('textarea');
-    document.body.appendChild(this.debugT);
-    Object.assign(this.debugT.style, {
-      width: '400px', height: '300px',
-      display: 'block', position: 'absolute',
-      zIndex: 1000, bottom: '0px', right: '0px',
-      color: '#fff', backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    });
   }
 
   update(/* timeDelta */) {
@@ -86,6 +69,7 @@ export class RoadRunnerSystem extends Core.System {
       const runner = runners[entityId];
       const position = this.world.get('Position', entityId);
       const range = runner.range;
+
       runner.neighbors = {};
       this.positionSystem.quadtree.iterate(
         {
@@ -97,15 +81,32 @@ export class RoadRunnerSystem extends Core.System {
         this.mapNeighbor,
         [range, runner, position]
       );
+
       const neighbors = Object.entries(runner.neighbors);
       runner.nearest = (neighbors.length === 0)
         ? null
         : neighbors.sort((a, b) => a[1] - b[1]).shift()[0];
 
-      if (runner.nearest && runner.destination) {
-        runner.path = this.astar(runner.nearest, runner.destination);
-      } else {
+      if (!runner.nearest || !runner.destination) {
         runner.path = null;
+      } else {
+        runner.path = this.astar(runner.nearest, runner.destination) || [];
+        const seeker = this.world.get('Seeker', entityId);
+        const thruster = this.world.get('Thruster', entityId);
+        if (seeker) {
+          const nextId = runner.path[1];
+          if (!nextId) {
+            thruster.stop = true;
+            seeker.active = false;
+            seeker.targetEntityId = null;
+            this.world.publish(MSG_DESTINATION_REACHED, entityId);
+          } else {
+            thruster.active = true;
+            thruster.stop = false;
+            seeker.active = true;
+            seeker.targetEntityId = nextId;
+          }
+        }
       }
     }
   }
@@ -121,7 +122,7 @@ export class RoadRunnerSystem extends Core.System {
     if (dist < range) { road.neighbors[neighborId] = dist; }
   }
 
-  // https://en.wikipedia.org/wiki/A-star
+  // https://en.wikipedia.org/wiki/A-star#Pseudocode
   astar(startId, goalId) {
     const INFINITY = 1000000000;
 
@@ -139,7 +140,7 @@ export class RoadRunnerSystem extends Core.System {
       const total_path = [currentId];
       while (cameFrom.has(currentId)) {
         currentId = cameFrom.get(currentId);
-        total_path.push(currentId);
+        total_path.unshift(currentId);
       }
       return total_path;
     };
@@ -176,10 +177,6 @@ export class RoadRunnerSystem extends Core.System {
         .shift()[0];
 
       if (currentId === goalId) {
-        this.debugT.value = JSON.stringify({
-          path: reconstruct_path(cameFrom, currentId),
-          startId, goalId, cameFrom, openSet, closedSet, gScore, fScore
-        });
         return reconstruct_path(cameFrom, currentId);
       }
 
@@ -216,30 +213,18 @@ export class RoadRunnerSystem extends Core.System {
       }
     }
 
-    this.debugT.value = JSON.stringify({
-      path: null,
-      startId, goalId, cameFrom, openSet, closedSet, gScore, fScore
-    });
-
     return null;
   }
 
   drawDebug(timeDelta, g) {
     if (!this.options.debug) { return; }
 
-    this.debugT.style.display = (this.options.debugText)
-      ? 'block'
-      : 'none';
-
     const roadItems = this.world.get('Road');
     for (const entityId in roadItems) {
       const road = roadItems[entityId];
       const position = this.world.get('Position', entityId);
       if (!road.debugColor) {
-        road.debugColor = '#' +
-          randDigit() + randDigit() +
-          randDigit() + randDigit() +
-          randDigit() + randDigit();
+        road.debugColor = randColor();
       }
 
       if (this.options.debugRange) {
@@ -282,27 +267,24 @@ export class RoadRunnerSystem extends Core.System {
       for (const entityId in runners) {
         const runner = runners[entityId];
         if (!runner.debugColor) {
-          runner.debugColor = '#' +
-            randDigit() + randDigit() +
-            randDigit() + randDigit() +
-            randDigit() + randDigit();
+          runner.debugColor = randColor();
         }
 
-        const circleSize = 220 + 10 * Math.random();
-        [runner.nearest, runner.destination].forEach(entityId => {
-          if (entityId) {
-            const position = this.world.get('Position', entityId);
-            g.beginPath();
-            g.setLineDash([15, 15]);
-            g.moveTo(position.x + circleSize, position.y);
-            g.arc(position.x, position.y, circleSize, 0, Math.PI * 2);
-            g.lineWidth = 4;
-            g.strokeStyle = runner.debugColor;
-            g.stroke();
-          }
-        });
-
         if (this.options.debugPath && runner.path) {
+          const circleSize = 220 + 10 * Math.random();
+          [runner.nearest, runner.destination].forEach(entityId => {
+            if (entityId) {
+              const position = this.world.get('Position', entityId);
+              g.beginPath();
+              g.setLineDash([15, 15]);
+              g.moveTo(position.x + circleSize, position.y);
+              g.arc(position.x, position.y, circleSize, 0, Math.PI * 2);
+              g.lineWidth = 4;
+              g.strokeStyle = runner.debugColor;
+              g.stroke();
+            }
+          });
+
           let last = runner.path[0];
           for (let idx = 1; idx < runner.path.length; idx++) {
             const current = runner.path[idx];
@@ -335,3 +317,14 @@ export class RoadRunnerSystem extends Core.System {
 }
 
 Core.registerSystem('RoadRunner', RoadRunnerSystem);
+
+function distance(aPosition, bPosition) {
+  return Math.sqrt(
+    Math.pow(bPosition.x - aPosition.x, 2) +
+    Math.pow(bPosition.y - aPosition.y, 2)
+  );
+}
+
+const digits = '0123456789abcdef';
+const randDigit = () => digits.charAt(Math.floor(Math.random() * digits.length));
+const randColor = () => '#' + randDigit() + randDigit() + randDigit() + randDigit() + randDigit() + randDigit();
