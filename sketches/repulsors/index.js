@@ -1,6 +1,6 @@
-webpackJsonp([2],{
+webpackJsonp([3],{
 
-/***/ 156:
+/***/ 196:
 /*!*****************************************!*\
   !*** multi ./src/sketches/repulsors.js ***!
   \*****************************************/
@@ -8,12 +8,12 @@ webpackJsonp([2],{
 /*! all exports used */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! ./src/sketches/repulsors.js */157);
+module.exports = __webpack_require__(/*! ./src/sketches/repulsors.js */197);
 
 
 /***/ }),
 
-/***/ 157:
+/***/ 197:
 /*!***********************************!*\
   !*** ./src/sketches/repulsors.js ***!
   \***********************************/
@@ -27,18 +27,18 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_viewportWebGL__ = __webpack_require__(/*! ../plugins/viewportWebGL */ 30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_viewportWebGL__ = __webpack_require__(/*! ../plugins/viewportWebGL */ 31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_health__ = __webpack_require__(/*! ../plugins/health */ 26);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__plugins_collision__ = __webpack_require__(/*! ../plugins/collision */ 37);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugins_bounce__ = __webpack_require__(/*! ../plugins/bounce */ 35);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugins_repulsor__ = __webpack_require__(/*! ../plugins/repulsor */ 59);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__plugins_collision__ = __webpack_require__(/*! ../plugins/collision */ 38);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugins_bounce__ = __webpack_require__(/*! ../plugins/bounce */ 34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugins_repulsor__ = __webpack_require__(/*! ../plugins/repulsor */ 49);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__plugins_playerInputSteering__ = __webpack_require__(/*! ../plugins/playerInputSteering */ 39);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__plugins_hordeSpawn__ = __webpack_require__(/*! ../plugins/hordeSpawn */ 58);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__plugins_hordeSpawn__ = __webpack_require__(/*! ../plugins/hordeSpawn */ 48);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__plugins_spawn__ = __webpack_require__(/*! ../plugins/spawn */ 27);
 
 
@@ -70,7 +70,7 @@ var world = window.world = new __WEBPACK_IMPORTED_MODULE_0__lib_core__["World"](
       zoom: 0.3
     },
     DrawStats: {},
-    MemoryStats: {},
+    // MemoryStats: {},
     DatGui: {},
     PlayerInputSteering: {},
     Health: {},
@@ -86,7 +86,8 @@ var world = window.world = new __WEBPACK_IMPORTED_MODULE_0__lib_core__["World"](
       viewportSystemName: 'ViewportWebGL',
       offscreenTTL: 0.5,
       spawnMargin: 250,
-      minCount: 200,
+      minCount: 150,
+      maxFrameSpawn: 15,
       spawn: function spawn(x, y) {
         var MIN_SIZE = 100;
         var MAX_SIZE = 300;
@@ -94,25 +95,9 @@ var world = window.world = new __WEBPACK_IMPORTED_MODULE_0__lib_core__["World"](
         world.insert({
           Sprite: { name: 'mine', size: size, color: 0xff2222 },
           Health: { max: 4 * size * size },
-          Spawn: {
-            /*
-              tombstone: (spawn, entityId) => {
-                const position = world.get('Position', entityId);
-                return {
-                  Sprite: {
-                    name: 'explosion',
-                    size,
-                    color: 0xff0000,
-                    ttl: 0.5
-                  },
-                  Position: { x: position.x, y: position.y },
-                  Spawn: { ttl: 0.5 }
-                };
-              }
-            */
-          },
+          Spawn: {},
           Collidable: {},
-          Bounce: { /* damage: 0.0001, */mass: 4 * size * size },
+          Bounce: { mass: 4 * size * size },
           Position: { x: x, y: y, rotation: Math.PI * 2 * Math.random() },
           Motion: { dx: 0, dy: 0, drotation: Math.PI * 2 * Math.random() },
           Thruster: { deltaV: 2400 + Math.random() * 100, maxV: 1200 + Math.random() * 200 },
@@ -126,7 +111,7 @@ var world = window.world = new __WEBPACK_IMPORTED_MODULE_0__lib_core__["World"](
 
 world.insert({
   Name: { name: 'hero1' },
-  Health: { max: 4000 },
+  // Health: { max: 4000 },
   Sprite: { name: 'hero', size: 150, color: 0x3333ff },
   Spawn: {},
   Collidable: {},
@@ -135,7 +120,6 @@ world.insert({
   Motion: {},
   Thruster: { deltaV: 2800, maxV: 1400, active: false },
   PlayerInputSteering: { radPerSec: Math.PI }
-  // Repulsor: { range: 600, force: 300 }
 });
 
 var x = 0;
@@ -175,5 +159,5 @@ gui.add(spawnSystem, 'spawnCount').listen();
 
 /***/ })
 
-},[156]);
+},[196]);
 //# sourceMappingURL=index.js.map

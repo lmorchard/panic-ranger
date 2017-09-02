@@ -1,6 +1,6 @@
 webpackJsonp([0],{
 
-/***/ 151:
+/***/ 191:
 /*!*******************************************!*\
   !*** multi ./src/sketches/pathfinding.js ***!
   \*******************************************/
@@ -8,12 +8,12 @@ webpackJsonp([0],{
 /*! all exports used */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! ./src/sketches/pathfinding.js */152);
+module.exports = __webpack_require__(/*! ./src/sketches/pathfinding.js */192);
 
 
 /***/ }),
 
-/***/ 152:
+/***/ 192:
 /*!*************************************!*\
   !*** ./src/sketches/pathfinding.js ***!
   \*************************************/
@@ -24,24 +24,24 @@ module.exports = __webpack_require__(/*! ./src/sketches/pathfinding.js */152);
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_core__ = __webpack_require__(/*! ../lib/core */ 0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(/*! lodash */ 153);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(/*! lodash */ 193);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_Vector2D__ = __webpack_require__(/*! ../lib/Vector2D */ 17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_Vector2D__ = __webpack_require__(/*! ../lib/Vector2D */ 28);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 20);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_expiration__ = __webpack_require__(/*! ../plugins/expiration */ 72);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_viewportWebGL__ = __webpack_require__(/*! ../plugins/viewportWebGL */ 30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_expiration__ = __webpack_require__(/*! ../plugins/expiration */ 84);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_viewportWebGL__ = __webpack_require__(/*! ../plugins/viewportWebGL */ 31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_health__ = __webpack_require__(/*! ../plugins/health */ 26);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__plugins_steering__ = __webpack_require__(/*! ../plugins/steering */ 75);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__plugins_collision__ = __webpack_require__(/*! ../plugins/collision */ 37);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__plugins_bounce__ = __webpack_require__(/*! ../plugins/bounce */ 35);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__plugins_pathfinding__ = __webpack_require__(/*! ../plugins/pathfinding */ 74);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__plugins_steering__ = __webpack_require__(/*! ../plugins/steering */ 98);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__plugins_collision__ = __webpack_require__(/*! ../plugins/collision */ 38);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__plugins_bounce__ = __webpack_require__(/*! ../plugins/bounce */ 34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__plugins_pathfinding__ = __webpack_require__(/*! ../plugins/pathfinding */ 86);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__plugins_playerInputSteering__ = __webpack_require__(/*! ../plugins/playerInputSteering */ 39);
 
 
@@ -233,7 +233,7 @@ guiSteering.add(steeringSystem, 'debug');
 
 /***/ }),
 
-/***/ 153:
+/***/ 193:
 /*!***************************************!*\
   !*** ./node_modules/lodash/lodash.js ***!
   \***************************************/
@@ -17327,11 +17327,11 @@ guiSteering.add(steeringSystem, 'debug');
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(/*! ./../webpack/buildin/global.js */ 154), __webpack_require__(/*! ./../webpack/buildin/module.js */ 155)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(/*! ./../webpack/buildin/global.js */ 194), __webpack_require__(/*! ./../webpack/buildin/module.js */ 195)(module)))
 
 /***/ }),
 
-/***/ 154:
+/***/ 194:
 /*!***********************************!*\
   !*** (webpack)/buildin/global.js ***!
   \***********************************/
@@ -17364,7 +17364,7 @@ module.exports = g;
 
 /***/ }),
 
-/***/ 155:
+/***/ 195:
 /*!***********************************!*\
   !*** (webpack)/buildin/module.js ***!
   \***********************************/
@@ -17398,5 +17398,5 @@ module.exports = function(module) {
 
 /***/ })
 
-},[151]);
+},[191]);
 //# sourceMappingURL=index.js.map
