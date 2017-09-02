@@ -17,6 +17,7 @@ import '../plugins/repulsor';
 import '../plugins/playerInputSteering';
 import '../plugins/hordeSpawn';
 import '../plugins/spawn';
+import '../plugins/roadRunner';
 
 const debug = true;
 
@@ -45,8 +46,52 @@ const world = window.world = new Core.World({
     Collision: {},
     Bounce: {},
     Spawn: {},
+    RoadRunner: {},
   }
 });
+
+let x = 0;
+let y = 0;
+let id;
+
+const destinations = [];
+
+const placeRepulsor = (x, y) =>
+  id = world.insert({
+    Name: { name: `repulsor${y}` },
+    Sprite: { name: 'repulsor', color: 0x228822, size: 100 },
+    Position: { x, y },
+    Motion: { },
+    Repulsor: { range: 600, force: 300 },
+    Road: { type: 'repulsor', range: 800 }
+  });
+
+for (y = 0; y > -3000; y -= 600) {
+  placeRepulsor(x, y);
+  x += (-300 + Math.random() * 600);
+}
+destinations.push(id);
+
+x = 0;
+for (y = 600; y < 3000; y += 600) {
+  placeRepulsor(x, y);
+  x += (-300 + Math.random() * 600);
+}
+destinations.push(id);
+
+y = 0;
+for (x = -600; x > -3000; x -= 600) {
+  placeRepulsor(x, y);
+  y += (-300 + Math.random() * 600);
+}
+destinations.push(id);
+
+y = 0;
+for (x = 600; x < 3000; x += 600) {
+  placeRepulsor(x, y);
+  y += (-300 + Math.random() * 600);
+}
+destinations.push(id);
 
 world.insert({
   Name: { name: 'hero1'},
@@ -58,41 +103,30 @@ world.insert({
   Motion: {},
   Thruster: { deltaV: 2800, maxV: 1400, active: false },
   PlayerInputSteering: { radPerSec: Math.PI },
+  Runner: { destination: ''+destinations[0] },
 });
-
-let x = 0;
-for (let y = 0; y > -15000; y -= 600) {
-  world.insert({
-    Name: { name: `repulsor${y}` },
-    Sprite: { name: 'repulsor', color: 0x228822 },
-    Position: { x, y },
-    Motion: { },
-    Repulsor: { range: 600, force: 300 }
-  });
-  x += (-300 + Math.random() * 600);
-}
 
 world.debug = true;
 
 world.start();
 
 const vpSystem = world.getSystem('ViewportWebGL');
-const spawnSystem = world.getSystem('HordeSpawn');
+const roadRunnerSystem = world.getSystem('RoadRunner');
 const guiSystem = world.getSystem('DatGui');
 const gui = guiSystem.gui;
 
-gui.add(world, 'isPaused');
-gui.add(world, 'debug');
-gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
-gui.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
+const generalf = gui.addFolder('General');
+generalf.add(world, 'isPaused');
+generalf.add(world, 'debug');
 
+const vpf = gui.addFolder('Viewport');
 const names = [ 'gridEnabled', 'followEnabled', 'cameraX', 'cameraY' ];
-names.forEach(function (name) {
-  gui.add(vpSystem, name).listen();
-});
+names.forEach(name => vpf.add(vpSystem, name).listen());
+vpf.add(vpSystem, 'zoom',
+  vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
+vpf.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
 
-const cp = vpSystem.cursorPosition;
-gui.add(cp, 'x').listen();
-gui.add(cp, 'y').listen();
-
-gui.add(spawnSystem, 'spawnCount').listen();
+const rrf = gui.addFolder('RoadRunner');
+['debug', 'debugRange', 'debugRoads', 'debugText', 'debugPath']
+  .forEach(name => rrf.add(roadRunnerSystem.options, name));
+rrf.open();

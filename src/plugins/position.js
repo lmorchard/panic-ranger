@@ -17,6 +17,7 @@ export class PositionSystem extends System {
 
   defaultOptions() {
     return {
+      debug: false,
       quadtreeMaxAge: 2,
       quadtreeObjectsPerNode: 5,
       quadtreeMaxLevels: 5
@@ -87,8 +88,10 @@ export class PositionSystem extends System {
   }
 
   drawDebug(timeDelta, g) {
+    if (!this.options.debug) { return; }
+
     g.lineWidth = 4;
-    g.strokeStyle = '#882222';
+    g.strokeStyle = g.fillStyle = '#882222';
     positions = this.getMatchingComponents();
     for (entityId in positions) {
       position = positions[entityId];
@@ -102,11 +105,11 @@ export class PositionSystem extends System {
     }
     g.stroke();
 
-    g.strokeStyle = '#228822';
+    g.strokeStyle = g.fillStyle = '#228822';
     this.drawDebugQuadtreeNode(g, this.quadtree);
     g.stroke();
 
-    g.strokeStyle = '#ffff33';
+    g.strokeStyle = g.fillStyle = '#ffff33';
     g.moveTo(-20, 0);
     g.lineTo(20, 0);
     g.moveTo(0, -20);
@@ -124,14 +127,15 @@ export class PositionSystem extends System {
   drawDebugQuadtreeNode(g, root) {
     if (!root) { return; }
 
-    g.strokeStyle = '#883388';
+    g.strokeStyle = g.fillStyle = '#883388';
+    g.moveTo(root.bounds.left, root.bounds.top);
     g.rect(root.bounds.left, root.bounds.top,
                root.bounds.width, root.bounds.height);
 
-    g.strokeStyle = '#112222';
+    g.strokeStyle = g.fillStyle = '#112222';
     root.objects.forEach(body => {
       g.moveTo(body.left, body.top);
-      g.rect(body.left, body.top, body.width, body.height)
+      g.rect(body.left, body.top, body.width, body.height);
     });
 
     this.drawDebugQuadtreeNode(g, root.nodes[0]);

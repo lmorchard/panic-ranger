@@ -49,7 +49,7 @@ export class DebugCanvas extends Core.System {
       this.canvas.style.display = 'block';
     }
 
-    this.canvas.width = this.container.offsetWidth
+    this.canvas.width = this.container.offsetWidth;
     this.canvas.height = this.container.offsetHeight;
 
     this.ctx.resetTransform();

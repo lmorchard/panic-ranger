@@ -31,6 +31,7 @@ export class ViewportWebGL extends Core.System {
       zoomMin: 0.1,
       zoomMax: 10.0,
       zoomWheelFactor: 0.05,
+      visibleMargin: 250,
       gridEnabled: true,
       gridSize: 250,
       gridColor: 0x222222,
@@ -181,10 +182,10 @@ export class ViewportWebGL extends Core.System {
       }
 
       sprite.visible = (
-        (position.right > this.visibleLeft) &&
-        (position.left < this.visibleRight) &&
-        (position.bottom > this.visibleTop) &&
-        (position.top < this.visibleBottom)
+        (position.right > this.visibleLeft - this.options.visibleMargin) &&
+        (position.left < this.visibleRight + this.options.visibleMargin) &&
+        (position.bottom > this.visibleTop - this.options.visibleMargin) &&
+        (position.top < this.visibleBottom + this.options.visibleMargin)
       );
 
       sceneSprite = this.scene[entityId];

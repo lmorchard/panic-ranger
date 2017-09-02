@@ -24,6 +24,7 @@ export class RepulsorSystem extends System {
 
   defaultOptions() {
     return {
+      debug: false,
       positionSystemName: 'Position'
     };
   }
@@ -83,6 +84,8 @@ export class RepulsorSystem extends System {
   }
 
   drawDebug(timeDelta, g) {
+    if (!this.options.debug) { return; }
+
     g.lineWidth = 4;
     g.strokeStyle = '#882222';
     components = this.getMatchingComponents();
