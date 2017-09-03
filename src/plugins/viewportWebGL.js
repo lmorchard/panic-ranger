@@ -42,6 +42,11 @@ export class ViewportWebGL extends Core.System {
   }
 
   initialize() {
+    this.spriteCount = 0;
+    this.lastVertexCount = 0;
+    this.actualBufferSize = 0;
+    this.calculatedBufferSize = 0;
+
     this.container = document.querySelector(this.options.container);
     this.canvas = document.createElement('canvas');
     this.container.appendChild(this.canvas);
@@ -221,11 +226,16 @@ export class ViewportWebGL extends Core.System {
 
     // Re-allocate larger buffer if current is too small for the scene.
     const bufferSize = this.calculateBufferSizeForScene();
+    this.actualBufferSize = this.buffer.length;
+    this.calculatedBufferSize = bufferSize;
     if (bufferSize > this.buffer.length) {
-      this.buffer = new Float32Array(Math.max(bufferSize * 1.5, this.buffer.length * 2));
+      this.buffer = new Float32Array(
+        Math.max(bufferSize * 1.5, this.buffer.length * 2)
+      );
     }
 
     const vertexCount = this.fillBufferFromScene();
+    this.lastVertexCount = vertexCount;
     this.gl.bufferData(this.gl.ARRAY_BUFFER, this.buffer, this.gl.STATIC_DRAW);
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 
@@ -369,9 +379,11 @@ export class ViewportWebGL extends Core.System {
   }
 
   calculateBufferSizeForScene() {
-    return Object.values(this.scene)
+    const objects = Object.values(this.scene);
+    this.spriteCount = objects.length;
+    return objects
       .reduce((acc, item) =>
-        item.shapes.reduce((acc, shape) =>
+        acc + item.shapes.reduce((acc, shape) =>
           acc + (shape.length - 0.5) * this.vertexSize * 4, 0), 0);
   }
 
@@ -403,8 +415,7 @@ export class ViewportWebGL extends Core.System {
       this.buffer[bufferPos++] = color[3];
     };
 
-    const sceneKeys = Object.keys(this.scene);
-    sceneKeys.sort();
+    const sceneKeys = Object.keys(this.scene).sort();
     for (let sceneKeysIdx = 0; sceneKeysIdx < sceneKeys.length; sceneKeysIdx++) {
       ({
         visible, shapes, position=[0.0, 0.0], scale=0, rotation=0,
