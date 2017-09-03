@@ -1,4 +1,4 @@
-webpackJsonp([1],{
+webpackJsonp([2],{
 
 /***/ 190:
 /*!*************************************!*\
@@ -24,25 +24,25 @@ module.exports = __webpack_require__(/*! ./src/sketches/roads.js */191);
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_core__ = __webpack_require__(/*! ../lib/core */ 0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_utils__ = __webpack_require__(/*! ../lib/utils */ 51);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 24);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_debugCanvas__ = __webpack_require__(/*! ../plugins/debugCanvas */ 69);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_viewportWebGL__ = __webpack_require__(/*! ../plugins/viewportWebGL */ 35);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 26);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_health__ = __webpack_require__(/*! ../plugins/health */ 31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 33);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugins_collision__ = __webpack_require__(/*! ../plugins/collision */ 41);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__plugins_bounce__ = __webpack_require__(/*! ../plugins/bounce */ 39);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__plugins_repulsor__ = __webpack_require__(/*! ../plugins/repulsor */ 49);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__plugins_playerInputSteering__ = __webpack_require__(/*! ../plugins/playerInputSteering */ 43);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__plugins_hordeSpawn__ = __webpack_require__(/*! ../plugins/hordeSpawn */ 48);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__plugins_spawn__ = __webpack_require__(/*! ../plugins/spawn */ 22);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__plugins_roadRunner__ = __webpack_require__(/*! ../plugins/roadRunner */ 70);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_utils__ = __webpack_require__(/*! ../lib/utils */ 46);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_debugCanvas__ = __webpack_require__(/*! ../plugins/debugCanvas */ 51);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_viewportWebGL__ = __webpack_require__(/*! ../plugins/viewportWebGL */ 31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_health__ = __webpack_require__(/*! ../plugins/health */ 27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__plugins_collision__ = __webpack_require__(/*! ../plugins/collision */ 38);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__plugins_bounce__ = __webpack_require__(/*! ../plugins/bounce */ 33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__plugins_repulsor__ = __webpack_require__(/*! ../plugins/repulsor */ 45);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__plugins_playerInputSteering__ = __webpack_require__(/*! ../plugins/playerInputSteering */ 39);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__plugins_hordeSpawn__ = __webpack_require__(/*! ../plugins/hordeSpawn */ 44);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__plugins_spawn__ = __webpack_require__(/*! ../plugins/spawn */ 18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__plugins_roadRunner__ = __webpack_require__(/*! ../plugins/roadRunner */ 52);
 
 
 
@@ -92,14 +92,16 @@ var world = window.world = new __WEBPACK_IMPORTED_MODULE_0__lib_core__["World"](
     Collision: {},
     Bounce: {},
     Spawn: {},
-    RoadRunner: {}
+    RoadRunner: {
+      astarCacheTTL: 2.0
+    }
   }
 });
 
 var destinations = [];
 
-var placeRepulsor = function placeRepulsor(x, y, horiz) {
-  return destinations.push(world.insert({
+var placeRepulsor = function placeRepulsor(x, y, horiz, markDestination) {
+  var id = world.insert({
     Name: { name: 'repulsor' + y },
     Sprite: { name: 'repulsor', color: 0x114411, size: 100 },
     Position: {
@@ -109,7 +111,10 @@ var placeRepulsor = function placeRepulsor(x, y, horiz) {
     Motion: {},
     Repulsor: { range: 600, force: 300 },
     Road: { type: 'repulsor', range: 800 }
-  }));
+  });
+  if (markDestination) {
+    destinations.push(id);
+  }
 };
 
 var x = 0;
@@ -117,14 +122,14 @@ var y = 0;
 var spacing = 600;
 var num = 4;
 for (x = -num * spacing; x <= num * spacing; x += spacing) {
-  placeRepulsor(x, -(spacing * num), true);
-  placeRepulsor(x, 0, true);
-  placeRepulsor(x, spacing * num, true);
+  placeRepulsor(x, -(spacing * num), true, true);
+  placeRepulsor(x, 0, true, true);
+  placeRepulsor(x, spacing * num, true, true);
 }
 for (y = -(num - 1) * spacing; y <= num * spacing; y += spacing) {
-  placeRepulsor(-(spacing * num), y, false);
-  placeRepulsor(0, y, true);
-  placeRepulsor(spacing * num, y, false);
+  //placeRepulsor(-(spacing * num), y, false);
+  placeRepulsor(0, y, true, false);
+  //placeRepulsor((spacing * num), y, false);
 }
 
 function spawnSelfDrivingBus() {
@@ -174,7 +179,7 @@ function spawnSelfDrivingBus() {
 
 // Spawn some initial entities
 for (var i = 0; i < 50; i++) {
-  setTimeout(spawnSelfDrivingBus, 10000 * Math.random());
+  setTimeout(spawnSelfDrivingBus, 5000 * Math.random());
 }
 
 // Spawn new entities when old ones reach their destinations
@@ -204,6 +209,10 @@ names.forEach(function (name) {
 });
 vpf.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
 vpf.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
+vpf.add(vpSystem, 'spriteCount').listen();
+vpf.add(vpSystem, 'lastVertexCount').listen();
+vpf.add(vpSystem, 'actualBufferSize').listen();
+vpf.add(vpSystem, 'calculatedBufferSize').listen();
 
 var rrf = gui.addFolder('RoadRunner');
 ['debug', 'debugRange', 'debugRoads', 'debugPath'].forEach(function (name) {
