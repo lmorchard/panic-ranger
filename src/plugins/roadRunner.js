@@ -1,10 +1,6 @@
 import * as Core from '../lib/core';
 import { distance, cacheCall } from '../lib/utils';
 
-let entityId, roads, road, runners, runner, thruster, seeker, position, range,
-  neighbors, neighborId, nextId, destinationPosition, distanceToDestination,
-  neighborRoad, dist;
-
 export const MSG_DESTINATION_REACHED = 'roadRunnerDestinationReached';
 
 const INFINITY = 1000000000;
@@ -57,11 +53,11 @@ export class RoadRunnerSystem extends Core.System {
   }
 
   updateRoads(/* timeDelta */) {
-    roads = this.world.get('Road');
-    for (entityId in roads) {
-      road = roads[entityId];
-      position = this.world.get('Position', entityId);
-      range = road.range;
+    const roads = this.world.get('Road');
+    for (const entityId in roads) {
+      const road = roads[entityId];
+      const position = this.world.get('Position', entityId);
+      const range = road.range;
       road.neighbors = {};
       this.positionSystem.quadtree.iterate(
         {
@@ -77,21 +73,20 @@ export class RoadRunnerSystem extends Core.System {
   }
 
   updateRunners(timeDelta) {
-
-    runners = this.world.get('Runner');
-    for (entityId in runners) {
+    const runners = this.world.get('Runner');
+    for (const entityId in runners) {
       // Find throttle & seeker for steering, otherwise bail out.
-      thruster = this.world.get('Thruster', entityId);
-      seeker = this.world.get('Seeker', entityId);
+      const thruster = this.world.get('Thruster', entityId);
+      const seeker = this.world.get('Seeker', entityId);
       if (!seeker || !thruster) { continue; }
 
       // If we don't have a destination, bail out.
-      runner = runners[entityId];
+      const runner = runners[entityId];
       if (!runner.destination) { continue; }
 
       // Find nearby path elements
-      position = this.world.get('Position', entityId);
-      range = runner.range;
+      const position = this.world.get('Position', entityId);
+      const range = runner.range;
       runner.neighbors = {};
       this.positionSystem.quadtree.iterate(
         {
@@ -105,10 +100,9 @@ export class RoadRunnerSystem extends Core.System {
       );
 
       // Find nearest path element, bail if none
-      neighbors = Object.entries(runner.neighbors);
+      const neighbors = Object.entries(runner.neighbors);
       runner.nearest = (neighbors.length === 0)
-        ? null
-        : neighbors.sort((a, b) => a[1] - b[1]).shift()[0];
+        ? null : neighbors.sort((a, b) => a[1] - b[1])[0][0];
       if (!runner.nearest) { continue; }
 
       // Update our path from nearest path element to destination
@@ -122,7 +116,7 @@ export class RoadRunnerSystem extends Core.System {
       if (runner.path === null) { continue; }
 
       // If we have a next step in the path, seek it.
-      nextId = runner.path[1];
+      const nextId = runner.path[1];
       if (nextId) {
         thruster.throttle = 1.0;
         seeker.active = true;
@@ -131,9 +125,9 @@ export class RoadRunnerSystem extends Core.System {
       }
 
       // We're down to the last step in the path, time for a landing.
-      destinationPosition =
+      const destinationPosition =
         this.world.get('Position', runner.destination);
-      distanceToDestination =
+      const distanceToDestination =
         distance(position, destinationPosition);
       if (distanceToDestination > 100) {
         // Close but not yet at the destination, so throttle back to help
@@ -151,13 +145,13 @@ export class RoadRunnerSystem extends Core.System {
   }
 
   mapNeighbor(neighborPosition, [range, road, position]) {
-    neighborId = neighborPosition.entityId;
+    const neighborId = neighborPosition.entityId;
     if (position.entityId === neighborId) { return; }
 
-    neighborRoad = this.world.get('Road', neighborId);
+    const neighborRoad = this.world.get('Road', neighborId);
     if (!neighborRoad) { return; }
 
-    dist = distance(position, neighborPosition);
+    const dist = distance(position, neighborPosition);
     if (dist < range) { road.neighbors[neighborId] = dist; }
   }
 
