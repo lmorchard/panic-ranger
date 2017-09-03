@@ -1,6 +1,6 @@
-webpackJsonp([1],{
+webpackJsonp([0],{
 
-/***/ 200:
+/***/ 192:
 /*!**************************************!*\
   !*** multi ./src/sketches/seeker.js ***!
   \**************************************/
@@ -8,12 +8,12 @@ webpackJsonp([1],{
 /*! all exports used */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! ./src/sketches/seeker.js */201);
+module.exports = __webpack_require__(/*! ./src/sketches/seeker.js */193);
 
 
 /***/ }),
 
-/***/ 201:
+/***/ 193:
 /*!********************************!*\
   !*** ./src/sketches/seeker.js ***!
   \********************************/
@@ -24,16 +24,16 @@ module.exports = __webpack_require__(/*! ./src/sketches/seeker.js */201);
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_core__ = __webpack_require__(/*! ../lib/core */ 0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 30);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 26);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 34);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_orbiter__ = __webpack_require__(/*! ../plugins/orbiter */ 85);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_viewportCanvas__ = __webpack_require__(/*! ../plugins/viewportCanvas */ 99);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 33);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_viewportCanvas__ = __webpack_require__(/*! ../plugins/viewportCanvas */ 98);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 24);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 23);
 
 
 
@@ -112,5 +112,5 @@ names.forEach(function (name) {
 
 /***/ })
 
-},[200]);
+},[192]);
 //# sourceMappingURL=index.js.map

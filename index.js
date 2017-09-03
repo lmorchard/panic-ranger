@@ -1,6 +1,6 @@
-webpackJsonp([7],{
+webpackJsonp([6],{
 
-/***/ 184:
+/***/ 181:
 /*!**********************!*\
   !*** ./src/index.js ***!
   \**********************/
@@ -125,5 +125,5 @@ gui.add(spawnSystem, 'spawnCount').listen();
 
 /***/ })
 
-},[184]);
+},[181]);
 //# sourceMappingURL=index.js.map
