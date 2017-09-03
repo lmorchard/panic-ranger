@@ -12,6 +12,8 @@ export class Seeker extends Core.Component {
       targetName: null,
       targetEntityId: null,
       targetPosition: null,
+      thrusterTurnCutoff: null,
+      thrusterTurnThrottle: 0.25,
       acquisitionDelay: 0,
       radPerSec: Math.PI
     };
@@ -77,6 +79,14 @@ export class SeekerSystem extends Core.System {
     const offset = Math.abs(targetAngle - position.rotation);
     if (offset > Math.PI) {
       direction = 0 - direction;
+    }
+
+    // Throttle back for sharp turns if necessary
+    if (seeker.thrusterTurnCutoff !== null) {
+      const thruster = this.world.get('Thruster', entityId);
+      thruster.active = true;
+      thruster.throttle = (offset > seeker.thrusterTurnCutoff)
+        ? seeker.thrusterTurnThrottle : 1.0;
     }
 
     // Work out the desired delta-rotation to steer toward target

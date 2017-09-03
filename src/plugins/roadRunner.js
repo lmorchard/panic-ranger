@@ -1,6 +1,13 @@
 import * as Core from '../lib/core';
+import { distance, cacheCall } from '../lib/utils';
+
+let entityId, roads, road, runners, runner, thruster, seeker, position, range,
+  neighbors, neighborId, nextId, destinationPosition, distanceToDestination,
+  neighborRoad, dist;
 
 export const MSG_DESTINATION_REACHED = 'roadRunnerDestinationReached';
+
+const INFINITY = 1000000000;
 
 export class Road extends Core.Component {
   static defaults() {
@@ -29,6 +36,7 @@ export class RoadRunnerSystem extends Core.System {
 
   defaultOptions() {
     return {
+      astarCacheTTL: 1.0,
       debug: true,
       debugRange: false,
       debugRoads: true,
@@ -43,14 +51,17 @@ export class RoadRunnerSystem extends Core.System {
     this.mapNeighbor = this.mapNeighbor.bind(this);
   }
 
-  update(/* timeDelta */) {
-    let entityId;
+  update(timeDelta) {
+    this.updateRoads(timeDelta);
+    this.updateRunners(timeDelta);
+  }
 
-    const roadItems = this.world.get('Road');
-    for (entityId in roadItems) {
-      const road = roadItems[entityId];
-      const position = this.world.get('Position', entityId);
-      const range = road.range;
+  updateRoads(/* timeDelta */) {
+    roads = this.world.get('Road');
+    for (entityId in roads) {
+      road = roads[entityId];
+      position = this.world.get('Position', entityId);
+      range = road.range;
       road.neighbors = {};
       this.positionSystem.quadtree.iterate(
         {
@@ -63,13 +74,24 @@ export class RoadRunnerSystem extends Core.System {
         [range, road, position]
       );
     }
+  }
 
-    const runners = this.world.get('Runner');
+  updateRunners(timeDelta) {
+
+    runners = this.world.get('Runner');
     for (entityId in runners) {
-      const runner = runners[entityId];
-      const position = this.world.get('Position', entityId);
-      const range = runner.range;
+      // Find throttle & seeker for steering, otherwise bail out.
+      thruster = this.world.get('Thruster', entityId);
+      seeker = this.world.get('Seeker', entityId);
+      if (!seeker || !thruster) { continue; }
 
+      // If we don't have a destination, bail out.
+      runner = runners[entityId];
+      if (!runner.destination) { continue; }
+
+      // Find nearby path elements
+      position = this.world.get('Position', entityId);
+      range = runner.range;
       runner.neighbors = {};
       this.positionSystem.quadtree.iterate(
         {
@@ -82,68 +104,66 @@ export class RoadRunnerSystem extends Core.System {
         [range, runner, position]
       );
 
-      const neighbors = Object.entries(runner.neighbors);
+      // Find nearest path element, bail if none
+      neighbors = Object.entries(runner.neighbors);
       runner.nearest = (neighbors.length === 0)
         ? null
         : neighbors.sort((a, b) => a[1] - b[1]).shift()[0];
+      if (!runner.nearest) { continue; }
 
-      if (!runner.nearest || !runner.destination) {
-        runner.path = null;
+      // Update our path from nearest path element to destination
+      // runner.path = this.astar(runner.nearest, runner.destination);
+      runner.path = cacheCall(
+        timeDelta, this.options.astarCacheTTL,
+        `astar:${runner.nearest}:${runner.destination}`,
+        this, 'astar',
+        runner.nearest, runner.destination
+      );
+      if (runner.path === null) { continue; }
+
+      // If we have a next step in the path, seek it.
+      nextId = runner.path[1];
+      if (nextId) {
+        thruster.throttle = 1.0;
+        seeker.active = true;
+        seeker.targetEntityId = nextId;
+        continue;
+      }
+
+      // We're down to the last step in the path, time for a landing.
+      destinationPosition =
+        this.world.get('Position', runner.destination);
+      distanceToDestination =
+        distance(position, destinationPosition);
+      if (distanceToDestination > 100) {
+        // Close but not yet at the destination, so throttle back to help
+        // prevent just orbiting it.
+        thruster.throttle = 0.25;
+        seeker.active = true;
+        seeker.targetEntityId = runner.destination;
       } else {
-        runner.path = this.astar(runner.nearest, runner.destination) || [];
-        const seeker = this.world.get('Seeker', entityId);
-        const thruster = this.world.get('Thruster', entityId);
-        if (seeker) {
-          const nextId = runner.path[1];
-          if (!nextId) {
-            thruster.stop = true;
-            seeker.active = false;
-            seeker.targetEntityId = null;
-            this.world.publish(MSG_DESTINATION_REACHED, entityId);
-          } else {
-            thruster.active = true;
-            thruster.stop = false;
-            seeker.active = true;
-            seeker.targetEntityId = nextId;
-          }
-        }
+        // Close enough to the destination, so stop seeking and call it.
+        seeker.active = false;
+        seeker.targetEntityId = null;
+        this.world.publish(MSG_DESTINATION_REACHED, entityId);
       }
     }
   }
 
   mapNeighbor(neighborPosition, [range, road, position]) {
-    const neighborId = neighborPosition.entityId;
+    neighborId = neighborPosition.entityId;
     if (position.entityId === neighborId) { return; }
 
-    const neighborRoad = this.world.get('Road', neighborId);
+    neighborRoad = this.world.get('Road', neighborId);
     if (!neighborRoad) { return; }
 
-    const dist = distance(position, neighborPosition);
+    dist = distance(position, neighborPosition);
     if (dist < range) { road.neighbors[neighborId] = dist; }
   }
 
   // https://en.wikipedia.org/wiki/A-star#Pseudocode
   astar(startId, goalId) {
-    const INFINITY = 1000000000;
-
     const roads = this.world.get('Road');
-
-    const heuristic_cost_estimate = (startId, goalId)  => {
-      return distance(
-        this.world.get('Position', startId),
-        this.world.get('Position', goalId)
-      );
-    };
-
-    const reconstruct_path = (cameFrom, startId) => {
-      let currentId = startId;
-      const total_path = [currentId];
-      while (cameFrom.has(currentId)) {
-        currentId = cameFrom.get(currentId);
-        total_path.unshift(currentId);
-      }
-      return total_path;
-    };
 
     // The set of nodes already evaluated
     const closedSet = new Set();
@@ -168,16 +188,22 @@ export class RoadRunnerSystem extends Core.System {
     const fScore = new Map();
 
     // For the first node, that value is completely heuristic.
-    fScore.set(startId, heuristic_cost_estimate(startId, goalId));
+    fScore.set(startId, this.astarHeuristicCostEstimate(startId, goalId));
 
     while (openSet.size > 0) {
-      const currentId = [...openSet]
-        .map(key => [key, fScore.has(key) ? fScore.get(key) : INFINITY])
-        .sort((a, b) => a[1] - b[1])
-        .shift()[0];
+      // Find the node in openSet having the lowest fScore[] value
+      let currentId = null;
+      let currentCost = INFINITY;
+      for (const key of openSet) {
+        const itemCost = fScore.has(key) ? fScore.get(key) : INFINITY;
+        if (itemCost < currentCost) {
+          currentCost = itemCost;
+          currentId = key;
+        }
+      }
 
       if (currentId === goalId) {
-        return reconstruct_path(cameFrom, currentId);
+        return this.astarReconstructPath(cameFrom, currentId);
       }
 
       openSet.delete(currentId);
@@ -209,19 +235,38 @@ export class RoadRunnerSystem extends Core.System {
         cameFrom.set(neighborId, currentId);
         gScore.set(neighborId, tentative_gScore);
         fScore.set(neighborId,
-          gScore.get(neighborId) + heuristic_cost_estimate(neighborId, goalId));
+          gScore.get(neighborId)
+          + this.astarHeuristicCostEstimate(neighborId, goalId));
       }
     }
 
     return null;
   }
 
+  astarHeuristicCostEstimate(startId, goalId) {
+    return distance(
+      this.world.get('Position', startId),
+      this.world.get('Position', goalId)
+    );
+  }
+
+  astarReconstructPath(cameFrom, startId) {
+    let pathId = startId;
+    const totalPath = [pathId];
+    while (cameFrom.has(pathId)) {
+      pathId = cameFrom.get(pathId);
+      totalPath.unshift(pathId);
+    }
+    return totalPath;
+  }
+
+
   drawDebug(timeDelta, g) {
     if (!this.options.debug) { return; }
 
-    const roadItems = this.world.get('Road');
-    for (const entityId in roadItems) {
-      const road = roadItems[entityId];
+    const roads = this.world.get('Road');
+    for (const entityId in roads) {
+      const road = roads[entityId];
       const position = this.world.get('Position', entityId);
       if (!road.debugColor) {
         road.debugColor = randColor();
@@ -317,13 +362,6 @@ export class RoadRunnerSystem extends Core.System {
 }
 
 Core.registerSystem('RoadRunner', RoadRunnerSystem);
-
-function distance(aPosition, bPosition) {
-  return Math.sqrt(
-    Math.pow(bPosition.x - aPosition.x, 2) +
-    Math.pow(bPosition.y - aPosition.y, 2)
-  );
-}
 
 const digits = '0123456789abcdef';
 const randDigit = () => digits.charAt(Math.floor(Math.random() * digits.length));

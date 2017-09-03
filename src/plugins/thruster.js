@@ -11,6 +11,7 @@ export class Thruster extends Core.Component {
       active: true,
       stop: false,
       useBrakes: true,
+      throttle: 1.0,
       deltaV: 0,
       maxV: 0
     };
@@ -51,7 +52,7 @@ export class ThrusterSystem extends Core.System {
 
     if (thruster.useBrakes) {
       // Try to enforce the max_v limit with braking thrust.
-      const maxV = thruster.stop ? 0 : thruster.maxV;
+      const maxV = thruster.stop ? 0 : (thruster.throttle * thruster.maxV);
       const currV = this.vInertia.magnitude();
       const overV = currV - maxV;
       if (overV > 0) {

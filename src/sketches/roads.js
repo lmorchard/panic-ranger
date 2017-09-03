@@ -16,7 +16,7 @@ import '../plugins/bounce';
 import '../plugins/repulsor';
 import '../plugins/playerInputSteering';
 import '../plugins/hordeSpawn';
-import { MSG_DESPAWN, MSG_SPAWN, MSG_DESTROY } from '../plugins/spawn';
+import { MSG_DESTROY } from '../plugins/spawn';
 import { MSG_DESTINATION_REACHED } from '../plugins/roadRunner';
 
 const debug = false;
@@ -130,11 +130,6 @@ world.subscribe(MSG_DESTINATION_REACHED, (msg, entityId) => {
   world.publish(MSG_DESTROY, entityId);
   setTimeout(spawnSelfDrivingBus, 1000 * Math.random());
 });
-
-world.subscribe(MSG_DESPAWN, (msg, entityId) =>
-  console.log('DESPAWN', world.get('Name', entityId).name));
-world.subscribe(MSG_SPAWN, (msg, entityId) =>
-  console.log('SPAWN', world.get('Name', entityId).name));
 
 world.debug = debug;
 
