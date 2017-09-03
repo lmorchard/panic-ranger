@@ -108,7 +108,8 @@ export class RoadRunnerSystem extends Core.System {
       // Update our path from nearest path element to destination
       // runner.path = this.astar(runner.nearest, runner.destination);
       runner.path = cacheCall(
-        timeDelta, this.options.astarCacheTTL,
+        timeDelta,
+        this.options.astarCacheTTL * (0.75 + (0.25 * Math.random())),
         `astar:${runner.nearest}:${runner.destination}`,
         this, 'astar',
         runner.nearest, runner.destination

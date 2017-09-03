@@ -47,14 +47,16 @@ const world = window.world = new Core.World({
     Collision: {},
     Bounce: {},
     Spawn: {},
-    RoadRunner: { },
+    RoadRunner: {
+      astarCacheTTL: 2.0
+    },
   }
 });
 
 const destinations = [];
 
-const placeRepulsor = (x, y, horiz) =>
-  destinations.push(world.insert({
+const placeRepulsor = (x, y, horiz, markDestination) => {
+  const id = world.insert({
     Name: { name: `repulsor${y}` },
     Sprite: { name: 'repulsor', color: 0x114411, size: 100 },
     Position: {
@@ -64,21 +66,23 @@ const placeRepulsor = (x, y, horiz) =>
     Motion: { },
     Repulsor: { range: 600, force: 300 },
     Road: { type: 'repulsor', range: 800 }
-  }));
+  });
+  if (markDestination) { destinations.push(id); }
+};
 
 let x = 0;
 let y = 0;
 const spacing = 600;
 const num = 4;
 for (x = -num * spacing; x <= num * spacing; x += spacing) {
-  placeRepulsor(x, -(spacing * num), true);
-  placeRepulsor(x, 0, true);
-  placeRepulsor(x, (spacing * num), true);
+  placeRepulsor(x, -(spacing * num), true, true);
+  placeRepulsor(x, 0, true, true);
+  placeRepulsor(x, (spacing * num), true, true);
 }
 for (y = -(num-1) * spacing; y <= num * spacing; y += spacing) {
-  placeRepulsor(-(spacing * num), y, false);
-  placeRepulsor(0, y, true);
-  placeRepulsor((spacing * num), y, false);
+  //placeRepulsor(-(spacing * num), y, false);
+  placeRepulsor(0, y, true, false);
+  //placeRepulsor((spacing * num), y, false);
 }
 
 function spawnSelfDrivingBus() {
@@ -124,7 +128,7 @@ function spawnSelfDrivingBus() {
 
 // Spawn some initial entities
 for (let i = 0; i < 50; i++) {
-  setTimeout(spawnSelfDrivingBus, 10000 * Math.random());
+  setTimeout(spawnSelfDrivingBus, 5000 * Math.random());
 }
 
 // Spawn new entities when old ones reach their destinations
@@ -153,6 +157,10 @@ names.forEach(name => vpf.add(vpSystem, name).listen());
 vpf.add(vpSystem, 'zoom',
   vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
 vpf.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
+vpf.add(vpSystem, 'spriteCount').listen();
+vpf.add(vpSystem, 'lastVertexCount').listen();
+vpf.add(vpSystem, 'actualBufferSize').listen();
+vpf.add(vpSystem, 'calculatedBufferSize').listen();
 
 const rrf = gui.addFolder('RoadRunner');
 ['debug', 'debugRange', 'debugRoads', 'debugPath']
