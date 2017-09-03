@@ -1,4 +1,5 @@
 import * as Core from '../lib/core';
+import { distance } from '../lib/utils';
 
 import '../plugins/drawStats';
 import '../plugins/memoryStats';
@@ -50,79 +51,80 @@ const world = window.world = new Core.World({
   }
 });
 
-let x = 0;
-let y = 0;
-let id;
-
 const destinations = [];
 
-const placeRepulsor = (x, y) =>
-  id = world.insert({
+const placeRepulsor = (x, y, horiz) =>
+  destinations.push(world.insert({
     Name: { name: `repulsor${y}` },
     Sprite: { name: 'repulsor', color: 0x114411, size: 100 },
-    Position: { x, y },
+    Position: {
+      x: x + (horiz ? 0 : Math.random() * 200 - 100),
+      y: y + (!horiz ? 0 : Math.random() * 200 - 100)
+    },
     Motion: { },
-    // Repulsor: { range: 600, force: 300 },
+    Repulsor: { range: 600, force: 300 },
     Road: { type: 'repulsor', range: 800 }
-  });
+  }));
 
-for (y = 0; y > -3000; y -= 600) {
-  placeRepulsor(x, y);
-  x += (-300 + Math.random() * 600);
+let x = 0;
+let y = 0;
+const spacing = 600;
+const num = 4;
+for (x = -num * spacing; x <= num * spacing; x += spacing) {
+  placeRepulsor(x, -(spacing * num), true);
+  placeRepulsor(x, 0, true);
+  placeRepulsor(x, (spacing * num), true);
 }
-destinations.push(id);
-
-x = 0;
-for (y = 600; y < 3000; y += 600) {
-  placeRepulsor(x, y);
-  x += (-300 + Math.random() * 600);
+for (y = -(num-1) * spacing; y <= num * spacing; y += spacing) {
+  placeRepulsor(-(spacing * num), y, false);
+  placeRepulsor(0, y, true);
+  placeRepulsor((spacing * num), y, false);
 }
-destinations.push(id);
-
-y = 0;
-for (x = -600; x > -3000; x -= 600) {
-  placeRepulsor(x, y);
-  y += (-300 + Math.random() * 600);
-}
-destinations.push(id);
-
-y = 0;
-for (x = 600; x < 3000; x += 600) {
-  placeRepulsor(x, y);
-  y += (-300 + Math.random() * 600);
-}
-destinations.push(id);
-
-const spawnPoints = destinations.map(id => world.get('Position', id));
 
 function spawnSelfDrivingBus() {
   const color = 0xffffff * Math.random();
-  const destination = '' +
-    destinations[Math.floor(Math.random() * destinations.length)];
-  let {x, y} = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
-  x += (400 * Math.random()) - 200;
-  y += (400 * Math.random()) - 200;
+  const spawnPoint = destinations[Math.floor(Math.random() * destinations.length)];
+
+  const {x, y} = world.get('Position', spawnPoint);
+
+  let destination;
+  do {
+    destination = destinations[Math.floor(Math.random() * destinations.length)];
+  } while (distance({x, y}, world.get('Position', destination)) < 3000);
 
   return world.insert({
     Name: { name: `bus${Math.random()}` },
     Sprite: { name: 'hero', size: 150, color },
-    Spawn: { },
+    Spawn: {
+      tombstone: (spawn, entityId) => ({
+        Name: world.get('Name', entityId),
+        Sprite: { name: 'hero', size: 150, color },
+        Position: world.get('Position', entityId),
+        Motion: { drotation: Math.PI * 8 },
+        Spawn: { ttl: 0.5 }
+      })
+    },
     Collidable: {},
-    Bounce: { mass: 7000 },
+    // Bounce: { mass: 7000 },
     Position: {
       x, y,
       rotation: Math.PI * 2 * Math.random()
     },
     Motion: {},
-    Thruster: { deltaV: 4000, maxV: 1500 },
-    Seeker: { radPerSec: Math.PI * 1.25, active: false },
-    Runner: { destination },
+    Thruster: { deltaV: 5000, maxV: 1250 },
+    Seeker: {
+      thrusterTurnCutoff: Math.PI * 0.01,
+      thrusterTurnThrottle: 0.01,
+      radPerSec: Math.PI * 4,
+      active: false
+    },
+    Runner: { destination: '' + destination },
   });
 }
 
 // Spawn some initial entities
-for (let i = 0; i < 10; i++) {
-  setTimeout(spawnSelfDrivingBus, 1000 * Math.random());
+for (let i = 0; i < 50; i++) {
+  setTimeout(spawnSelfDrivingBus, 10000 * Math.random());
 }
 
 // Spawn new entities when old ones reach their destinations

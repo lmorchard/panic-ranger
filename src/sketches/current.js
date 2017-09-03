@@ -111,11 +111,11 @@ function spawnSelfDrivingBus() {
       rotation: Math.PI * 2 * Math.random()
     },
     Motion: {},
-    Thruster: { deltaV: 5000, maxV: 1500 },
+    Thruster: { deltaV: 5000, maxV: 1250 },
     Seeker: {
-      thrusterTurnCutoff: Math.PI * 0.1,
-      thrusterTurnThrottle: 0.125,
-      radPerSec: Math.PI * 3,
+      thrusterTurnCutoff: Math.PI * 0.01,
+      thrusterTurnThrottle: 0.01,
+      radPerSec: Math.PI * 4,
       active: false
     },
     Runner: { destination: '' + destination },
