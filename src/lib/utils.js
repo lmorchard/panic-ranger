@@ -10,22 +10,18 @@ export function distance(aPosition, bPosition) {
   );
 }
 
-const cachedResults = new Map();
-
+const cachedResults = {};
+let cachedValue;
 export function cacheCall(timeDelta, defaultTTL, key, self, fn, ...args) {
-  let value;
-  if (cachedResults.has(key)) {
-    value = cachedResults.get(key);
-    value.ttl -= timeDelta;
-    if (value.ttl > 0) {
-      cachedResults.set(key, value);
-      return value.result;
-    }
+  if (key in cachedResults) {
+    cachedValue = cachedResults[key];
+    cachedValue.ttl -= timeDelta;
+    if (cachedValue.ttl > 0) { return cachedValue.result; }
   }
-  value = {
+  cachedValue = {
     ttl: defaultTTL,
     result: self[fn](...args)
   };
-  cachedResults.set(key, value);
-  return value.result;
+  cachedResults[key] = cachedValue;
+  return cachedValue.result;
 }
