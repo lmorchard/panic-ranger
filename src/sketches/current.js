@@ -54,11 +54,11 @@ const world = window.world = new Core.World({
       viewportSystemName: 'ViewportWebGL',
       offscreenTTL: 0.5,
       spawnMargin: 250,
-      minCount: 200,
+      minCount: 100,
       maxFrameSpawn: 15,
       spawn: (x, y) => {
-        const MIN_SIZE=100;
-        const MAX_SIZE=300;
+        const MIN_SIZE=200;
+        const MAX_SIZE=500;
         const size = ((MAX_SIZE - MIN_SIZE) * Math.random()) + MIN_SIZE;
         const repulsor = Object.keys(world.get('Repulsor'))
           .map(key => [Math.random(), key])
@@ -192,4 +192,6 @@ vpf.add(vpSystem, 'calculatedBufferSize').listen();
 const rrf = gui.addFolder('RoadRunner');
 ['debug', 'debugRange', 'debugRoads', 'debugPath']
   .forEach(name => rrf.add(roadRunnerSystem.options, name));
+rrf.add(roadRunnerSystem.options, 'pathfindingStrategy',
+  ['astar', 'cachedAstar', 'floydWarshall']);
 rrf.open();

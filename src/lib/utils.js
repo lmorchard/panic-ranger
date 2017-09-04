@@ -12,14 +12,16 @@ export function distance(aPosition, bPosition) {
 
 const cachedResults = {};
 let cachedValue;
-export function cacheCall(timeDelta, defaultTTL, key, self, fn, ...args) {
+export function cacheCall(ttl, key, self, fn, ...args) {
+  const now = Date.now();
   if (key in cachedResults) {
     cachedValue = cachedResults[key];
-    cachedValue.ttl -= timeDelta;
-    if (cachedValue.ttl > 0) { return cachedValue.result; }
+    if (now - cachedValue.time < ttl) {
+      return cachedValue.result;
+    }
   }
   cachedValue = {
-    ttl: defaultTTL,
+    time: now,
     result: self[fn](...args)
   };
   cachedResults[key] = cachedValue;

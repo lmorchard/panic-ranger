@@ -32,19 +32,23 @@ export class RoadRunnerSystem extends Core.System {
 
   defaultOptions() {
     return {
-      astarCacheTTL: 1.0,
       debug: true,
       debugRange: false,
       debugRoads: true,
       debugRunners: true,
       debugPath: true,
-      positionSystemName: 'Position'
+      positionSystemName: 'Position',
+      floydWarshallTTL: 1000,
+      astarCacheTTL: 1000,
+      pathfindingStrategy: 'cachedAstar'
     };
   }
 
   initialize() {
     this.positionSystem = this.world.getSystem(this.options.positionSystemName);
     this.mapNeighbor = this.mapNeighbor.bind(this);
+    this.findNearest = this.findNearest.bind(this);
+    this.floydWarshallInit();
   }
 
   update(timeDelta) {
@@ -52,7 +56,10 @@ export class RoadRunnerSystem extends Core.System {
     this.updateRunners(timeDelta);
   }
 
-  updateRoads(/* timeDelta */) {
+  updateRoads(timeDelta) {
+    const measure = this.options.debug && Math.random() < 0.1;
+
+    if (measure) console.time('updateRoads');
     const roads = this.world.get('Road');
     for (const entityId in roads) {
       const road = roads[entityId];
@@ -70,9 +77,16 @@ export class RoadRunnerSystem extends Core.System {
         [range, road, position]
       );
     }
+    if (this.options.pathfindingStrategy === 'floydWarshall') {
+      this.floydWarshallUpdate(timeDelta);
+    }
+    if (measure) console.timeEnd('updateRoads');
   }
 
   updateRunners(timeDelta) {
+    const measure = this.options.debug && Math.random() < 0.1;
+
+    if (measure) console.time('updateRunners');
     const runners = this.world.get('Runner');
     for (const entityId in runners) {
       // Find throttle & seeker for steering, otherwise bail out.
@@ -87,7 +101,8 @@ export class RoadRunnerSystem extends Core.System {
       // Find nearby path elements
       const position = this.world.get('Position', entityId);
       const range = runner.range;
-      runner.neighbors = {};
+      runner.nearestDist = null;
+      runner.nearest = null;
       this.positionSystem.quadtree.iterate(
         {
           left: position.left - range,
@@ -95,25 +110,29 @@ export class RoadRunnerSystem extends Core.System {
           right: position.right + range,
           bottom: position.bottom + range
         },
-        this.mapNeighbor,
+        this.findNearest,
         [range, runner, position]
       );
-
-      // Find nearest path element, bail if none
-      const neighbors = Object.entries(runner.neighbors);
-      runner.nearest = (neighbors.length === 0)
-        ? null : neighbors.sort((a, b) => a[1] - b[1])[0][0];
       if (!runner.nearest) { continue; }
 
       // Update our path from nearest path element to destination
-      // runner.path = this.astar(runner.nearest, runner.destination);
-      runner.path = cacheCall(
-        timeDelta,
-        this.options.astarCacheTTL * (0.75 + (0.25 * Math.random())),
-        `astar:${runner.nearest}:${runner.destination}`,
-        this, 'astar',
-        runner.nearest, runner.destination
-      );
+      runner.path = null;
+      switch (this.options.pathfindingStrategy) {
+        case 'floydWarshall':
+          runner.path = this.floydWarshallPath(runner.nearest, runner.destination);
+          break;
+        case 'cachedAstar':
+          runner.path = cacheCall(
+            this.options.astarCacheTTL,
+            `astar:${runner.nearest}:${runner.destination}`,
+            this, 'astar',
+            runner.nearest, runner.destination
+          );
+          break;
+        case 'astar':
+        default:
+          runner.path = this.astar(runner.nearest, runner.destination);
+      }
       if (runner.path === null) { continue; }
 
       // If we have a next step in the path, seek it.
@@ -143,6 +162,7 @@ export class RoadRunnerSystem extends Core.System {
         this.world.publish(MSG_DESTINATION_REACHED, entityId);
       }
     }
+    if (measure) console.timeEnd('updateRunners');
   }
 
   mapNeighbor(neighborPosition, [range, road, position]) {
@@ -153,7 +173,23 @@ export class RoadRunnerSystem extends Core.System {
     if (!neighborRoad) { return; }
 
     const dist = distance(position, neighborPosition);
-    if (dist < range) { road.neighbors[neighborId] = dist; }
+    if (dist > range) { return; }
+
+    road.neighbors[neighborId] = dist;
+  }
+
+  findNearest(neighborPosition, [range, runner, position]) {
+    const neighborId = neighborPosition.entityId;
+    if (position.entityId === neighborId) { return; }
+
+    const neighborRoad = this.world.get('Road', neighborId);
+    if (!neighborRoad) { return; }
+
+    const dist = distance(position, neighborPosition);
+    if (runner.nearestDist !== null && dist > runner.nearestDist) { return; }
+
+    runner.nearest = neighborId;
+    runner.nearestDist = dist;
   }
 
   // https://en.wikipedia.org/wiki/A-star#Pseudocode
@@ -255,6 +291,64 @@ export class RoadRunnerSystem extends Core.System {
     return totalPath;
   }
 
+  // https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm#Path_reconstruction
+  floydWarshallInit() {
+    this.floydWarshallLastUpdate = Date.now();
+    this.fwDist = new Map();
+    this.fwNext = new Map();
+  }
+
+  floydWarshallKey(u, v) {
+    return [u, v].sort().join(':');
+  }
+
+  floydWarshallUpdate(timeDelta) {
+    const now = Date.now();
+    if (now - this.floydWarshallLastUpdate < this.options.floydWarshallTTL) { return; }
+    this.floydWarshallLastUpdate = now;
+
+    console.time('floydWarshallUpdate');
+    const roads = this.world.get('Road');
+    this.fwDist.clear();
+    this.fwNext.clear();
+    for (const roadId in roads) {
+      const road = roads[roadId];
+      for (const neighborId in road.neighbors) {
+        const key = `${roadId}:${neighborId}`;
+        this.fwDist.set(key, road.neighbors[neighborId]);
+        this.fwNext.set(key, neighborId);
+      }
+    }
+    for (const k in roads) {
+      for (const i in roads) {
+        for (const j in roads) {
+          const ij = `${i}:${j}`;
+          const ik = `${i}:${k}`;
+          const kj = `${k}:${j}`;
+          const dij = this.fwDist.get(ij) || INFINITY;
+          const dik = this.fwDist.get(ik) || INFINITY;
+          const dkj = this.fwDist.get(kj) || INFINITY;
+          if (dij > dik + dkj) {
+            this.fwDist.set(ij, dik + dkj);
+            this.fwNext.set(ij, this.fwNext.get(ik));
+          }
+        }
+      }
+    }
+    console.timeEnd('floydWarshallUpdate');
+  }
+
+  floydWarshallPath(u, v) {
+    if (!this.fwNext.has(`${u}:${v}`)) {
+      return null;
+    }
+    const path = [u];
+    while (u !== v) {
+      u = this.fwNext.get(`${u}:${v}`);
+      path.push(u);
+    }
+    return path;
+  }
 
   drawDebug(timeDelta, g) {
     if (!this.options.debug) { return; }
