@@ -192,6 +192,7 @@ vpf.add(vpSystem, 'calculatedBufferSize').listen();
 const rrf = gui.addFolder('RoadRunner');
 ['debug', 'debugRange', 'debugRoads', 'debugPath']
   .forEach(name => rrf.add(roadRunnerSystem.options, name));
+rrf.add(roadRunnerSystem.options, 'debugSample', 0.01, 0.5).step(0.01);
 rrf.add(roadRunnerSystem.options, 'pathfindingStrategy',
   ['astar', 'cachedAstar', 'floydWarshall']);
 rrf.open();
