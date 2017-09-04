@@ -1,6 +1,6 @@
 webpackJsonp([5],{
 
-/***/ 184:
+/***/ 181:
 /*!***************************************!*\
   !*** multi ./src/sketches/current.js ***!
   \***************************************/
@@ -8,12 +8,12 @@ webpackJsonp([5],{
 /*! all exports used */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! ./src/sketches/current.js */185);
+module.exports = __webpack_require__(/*! ./src/sketches/current.js */182);
 
 
 /***/ }),
 
-/***/ 185:
+/***/ 182:
 /*!*********************************!*\
   !*** ./src/sketches/current.js ***!
   \*********************************/
@@ -23,17 +23,17 @@ module.exports = __webpack_require__(/*! ./src/sketches/current.js */185);
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys__ = __webpack_require__(/*! babel-runtime/core-js/object/keys */ 28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys__ = __webpack_require__(/*! babel-runtime/core-js/object/keys */ 21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_core__ = __webpack_require__(/*! ../lib/core */ 0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__lib_utils__ = __webpack_require__(/*! ../lib/utils */ 46);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_debugCanvas__ = __webpack_require__(/*! ../plugins/debugCanvas */ 51);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_viewportWebGL__ = __webpack_require__(/*! ../plugins/viewportWebGL */ 31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 22);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_health__ = __webpack_require__(/*! ../plugins/health */ 27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_health__ = __webpack_require__(/*! ../plugins/health */ 28);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 30);
@@ -102,11 +102,11 @@ var world = window.world = new __WEBPACK_IMPORTED_MODULE_1__lib_core__["World"](
       viewportSystemName: 'ViewportWebGL',
       offscreenTTL: 0.5,
       spawnMargin: 250,
-      minCount: 200,
+      minCount: 100,
       maxFrameSpawn: 15,
       spawn: function spawn(x, y) {
-        var MIN_SIZE = 100;
-        var MAX_SIZE = 300;
+        var MIN_SIZE = 200;
+        var MAX_SIZE = 500;
         var size = (MAX_SIZE - MIN_SIZE) * Math.random() + MIN_SIZE;
         var repulsor = __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys___default()(world.get('Repulsor')).map(function (key) {
           return [Math.random(), key];
@@ -247,12 +247,14 @@ vpf.add(vpSystem, 'actualBufferSize').listen();
 vpf.add(vpSystem, 'calculatedBufferSize').listen();
 
 var rrf = gui.addFolder('RoadRunner');
-['debug', 'debugRange', 'debugRoads', 'debugPath'].forEach(function (name) {
+['debug', 'debugPerformance', 'debugRange', 'debugRoads', 'debugPath'].forEach(function (name) {
   return rrf.add(roadRunnerSystem.options, name);
 });
+rrf.add(roadRunnerSystem.options, 'debugSample', 0.01, 0.5).step(0.01);
+rrf.add(roadRunnerSystem.options, 'pathfindingStrategy', ['astar', 'cachedAstar', 'floydWarshall']);
 rrf.open();
 
 /***/ })
 
-},[184]);
+},[181]);
 //# sourceMappingURL=index.js.map

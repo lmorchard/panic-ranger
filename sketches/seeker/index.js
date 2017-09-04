@@ -1,6 +1,6 @@
 webpackJsonp([0],{
 
-/***/ 194:
+/***/ 191:
 /*!**************************************!*\
   !*** multi ./src/sketches/seeker.js ***!
   \**************************************/
@@ -8,12 +8,12 @@ webpackJsonp([0],{
 /*! all exports used */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! ./src/sketches/seeker.js */195);
+module.exports = __webpack_require__(/*! ./src/sketches/seeker.js */192);
 
 
 /***/ }),
 
-/***/ 195:
+/***/ 192:
 /*!********************************!*\
   !*** ./src/sketches/seeker.js ***!
   \********************************/
@@ -24,15 +24,15 @@ module.exports = __webpack_require__(/*! ./src/sketches/seeker.js */195);
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_core__ = __webpack_require__(/*! ../lib/core */ 0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_orbiter__ = __webpack_require__(/*! ../plugins/orbiter */ 85);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_seeker__ = __webpack_require__(/*! ../plugins/seeker */ 29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_viewportCanvas__ = __webpack_require__(/*! ../plugins/viewportCanvas */ 97);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_viewportCanvas__ = __webpack_require__(/*! ../plugins/viewportCanvas */ 96);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 19);
 
 
@@ -112,5 +112,5 @@ names.forEach(function (name) {
 
 /***/ })
 
-},[194]);
+},[191]);
 //# sourceMappingURL=index.js.map

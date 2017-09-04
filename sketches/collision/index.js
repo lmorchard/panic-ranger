@@ -1,6 +1,6 @@
 webpackJsonp([6],{
 
-/***/ 182:
+/***/ 179:
 /*!*****************************************!*\
   !*** multi ./src/sketches/collision.js ***!
   \*****************************************/
@@ -8,12 +8,12 @@ webpackJsonp([6],{
 /*! all exports used */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! ./src/sketches/collision.js */183);
+module.exports = __webpack_require__(/*! ./src/sketches/collision.js */180);
 
 
 /***/ }),
 
-/***/ 183:
+/***/ 180:
 /*!***********************************!*\
   !*** ./src/sketches/collision.js ***!
   \***********************************/
@@ -26,11 +26,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__lib_core__ = __webpack_require__(/*! ../lib/core */ 0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_Vector2D__ = __webpack_require__(/*! ../lib/Vector2D */ 37);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_viewportWebGL__ = __webpack_require__(/*! ../plugins/viewportWebGL */ 31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 22);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_health__ = __webpack_require__(/*! ../plugins/health */ 27);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_health__ = __webpack_require__(/*! ../plugins/health */ 28);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__plugins_thruster__ = __webpack_require__(/*! ../plugins/thruster */ 30);
@@ -181,5 +181,5 @@ gui.add(cp, 'y').listen();
 
 /***/ })
 
-},[182]);
+},[179]);
 //# sourceMappingURL=index.js.map
