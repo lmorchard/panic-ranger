@@ -11,7 +11,9 @@ export function distance(aPosition, bPosition) {
 }
 
 const cachedResults = {};
+
 let cachedValue;
+
 export function cacheCall(ttl, key, self, fn, ...args) {
   const now = Date.now();
   if (key in cachedResults) {
@@ -31,20 +33,36 @@ export function cacheCall(ttl, key, self, fn, ...args) {
 const times = {};
 
 export function timeStart(name) {
-  const now = Date.now();
+  const now = performance.now();
   if (!times[name]) {
-    times[name] = { acc: 0, count: 0 };
+    times[name] = { acc: 0, count: 0, lastConsole: now };
   }
   times[name].last = now;
 }
 
-export function timeEnd(name) {
-  const now = Date.now();
+export function timeEnd(name, throttle=2000) {
+  const now = performance.now();
   if (!times[name]) { return; }
+
   const time = times[name];
   const duration = now - time.last;
+
+  if (time.count > 1000) {
+    time.acc = 0;
+    time.count = 0;
+  }
+
   time.last = now;
   time.acc += duration;
   time.count++;
-  console.log(name, time.count, duration, time.acc / time.count);
+
+  if (now - time.lastConsole > throttle) {
+    time.lastConsole = now;
+    // eslint-disable-next-line no-console
+    console.log(
+      name, time.count,
+      Math.floor(duration * 1000),
+      Math.floor((time.acc / time.count) * 1000)
+    );
+  }
 }
