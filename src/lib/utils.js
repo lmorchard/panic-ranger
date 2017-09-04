@@ -27,3 +27,24 @@ export function cacheCall(ttl, key, self, fn, ...args) {
   cachedResults[key] = cachedValue;
   return cachedValue.result;
 }
+
+const times = {};
+
+export function timeStart(name) {
+  const now = Date.now();
+  if (!times[name]) {
+    times[name] = { acc: 0, count: 0 };
+  }
+  times[name].last = now;
+}
+
+export function timeEnd(name) {
+  const now = Date.now();
+  if (!times[name]) { return; }
+  const time = times[name];
+  const duration = now - time.last;
+  time.last = now;
+  time.acc += duration;
+  time.count++;
+  console.log(name, time.count, duration, time.acc / time.count);
+}

@@ -1,5 +1,5 @@
 import * as Core from '../lib/core';
-import { distance, cacheCall } from '../lib/utils';
+import { distance, cacheCall, timeStart, timeEnd } from '../lib/utils';
 
 export const MSG_DESTINATION_REACHED = 'roadRunnerDestinationReached';
 
@@ -58,9 +58,6 @@ export class RoadRunnerSystem extends Core.System {
   }
 
   updateRoads(timeDelta) {
-    const measure = this.options.debug && Math.random() < this.options.debugSample;
-
-    if (measure) console.time('updateRoads');
     const roads = this.world.get('Road');
     for (const entityId in roads) {
       const road = roads[entityId];
@@ -81,13 +78,9 @@ export class RoadRunnerSystem extends Core.System {
     if (this.options.pathfindingStrategy === 'floydWarshall') {
       this.floydWarshallUpdate(timeDelta);
     }
-    if (measure) console.timeEnd('updateRoads');
   }
 
   updateRunners(timeDelta) {
-    const measure = this.options.debug && Math.random() < this.options.debugSample;
-
-    if (measure) console.time('updateRunners');
     const runners = this.world.get('Runner');
     for (const entityId in runners) {
       // Find throttle & seeker for steering, otherwise bail out.
@@ -163,7 +156,6 @@ export class RoadRunnerSystem extends Core.System {
         this.world.publish(MSG_DESTINATION_REACHED, entityId);
       }
     }
-    if (measure) console.timeEnd('updateRunners');
   }
 
   mapNeighbor(neighborPosition, [range, road, position]) {
@@ -293,11 +285,10 @@ export class RoadRunnerSystem extends Core.System {
   }
 
   // https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm#Path_reconstruction
-  // http://www.jroller.com/vschiavoni/entry/a_fast_java_implementation_of
   floydWarshallInit() {
     this.floydWarshallLastUpdate = Date.now();
-    this.fwDist = new Map();
-    this.fwNext = new Map();
+    this.fwDist = {};
+    this.fwNext = {};
   }
 
   floydWarshallUpdate(timeDelta) {
@@ -306,16 +297,17 @@ export class RoadRunnerSystem extends Core.System {
     if (age < this.options.floydWarshallTTL) { return; }
     this.floydWarshallLastUpdate = now;
 
-    console.time('floydWarshallUpdate');
+    timeStart('floydWarshallUpdate');
 
     const roads = this.world.get('Road');
     const roadIds = Object.keys(roads);
+    const roadCnt = roadIds.length;
 
     let i, k, j, iId, kId, jId, roadId, road, neighborIds, neighborId, key,
-        ik, ij, kj, dik, dij, dkj;
+        ki, ik, ij, ji, kj, dik, dij, dkj, aji;
 
-    this.fwDist.clear();
-    this.fwNext.clear();
+    this.fwDist = {};
+    this.fwNext = {};
 
     for (i = 0; i < roadIds.length; i++) {
       roadId = roadIds[i];
@@ -324,41 +316,36 @@ export class RoadRunnerSystem extends Core.System {
       for (k = 0; k < neighborIds.length; k++) {
         neighborId = neighborIds[k];
         key = `${roadId}:${neighborId}`;
-        this.fwDist.set(key, road.neighbors[neighborId]);
-        this.fwNext.set(key, neighborId);
+        this.fwDist[key] = road.neighbors[neighborId];
+        this.fwNext[key] = neighborId;
       }
     }
 
-    for (k = 0; k < roadIds.length; k++) {
-      kId = roadIds[k];
-      for (i = 0; i < roadIds.length; i++) {
-        iId = roadIds[i];
-        ik = `${iId}:${kId}`;
-        dik = this.fwDist.get(ik) || INFINITY;
-        for (j = 0; j < roadIds.length; j++) {
-          jId = roadIds[j];
-          ij = `${iId}:${jId}`;
-          kj = `${kId}:${jId}`;
-          dij = this.fwDist.get(ij) || INFINITY;
-          dkj = this.fwDist.get(kj) || INFINITY;
+    for (k = 0; kId = roadIds[k], k < roadCnt; k++) {
+      for (i = 0; iId = roadIds[i], i < roadCnt; i++) {
+        if (k === i) { continue; }
+        for (j = 0; jId = roadIds[j], j < roadCnt; j++) {
+          dik = this.fwDist[`${iId}:${kId}`] || INFINITY;
+          dij = this.fwDist[`${iId}:${jId}`] || INFINITY;
+          dkj = this.fwDist[`${kId}:${jId}`] || INFINITY;
           if (dij > dik + dkj) {
-            this.fwDist.set(ij, dik + dkj);
-            this.fwNext.set(ij, this.fwNext.get(ik));
+            this.fwDist[`${iId}:${jId}`] = dik + dkj;
+            this.fwNext[`${iId}:${jId}`] = this.fwNext[`${iId}:${kId}`];
           }
         }
       }
     }
 
-    console.timeEnd('floydWarshallUpdate');
+    timeEnd('floydWarshallUpdate');
   }
 
   floydWarshallPath(u, v) {
-    if (!this.fwNext.has(`${u}:${v}`)) {
+    if (!(`${u}:${v}` in this.fwNext)) {
       return null;
     }
     const path = [u];
     while (u !== v) {
-      u = this.fwNext.get(`${u}:${v}`);
+      u = this.fwNext[`${u}:${v}`];
       path.push(u);
     }
     return path;
