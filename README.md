@@ -25,11 +25,16 @@ Good luck.
 
 ### TODO
 
+* overall ui / control
+  * zoomed out godseye for situational awareness and autopilot selection?
+  * zoomed in manual piloting
+  * does it need an inhabited hero ship? or just RTS-style command & control?
+  * vision enabled / reduced by connected repulsors? "fog of war"?
+
 * map proximate repulsors in a graph for pathfinding by NPC ships
   * player autopilot? (which can fail / perform badly)
 
 * bugs
-  * fatal err on collisions?
 
 * player stats
   * willpower
@@ -55,7 +60,8 @@ Good luck.
   * ships safely traversed
 
 * entity AI
-  * pathfinding between stargates via repulsor roads
+  * pathfinding is not steering
+  * steering with obstacle avoidance
 
 * powerups
   * meds
