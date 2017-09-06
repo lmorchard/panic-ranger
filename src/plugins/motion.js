@@ -12,6 +12,11 @@ export class Motion extends Core.Component {
 Core.registerComponent('Motion', Motion);
 
 export class MotionSystem extends Core.System {
+  defaultOptions() {
+    return {
+      debug: false
+    };
+  }
   matchComponent() {
     return 'Motion';
   }
@@ -25,6 +30,28 @@ export class MotionSystem extends Core.System {
     if (pos.rotation < 0) {
       pos.rotation += PI2;
     }
+  }
+  drawDebug(timeDelta, g) {
+    if (!this.options.debug) { return; }
+
+    g.save();
+    const vectorFactor = 0.3;
+    const motions = this.world.get('Motion');
+    for (const entityId in motions) {
+      const motion = motions[entityId];
+      const position = this.world.get('Position', entityId);
+      g.beginPath();
+      g.setLineDash([32, 32]);
+      g.moveTo(position.x, position.y);
+      g.lineTo(
+        vectorFactor * motion.dx + position.x,
+        vectorFactor * motion.dy + position.y
+      );
+      g.lineWidth = 32;
+      g.strokeStyle = '#333333';
+      g.stroke();
+    }
+    g.restore();
   }
 }
 Core.registerSystem('Motion', MotionSystem);

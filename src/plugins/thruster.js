@@ -21,6 +21,12 @@ Core.registerComponent('Thruster', Thruster);
 
 export class ThrusterSystem extends Core.System {
 
+  defaultOptions() {
+    return {
+      debug: false
+    };
+  }
+
   matchComponent() { return 'Thruster'; }
 
   initialize() {
@@ -75,6 +81,5 @@ export class ThrusterSystem extends Core.System {
     motion.dx = this.vInertia.x;
     motion.dy = this.vInertia.y;
   }
-
 }
 Core.registerSystem('Thruster', ThrusterSystem);

@@ -11,13 +11,13 @@ export class Steering extends Core.Component {
     return {
       active: false,
       thrusterTurnCutoff: null,
-      thrusterTurnThrottle: 0.25,
+      thrusterTurnThrottle: null,
       acquisitionDelay: 0,
       radPerSec: Math.PI,
 
       avoidFactor: 1.0,
       avoidTags: [],
-      avoidSensorRange: 1000,
+      avoidRange: 1000,
       avoidObstacleRepel: [10, 2.0],
 
       // TODO: prioritized list of things to seek - e.g. path from pathfinder
@@ -37,6 +37,12 @@ export class SteeringSystem extends Core.System {
   defaultOptions() {
     return {
       debug: false,
+      debugBehaviorColors: {
+        target: '#dddddd',
+        avoid: '#dd0000',
+        seek: '#00dd00',
+      },
+      debugVectorFactor: 100,
       positionSystemName: 'Position',
       behaviors: [ 'avoid', 'push', 'seek', 'flee', 'wander', 'evade', 'pursue' ]
     };
@@ -62,6 +68,8 @@ export class SteeringSystem extends Core.System {
       return;
     }
 
+    if (this.options.debug) steering.debugVectors = {};
+
     this.vectors.target.setValues(0, 0);
     for (let idx = 0; idx < this.options.behaviors.length; idx++) {
       const behavior = this.options.behaviors[idx];
@@ -71,24 +79,33 @@ export class SteeringSystem extends Core.System {
       vector.setValues(0, 0);
       this[behavior](vector, timeDelta, entityId, steering, position, motion);
       vector.multiplyScalar(factor);
+      if (this.options.debug) steering.debugVectors[behavior] = Vector2D.cloneFrom(vector);
       this.vectors.target.add(vector);
     }
+
+    if (this.options.debug)
+      steering.debugVectors.target = Vector2D.cloneFrom(this.vectors.target);
 
     this.applySteering(timeDelta, entityId, steering, position, motion);
   }
 
-  avoid(vector, timeDelta, entityId, steering, position/*, motion */) {
-    // const sprite = this.world.get('Sprite', entityId);
-
-    const range = steering.avoidSensorRange;
+  avoid(vector, timeDelta, entityId, steering, position, motion) {
+    const thruster = this.world.get('Thruster', entityId);
+    const range = steering.avoidRange;
     const sqRange = range * range;
 
-    this.positionSystem.quadtree.iterate({
+    const goal = new Vector2D();
+    const inertia = new Vector2D(motion.dx, motion.dy);
+
+    if (this.options.debug) steering.avoidPositions = [];
+
+    steering.avoidRect = {
       left: position.left - range,
       top: position.top - range,
       right: position.right + range,
       bottom: position.bottom + range
-    }, (item) => {
+    };
+    this.positionSystem.quadtree.iterate(steering.avoidRect, (item) => {
       if (entityId === item.entityId) { return; }
 
       const targetName = this.world.get('Name', item.entityId);
@@ -107,11 +124,19 @@ export class SteeringSystem extends Core.System {
       const sqDist = squareDistance(position, targetPosition);
       if (sqDist > sqRange) { return; }
 
-      const magnitude = 10 / sqDist;
-      vector.x += (position.x - targetPosition.x) * magnitude;
-      vector.y += (position.y - targetPosition.y) * magnitude;
+      if (this.options.debug)
+        steering.avoidPositions.push({x: targetPosition.x, y: targetPosition. y });
+
+      const magnitude = 1 / sqDist;
+      goal.x += (position.x - targetPosition.x) * magnitude;
+      goal.y += (position.y - targetPosition.y) * magnitude;
     });
 
+    vector.set(goal);
+    /*
+    goal.normalize().multiplyScalar(thruster.maxV);
+    vector.set(goal.subtract(inertia));
+    */
     vector.normalize();
   }
 
@@ -169,9 +194,7 @@ export class SteeringSystem extends Core.System {
     // If the offset between the angles is more than half a circle, go
     // the other way because it'll be shorter.
     const offset = Math.abs(targetAngle - position.rotation);
-    if (offset > Math.PI) {
-      direction = 0 - direction;
-    }
+    if (offset > Math.PI) { direction = 0 - direction; }
 
     // Throttle back for sharp turns if necessary
     if (steering.thrusterTurnCutoff !== null) {
@@ -198,8 +221,77 @@ export class SteeringSystem extends Core.System {
     motion.drotation += impulseDr;
   }
 
-  drawDebug(/* timeDelta, g */) {
+  drawDebug(timeDelta, g) {
     if (!this.options.debug) { return; }
+
+    const vectorColors = this.options.debugBehaviorColors;
+
+    const steerings = this.world.get('Steering');
+    for (const entityId in steerings) {
+      const steering = steerings[entityId];
+      if (!steering.debugVectors) { return; }
+
+      const position = this.world.get('Position', entityId);
+
+      g.beginPath();
+      g.moveTo(position.x + steering.avoidRange, position.y);
+      g.arc(position.x, position.y, steering.avoidRange, 0, Math.PI * 2);
+      g.lineWidth = 4;
+      g.strokeStyle = '#333300';
+      g.stroke();
+
+      if (steering.avoidRect) {
+        g.beginPath();
+        g.lineWidth = 4;
+        g.strokeStyle = '#111100';
+        g.strokeRect(
+          steering.avoidRect.left,
+          steering.avoidRect.top,
+          steering.avoidRect.right - steering.avoidRect.left,
+          steering.avoidRect.bottom - steering.avoidRect.top
+        );
+      }
+
+      if (steering.avoidPositions) {
+        steering.avoidPositions.forEach(avoidPosition => {
+          g.beginPath();
+          g.moveTo(position.x, position.y);
+          g.lineTo(avoidPosition.x, avoidPosition.y);
+          g.setLineDash([4, 32]);
+          g.lineWidth = 8;
+          g.strokeStyle = '#cc0000';
+          g.stroke();
+        });
+      }
+
+      this.drawDebugVector(timeDelta, g, position,
+        steering.debugVectors.target, vectorColors.target);
+
+      this.options.behaviors.forEach(behavior => {
+        const vector = steering.debugVectors[behavior];
+        if (!vector) { return; }
+
+        const color = vectorColors[behavior];
+        if (!color) { return; }
+
+        this.drawDebugVector(timeDelta, g, position, vector, color);
+      });
+    }
+  }
+
+  drawDebugVector(timeDelta, g, position, vector, color) {
+    const vectorFactor = this.options.debugVectorFactor;
+
+    g.beginPath();
+    g.setLineDash([]);
+    g.moveTo(position.x, position.y);
+    g.lineTo(
+      vectorFactor * vector.x + position.x,
+      vectorFactor * vector.y + position.y
+    );
+    g.lineWidth = 4;
+    g.strokeStyle = color;
+    g.stroke();
   }
 
 }

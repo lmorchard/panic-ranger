@@ -106,8 +106,8 @@ function spawnShip() {
     },
     Steering: {
       active: true,
-      thrusterTurnCutoff: Math.PI * 0.1,
-      thrusterTurnThrottle: 0.0,
+      // thrusterTurnCutoff: Math.PI * 0.1,
+      // thrusterTurnThrottle: 0.0,
       radPerSec: Math.PI * 1.5,
 
       seekFactor: 1.0,

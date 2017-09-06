@@ -36,10 +36,11 @@ const world = window.world = new Core.World({
     DrawStats: {},
     DatGui: {},
     Health: {},
-    Motion: {},
     Position: {},
-    Thruster: {},
+    Motion: { debug: true },
+    Thruster: { debug: true },
     Steering: {
+      debug: true,
       behaviors: [
         'avoid',
         'push',
@@ -86,14 +87,14 @@ function spawnShip() {
       ttl: 10 + Math.random()
     },
     Sprite: {
-      name: 'hero',
+      name: (source.x < 0) ? 'hero' : 'bus',
       size: 100,
       color: 0xffffff * Math.random(),
     },
     Position: {
-      x: source.x + (250 * Math.random()),
-      y: source.y + (250 * Math.random()),
-      rotation: Math.PI * 2 * Math.random()
+      x: source.x,
+      y: source.y + (1000 - 2000 * Math.random()),
+      rotation: ((source.x > 0) ? Math.PI : 0)
     },
     Bounce: {
       mass: 100
@@ -101,27 +102,27 @@ function spawnShip() {
     Collidable: { },
     Motion: { },
     Thruster: {
-      deltaV: 5000,// + 500 * Math.random(),
-      maxV: 1000,// + 500 * Math.random()
+      deltaV: 4000 + 500 * Math.random(),
+      maxV: 1000 + 500 * Math.random()
     },
     Steering: {
       active: true,
-      thrusterTurnCutoff: Math.PI * 0.1,
-      thrusterTurnThrottle: 0.0,
       radPerSec: Math.PI * 1.5,
+      thrusterTurnCutoff: Math.PI * 0.1,
+      thrusterTurnThrottle: 0.5,
 
       seekFactor: 1.0,
       seekTargetPosition: dest,
 
-      avoidFactor: 1.75,
+      avoidFactor: 2.0,
       avoidTags: ['ship'],
-      avoidSensorRange: 500,
+      avoidRange: 500,
     }
   }));
 }
 
 const ships = [];
-for (let idx = 0; idx < 25; idx++) {
+for (let idx = 0; idx < 15; idx++) {
   setTimeout(spawnShip, 5000 * Math.random());
 }
 
@@ -132,6 +133,9 @@ world.subscribe(MSG_DESPAWN, () => {
 world.start();
 
 const vpSystem = world.getSystem('ViewportWebGL');
+const steeringSystem = world.getSystem('Steering');
+const thrusterSystem = world.getSystem('Thruster');
+const motionSystem = world.getSystem('Motion');
 const guiSystem = world.getSystem('DatGui');
 const gui = guiSystem.gui;
 
@@ -150,3 +154,11 @@ vpf.add(vpSystem, 'spriteCount').listen();
 vpf.add(vpSystem, 'lastVertexCount').listen();
 vpf.add(vpSystem, 'actualBufferSize').listen();
 vpf.add(vpSystem, 'calculatedBufferSize').listen();
+
+const mf = gui.addFolder('Motion');
+[ 'debug' ].forEach(name => mf.add(motionSystem.options, name));
+mf.open();
+
+const sf = gui.addFolder('Steering');
+[ 'debug' ].forEach(name => sf.add(steeringSystem.options, name));
+sf.open();
