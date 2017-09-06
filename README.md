@@ -30,6 +30,10 @@ Good luck.
   * zoomed in manual piloting
   * does it need an inhabited hero ship? or just RTS-style command & control?
   * vision enabled / reduced by connected repulsors? "fog of war"?
+  * Herzog Zwei style hero piloting with unit placement?aa
+
+* ship mechanics
+  * THRUST-style tractor beam?
 
 * map proximate repulsors in a graph for pathfinding by NPC ships
   * player autopilot? (which can fail / perform badly)
