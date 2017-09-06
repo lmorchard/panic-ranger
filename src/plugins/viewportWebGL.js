@@ -497,8 +497,10 @@ for (let idx = 0; idx < 8; idx++) {
 }
 defaultShape.push([ 0.5, 0 ]);
 
+const defaultShapes = [ defaultShape ];
+
 WebGLSprite.register('default', {
-  init() { return defaultShape; }
+  init() { return defaultShapes; }
 });
 
 const heroShapes = [

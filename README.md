@@ -25,6 +25,8 @@ Good luck.
 
 ### TODO
 
+* travis / circle (or lambda?) to auto-build & publish sketches on check-in
+
 * overall ui / control
   * zoomed out godseye for situational awareness and autopilot selection?
   * zoomed in manual piloting

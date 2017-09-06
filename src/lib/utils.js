@@ -3,11 +3,13 @@ export function lerp(v0, v1, t) {
   return (1-t)*v0 + t*v1;
 }
 
+export function squareDistance(aPosition, bPosition) {
+  return Math.pow(bPosition.x - aPosition.x, 2) +
+         Math.pow(bPosition.y - aPosition.y, 2);
+}
+
 export function distance(aPosition, bPosition) {
-  return Math.sqrt(
-    Math.pow(bPosition.x - aPosition.x, 2) +
-    Math.pow(bPosition.y - aPosition.y, 2)
-  );
+  return Math.sqrt(squareDistance(aPosition, bPosition));
 }
 
 const cachedResults = {};
