@@ -1,6 +1,6 @@
-webpackJsonp([4],{
+webpackJsonp([5],{
 
-/***/ 183:
+/***/ 184:
 /*!******************************************!*\
   !*** multi ./src/sketches/explosions.js ***!
   \******************************************/
@@ -8,12 +8,12 @@ webpackJsonp([4],{
 /*! all exports used */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! ./src/sketches/explosions.js */184);
+module.exports = __webpack_require__(/*! ./src/sketches/explosions.js */185);
 
 
 /***/ }),
 
-/***/ 184:
+/***/ 185:
 /*!************************************!*\
   !*** ./src/sketches/explosions.js ***!
   \************************************/
@@ -23,17 +23,17 @@ module.exports = __webpack_require__(/*! ./src/sketches/explosions.js */184);
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys__ = __webpack_require__(/*! babel-runtime/core-js/object/keys */ 21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys__ = __webpack_require__(/*! babel-runtime/core-js/object/keys */ 33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_babel_runtime_core_js_object_keys__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lib_core__ = __webpack_require__(/*! ../lib/core */ 0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 20);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 22);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_viewportWebGL__ = __webpack_require__(/*! ../plugins/viewportWebGL */ 31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 23);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_spawn__ = __webpack_require__(/*! ../plugins/spawn */ 18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__plugins_drawStats__ = __webpack_require__(/*! ../plugins/drawStats */ 17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__plugins_memoryStats__ = __webpack_require__(/*! ../plugins/memoryStats */ 18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__plugins_datGui__ = __webpack_require__(/*! ../plugins/datGui */ 16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__plugins_viewportWebGL__ = __webpack_require__(/*! ../plugins/viewportWebGL */ 25);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__plugins_name__ = __webpack_require__(/*! ../plugins/name */ 19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__plugins_position__ = __webpack_require__(/*! ../plugins/position */ 7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__plugins_motion__ = __webpack_require__(/*! ../plugins/motion */ 9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__plugins_spawn__ = __webpack_require__(/*! ../plugins/spawn */ 15);
 
 
 
@@ -133,5 +133,5 @@ gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).li
 
 /***/ })
 
-},[183]);
+},[184]);
 //# sourceMappingURL=index.js.map
