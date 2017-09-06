@@ -3,7 +3,7 @@ import { distance, cacheCall, timeStart, timeEnd } from '../lib/utils';
 
 export const MSG_DESTINATION_REACHED = 'roadRunnerDestinationReached';
 
-const INFINITY = 1000000000;
+const INFINITY = Infinity;
 
 export class Road extends Core.Component {
   static defaults() {
@@ -35,9 +35,9 @@ export class RoadRunnerSystem extends Core.System {
       debug: true,
       debugPerformance: false,
       debugRange: false,
-      debugRoads: true,
-      debugRunners: true,
-      debugPath: true,
+      debugRoads: false,
+      debugRunners: false,
+      debugPath: false,
       debugSample: 0.01,
       positionSystemName: 'Position',
       floydWarshallTTL: 500,
@@ -148,6 +148,7 @@ export class RoadRunnerSystem extends Core.System {
       }
 
       // We're down to the last step in the path, time for a landing.
+      // TODO: Move this kind of stuff into seeker / steering system
       const destinationPosition =
         this.world.get('Position', runner.destination);
       const distanceToDestination =

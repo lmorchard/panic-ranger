@@ -29,6 +29,7 @@ const world = window.world = new Core.World({
       container: '#game',
       zoom: 0.15,
       gridEnabled: false,
+      followName: 'hero1',
       lineWidth: 2.0
     },
     DebugCanvas: {
@@ -125,28 +126,28 @@ function spawnSelfDrivingBus() {
 
   return world.insert({
     Name: { name: `bus${Math.random()}` },
-    Sprite: { name: 'hero', size: 150, color },
+    Sprite: { name: 'bus', size: 150, color },
     Spawn: {
       tombstone: (spawn, entityId) => ({
         Name: world.get('Name', entityId),
-        Sprite: { name: 'hero', size: 150, color },
+        Sprite: { name: 'hero', size: 200, color },
         Position: world.get('Position', entityId),
         Motion: { drotation: Math.PI * 8 },
         Spawn: { ttl: 0.5 }
       })
     },
     Collidable: {},
-    //Bounce: { mass: 7000 },
+    // Bounce: { mass: 7000 },
     Position: {
       x, y,
       rotation: Math.PI * 2 * Math.random()
     },
     Motion: {},
-    Thruster: { deltaV: 5000, maxV: 1250 },
+    Thruster: { deltaV: 5000, maxV: 1000 },
     Seeker: {
-      thrusterTurnCutoff: Math.PI * 0.01,
+      thrusterTurnCutoff: Math.PI * 0.0001,
       thrusterTurnThrottle: 0.01,
-      radPerSec: Math.PI * 4,
+      radPerSec: Math.PI * 2,
       active: false
     },
     Runner: { destination: '' + destination },
@@ -154,7 +155,7 @@ function spawnSelfDrivingBus() {
 }
 
 // Spawn some initial entities
-for (let i = 0; i < 50; i++) {
+for (let i = 0; i < 25; i++) {
   setTimeout(spawnSelfDrivingBus, 5000 * Math.random());
 }
 
@@ -162,6 +163,19 @@ for (let i = 0; i < 50; i++) {
 world.subscribe(MSG_DESTINATION_REACHED, (msg, entityId) => {
   world.publish(MSG_DESTROY, entityId);
   setTimeout(spawnSelfDrivingBus, 1000 * Math.random());
+});
+
+false && world.insert({
+  Name: { name: 'hero1'},
+  // Health: { max: 4000 },
+  Sprite: { name: 'hero', size: 100, color: 0x3333ff },
+  Spawn: {},
+  Collidable: {},
+  Bounce: { damage: 0.0001, mass: 7000 },
+  Position: { x: 0, y: 0, rotation: -(Math.PI / 2) },
+  Motion: {},
+  Thruster: { deltaV: 2800, maxV: 1400, active: false },
+  PlayerInputSteering: { radPerSec: Math.PI },
 });
 
 world.debug = debug;
