@@ -6,6 +6,8 @@ import { MSG_DAMAGE } from './health';
 
 import Vector2D from '../lib/Vector2D';
 
+export const MSG_BOUNCE = 'bounceBounce';
+
 export class BounceComponent extends Core.Component {
   static defaults() {
     return {
@@ -158,6 +160,8 @@ export class BounceSystem extends Core.System {
     // calculate new velocity vectors of the entities, the tangential
     // component stays the same, the normal component changes analog to
     // the 1-Dimensional case
+
+    this.world.publish(MSG_BOUNCE, { a: aEntityId, b: bEntityId });
 
     if (aMotion) {
       const aFactor = (m1 - m2) / M * this.v1n.magnitude() +

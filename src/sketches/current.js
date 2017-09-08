@@ -12,7 +12,7 @@ import '../plugins/motion';
 import '../plugins/thruster';
 import '../plugins/steering';
 import '../plugins/collision';
-import '../plugins/bounce';
+import { MSG_BOUNCE } from '../plugins/bounce';
 import '../plugins/repulsor';
 import '../plugins/playerInputSteering';
 import { MSG_DESPAWN } from '../plugins/spawn';
@@ -103,32 +103,47 @@ function spawnShip() {
     Motion: { },
     Thruster: {
       deltaV: 4000 + 500 * Math.random(),
-      maxV: 1000 + 500 * Math.random()
+      maxV: 700 + 500 * Math.random()
     },
     Steering: {
       active: true,
       radPerSec: Math.PI * 1.5,
       thrusterTurnCutoff: Math.PI * 0.1,
-      thrusterTurnThrottle: 0.5,
+      thrusterTurnThrottle: 0.25,
 
       seekFactor: 1.0,
       seekTargetPosition: dest,
 
-      avoidFactor: 2.0,
+      avoidFactor: 1.0,
       avoidTags: ['ship'],
-      avoidRange: 500,
+      avoidRange: 600,
     }
   }));
 }
 
 const ships = [];
-for (let idx = 0; idx < 15; idx++) {
+for (let idx = 0; idx < 25; idx++) {
   setTimeout(spawnShip, 5000 * Math.random());
 }
 
 world.subscribe(MSG_DESPAWN, () => {
   setTimeout(spawnShip, 1000 * Math.random());
 });
+
+
+const stats = {
+  last: Date.now(),
+  duration: 0,
+  bounces: 0,
+};
+world.subscribe(MSG_BOUNCE, () => {
+  stats.bounces++;
+});
+setInterval(() => {
+  const now = Date.now();
+  stats.duration += now - stats.last;
+  stats.last = now;
+}, 16);
 
 world.start();
 
@@ -162,3 +177,7 @@ mf.open();
 const sf = gui.addFolder('Steering');
 [ 'debug' ].forEach(name => sf.add(steeringSystem.options, name));
 sf.open();
+
+const statsFolder = gui.addFolder('Stats');
+[ 'duration', 'bounces' ].forEach(name => statsFolder.add(stats, name).listen());
+statsFolder.open();
