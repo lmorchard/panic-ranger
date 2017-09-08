@@ -45,7 +45,7 @@
     "stats-js": "^1.0.0-alpha1"
   },
   "scripts": {
-    "start": "NODE_ENV=development INDEX=1 webpack-dev-server --progress --colors",
+    "start": "NODE_ENV=development INDEX=1 webpack-dev-server",
     "start:current": "NODE_ENV=development SKETCHES=current webpack-dev-server --progress --colors",
     "start:dev": "npm-run-all --parallel start test:watch lint:watch",
     "start:dev:current": "npm-run-all --parallel start:current test:watch lint:watch",
