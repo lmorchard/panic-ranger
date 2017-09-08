@@ -6,16 +6,17 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const DashboardPlugin = require('webpack-dashboard/plugin');
 
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const IS_PROD = NODE_ENV === 'production';
-const IS_DEV = NODE_ENV === 'development';
-
 const HOST = process.env.HOST ? HOST : 'localhost';
 const PORT = process.env.PORT || 3000;
 const PROJECT_DOMAIN = process.env.PROJECT_DOMAIN || null;
 const DEV_SERVER_PUBLIC = PROJECT_DOMAIN
   ? `${PROJECT_DOMAIN}.glitch.me`
   : `${HOST}:${PORT}`;
+
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const IS_PROD = NODE_ENV === 'production';
+const IS_DEV = NODE_ENV === 'development';
+const IS_GLITCH = PROJECT_DOMAIN !== null;
 
 const BUILD_INDEX = IS_PROD || (IS_DEV && 'INDEX' in process.env);
 
@@ -69,6 +70,9 @@ module.exports = [
       port: PORT,
       disableHostCheck: true,
       contentBase: 'dist'
+    },
+    watchOptions: {
+      aggregateTimeout: IS_GLITCH ? 2000 : 0
     },
     devtool: 'source-map',
     entry: entries,
