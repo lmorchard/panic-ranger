@@ -14,7 +14,7 @@ const HOST = process.env.HOST ? HOST : 'localhost';
 const PORT = process.env.PORT || 3000;
 const PROJECT_DOMAIN = process.env.PROJECT_DOMAIN || null;
 const DEV_SERVER_PUBLIC = PROJECT_DOMAIN
-  ? `${PROJECT_DOMAIN}`
+  ? `${PROJECT_DOMAIN}.glitch.me`
   : `${HOST}:${PORT}`;
 
 const BUILD_INDEX = IS_PROD || (IS_DEV && 'INDEX' in process.env);
