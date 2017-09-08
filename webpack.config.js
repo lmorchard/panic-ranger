@@ -6,10 +6,16 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const DashboardPlugin = require('webpack-dashboard/plugin');
 
-const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PROD = NODE_ENV === 'production';
 const IS_DEV = NODE_ENV === 'development';
+
+const HOST = process.env.HOST ? HOST : 'localhost';
+const PORT = process.env.PORT || 3000;
+const PROJECT_DOMAIN = process.env.PROJECT_DOMAIN || null;
+const DEV_SERVER_PUBLIC = PROJECT_DOMAIN
+  ? `${PROJECT_DOMAIN}`
+  : `${HOST}:${PORT}`;
 
 const BUILD_INDEX = IS_PROD || (IS_DEV && 'INDEX' in process.env);
 
@@ -59,6 +65,7 @@ if (BUILD_INDEX) {
 module.exports = [
   {
     devServer: {
+      public: DEV_SERVER_PUBLIC,
       port: PORT,
       disableHostCheck: true,
       contentBase: 'dist'
