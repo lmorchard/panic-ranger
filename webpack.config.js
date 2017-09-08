@@ -6,6 +6,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const DashboardPlugin = require('webpack-dashboard/plugin');
 
+const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PROD = NODE_ENV === 'production';
 const IS_DEV = NODE_ENV === 'development';
@@ -58,6 +59,7 @@ if (BUILD_INDEX) {
 module.exports = [
   {
     devServer: {
+      port: PORT,
       contentBase: 'dist'
     },
     devtool: 'source-map',
