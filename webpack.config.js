@@ -60,6 +60,7 @@ module.exports = [
   {
     devServer: {
       port: PORT,
+      disableHostCheck: true,
       contentBase: 'dist'
     },
     devtool: 'source-map',
