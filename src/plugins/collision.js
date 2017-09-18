@@ -9,7 +9,7 @@ export class Collidable extends Core.Component {
   }
 }
 
-Core.registerComponent('Collidable', Collidable);
+export const components = { Collidable: Collidable };
 
 let match, matches, entityId, entityId2, position, aCollidable, bCollidable, dx, dy, radii;
 
@@ -91,4 +91,4 @@ export class CollisionSystem extends Core.System {
   }
 }
 
-Core.registerSystem('Collision', CollisionSystem);
+export const systems = { Collision: CollisionSystem };

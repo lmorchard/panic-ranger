@@ -17,7 +17,7 @@ export class CanvasSprite extends Core.Component {
     return c;
   }
 }
-Core.registerComponent('Sprite', CanvasSprite);
+export const components = { CanvasSprite };
 
 // See also: http://phrogz.net/JS/wheeldelta.html
 const wheelDistance = function(evt){
@@ -291,7 +291,7 @@ export class ViewportCanvas extends Core.System {
 
 }
 
-Core.registerSystem('ViewportCanvas', ViewportCanvas);
+export const systems = { ViewportCanvas };
 
 const spriteRegistry = {};
 export function registerSprite(name, sprite) {

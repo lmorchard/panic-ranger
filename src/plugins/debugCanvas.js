@@ -93,4 +93,4 @@ export class DebugCanvas extends Core.System {
 
 }
 
-Core.registerSystem('DebugCanvas', DebugCanvas);
+export const systems = { DebugCanvas: DebugCanvas };

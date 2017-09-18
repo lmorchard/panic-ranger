@@ -57,7 +57,8 @@ module.exports = [
         : `${HOST}:${PORT}`,
       port: PORT,
       disableHostCheck: true,
-      contentBase: 'dist'
+      contentBase: 'dist',
+      hot: true
     },
     watchOptions: {
       aggregateTimeout: IS_GLITCH ? 500 : 0

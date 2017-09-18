@@ -9,7 +9,7 @@ export class Motion extends Core.Component {
     return { dx: 0, dy: 0, drotation: 0 };
   }
 }
-Core.registerComponent('Motion', Motion);
+export const components = { Motion: Motion };
 
 export class MotionSystem extends Core.System {
   defaultOptions() {
@@ -54,4 +54,4 @@ export class MotionSystem extends Core.System {
     g.restore();
   }
 }
-Core.registerSystem('Motion', MotionSystem);
+export const systems = { Motion: MotionSystem };

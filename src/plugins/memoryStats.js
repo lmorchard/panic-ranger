@@ -15,4 +15,5 @@ export class MemoryStatsSystem extends Core.System {
   draw() { this.stats.update(); }
 
 }
-Core.registerSystem('MemoryStats', MemoryStatsSystem);
+
+export const systems = { MemoryStats: MemoryStatsSystem };

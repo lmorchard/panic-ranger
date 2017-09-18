@@ -1,4 +1,4 @@
-import { Component, System, registerComponent, registerSystem } from '../lib/core';
+import { Component, System } from '../lib/core';
 
 import { MSG_DESTROY } from './spawn';
 
@@ -11,7 +11,7 @@ export class HordeSpawn extends Component {
   }
 }
 
-registerComponent('HordeSpawn', HordeSpawn);
+export const components = { HordeSpawn: HordeSpawn };
 
 export class HordeSpawnSystem extends System {
 
@@ -92,4 +92,4 @@ export class HordeSpawnSystem extends System {
 
 }
 
-registerSystem('HordeSpawn', HordeSpawnSystem);
+export const systems = { HordeSpawn: HordeSpawnSystem };

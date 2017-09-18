@@ -15,7 +15,7 @@ export class Orbiter extends Core.Component {
     };
   }
 }
-Core.registerComponent('Orbiter', Orbiter);
+export const components = { Orbiter: Orbiter };
 
 export class OrbiterSystem extends Core.System {
 
@@ -53,4 +53,4 @@ export class OrbiterSystem extends Core.System {
 
   }
 }
-Core.registerSystem('Orbiter', OrbiterSystem);
+export const systems = { Orbiter: OrbiterSystem };

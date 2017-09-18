@@ -25,7 +25,7 @@ export const Messages = {
 };
 
 export class World {
-  constructor(options) {
+  constructor(options, store = {}) {
     options = options || {};
 
     this.isRunning = false;
@@ -37,7 +37,7 @@ export class World {
       this.addSystems(options.systems);
     }
 
-    this.store = {};
+    this.store = store;
 
     this.subscribers = {};
 
@@ -75,6 +75,9 @@ export class World {
 
   stop() {
     this.isRunning = false;
+    for (const systemName in this.systems) {
+      this.systems[systemName].stop();
+    }
     return this;
   }
 
@@ -289,6 +292,8 @@ export class System {
 
   initialize() { }
 
+  stop() { }
+
   getMatchingComponents() {
     return this.world.get(this.matchComponent());
   }
@@ -320,21 +325,19 @@ export class System {
 }
 
 const componentRegistry = {};
+const systemRegistry = {};
 
-export function registerComponent(componentName, componentManager) {
-  componentRegistry[componentName] = componentManager;
+export function installPlugins (modules) {
+  modules.forEach(({components={}, systems={}}) => {
+    Object.assign(componentRegistry, components);
+    Object.assign(systemRegistry, systems);
+  });
 }
 
-export function getComponent(componentName) {
+export function getComponent (componentName) {
   return componentRegistry[componentName];
 }
 
-const systemRegistry = {};
-
-export function registerSystem(systemName, system) {
-  systemRegistry[systemName] = system;
-}
-
-export function getSystem(systemName) {
+export function getSystem (systemName) {
   return systemRegistry[systemName];
 }

@@ -15,8 +15,6 @@ export class Road extends Core.Component {
   }
 }
 
-Core.registerComponent('Road', Road);
-
 export class Runner extends Core.Component {
   static defaults() {
     return {
@@ -26,7 +24,7 @@ export class Runner extends Core.Component {
   }
 }
 
-Core.registerComponent('Runner', Runner);
+export const components = { Road, Runner };
 
 export class RoadRunnerSystem extends Core.System {
 
@@ -478,7 +476,7 @@ export class RoadRunnerSystem extends Core.System {
 
 }
 
-Core.registerSystem('RoadRunner', RoadRunnerSystem);
+export const systems = { RoadRunner: RoadRunnerSystem };
 
 const digits = '0123456789abcdef';
 const randDigit = () => digits.charAt(Math.floor(Math.random() * digits.length));

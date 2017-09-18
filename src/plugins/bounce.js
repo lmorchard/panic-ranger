@@ -1,14 +1,12 @@
-import * as Core from '../lib/core';
+import { Component, System } from '../lib/core';
 
-import './position';
-import './motion';
 import { MSG_DAMAGE } from './health';
 
 import Vector2D from '../lib/Vector2D';
 
 export const MSG_BOUNCE = 'bounceBounce';
 
-export class BounceComponent extends Core.Component {
+export class BounceComponent extends Component {
   static defaults() {
     return {
       mass: 1000.0
@@ -16,9 +14,9 @@ export class BounceComponent extends Core.Component {
   }
 }
 
-Core.registerComponent('Bounce', BounceComponent);
+export const components = { Bounce: BounceComponent };
 
-export class BounceSystem extends Core.System {
+export class BounceSystem extends System {
 
   matchComponent() { return 'Bounce'; }
 
@@ -203,4 +201,4 @@ export class BounceSystem extends Core.System {
 
 }
 
-Core.registerSystem('Bounce', BounceSystem);
+export const systems = { Bounce: BounceSystem };

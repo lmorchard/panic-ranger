@@ -1,4 +1,4 @@
-import { Component, System, registerComponent, registerSystem } from '../lib/core';
+import { Component, System } from '../lib/core';
 import { MSG_DESTROY } from './spawn';
 
 export const MSG_DAMAGE = 'healthDamage';
@@ -21,7 +21,7 @@ export class Health extends Component {
   }
 }
 
-registerComponent('Health', Health);
+export const components = { Health: Health };
 
 export class HealthSystem extends System {
 
@@ -50,4 +50,4 @@ export class HealthSystem extends System {
 
 }
 
-registerSystem('Health', HealthSystem);
+export const systems = { Health: HealthSystem };

@@ -20,7 +20,7 @@ export class Seeker extends Core.Component {
   }
 }
 
-Core.registerComponent('Seeker', Seeker);
+export const components = { Seeker };
 
 export class SeekerSystem extends Core.System {
 
@@ -108,4 +108,4 @@ export class SeekerSystem extends Core.System {
 
 }
 
-Core.registerSystem('Seeker', SeekerSystem);
+export const systems = { Seeker: SeekerSystem };

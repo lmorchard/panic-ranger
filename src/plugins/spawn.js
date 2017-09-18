@@ -1,4 +1,4 @@
-import { Component, System, registerComponent, registerSystem } from '../lib/core';
+import { Component, System } from '../lib/core';
 
 export const MSG_SPAWN = 'spawnSpawn';
 export const MSG_DESTROY = 'spawnDestroy';
@@ -18,7 +18,7 @@ export class Spawn extends Component {
   }
 }
 
-registerComponent('Spawn', Spawn);
+export const components = { Spawn };
 
 export class SpawnSystem extends System {
   defaultOptions() {
@@ -63,4 +63,4 @@ export class SpawnSystem extends System {
   }
 }
 
-registerSystem('Spawn', SpawnSystem);
+export const systems = { Spawn: SpawnSystem };

@@ -1,4 +1,4 @@
-import { Component, System, registerComponent, registerSystem } from '../lib/core';
+import { Component, System } from '../lib/core';
 
 export class PlayerInputSteering extends Component {
   static defaults() {
@@ -9,7 +9,7 @@ export class PlayerInputSteering extends Component {
   }
 }
 
-registerComponent('PlayerInputSteering', PlayerInputSteering);
+export const components = { PlayerInputSteering: PlayerInputSteering };
 
 const PI2 = Math.PI * 2;
 
@@ -189,4 +189,4 @@ export class PlayerInputSteeringSystem extends System {
 
 }
 
-registerSystem('PlayerInputSteering', PlayerInputSteeringSystem);
+export const systems = { PlayerInputSteering: PlayerInputSteeringSystem };

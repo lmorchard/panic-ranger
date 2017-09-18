@@ -17,7 +17,7 @@ export class Thruster extends Core.Component {
     };
   }
 }
-Core.registerComponent('Thruster', Thruster);
+export const components = { Thruster };
 
 export class ThrusterSystem extends Core.System {
 
@@ -82,4 +82,4 @@ export class ThrusterSystem extends Core.System {
     motion.dy = this.vInertia.y;
   }
 }
-Core.registerSystem('Thruster', ThrusterSystem);
+export const systems = { Thruster: ThrusterSystem };

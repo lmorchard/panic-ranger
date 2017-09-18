@@ -305,7 +305,7 @@ export class ViewportPixi extends Core.System {
 
 }
 
-Core.registerSystem('ViewportPixi', ViewportPixi);
+export const systems = { }; //ViewportPixi: ViewportPixi };
 
 export class CanvasSprite extends Core.Component {
   static defaults() {
@@ -327,7 +327,7 @@ export class CanvasSprite extends Core.Component {
   }
 }
 
-Core.registerComponent('Sprite', CanvasSprite);
+export const components = { }; // Sprite: CanvasSprite };
 
 const spriteRegistry = {};
 export function registerSprite(name, sprite) {

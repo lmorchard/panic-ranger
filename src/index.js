@@ -1,63 +1,35 @@
 import dat from 'dat-gui';
 
-import * as Core from './lib/core';
+let { World, installPlugins } = require('./lib/core');
 
-import './plugins/drawStats';
-import './plugins/memoryStats';
-import './plugins/debugCanvas';
-import './plugins/viewportWebGL';
-import './plugins/name';
-import './plugins/health';
-import './plugins/position';
-import './plugins/motion';
-import './plugins/thruster';
-import './plugins/steering';
-import './plugins/collision';
 import { MSG_BOUNCE } from './plugins/bounce';
-import './plugins/repulsor';
-import './plugins/playerInputSteering';
 import { MSG_DESPAWN } from './plugins/spawn';
 
 const debug = true;
 
-const world = window.world = new Core.World({
-  systems: {
-    ViewportWebGL: {
-      debug: debug,
-      container: '#game',
-      zoom: 0.2,
-      gridEnabled: false,
-      followName: 'hero1',
-      lineWidth: 2.0
-    },
-    DebugCanvas: {
-      container: '#game',
-      viewportSystemName: 'ViewportWebGL',
-    },
-    DrawStats: {},
-    Health: {},
-    Position: {},
-    Motion: { debug: true },
-    Thruster: { debug: true },
-    Steering: {
-      debug: true,
-      behaviors: [
-        'avoid',
-        'push',
-        'seek',
-        'flee',
-        'wander',
-        'evade',
-        'pursue'
-      ]
-    },
-    Repulsor: {},
-    Collision: {},
-    Bounce: {},
-    Spawn: {},
-  }
-});
+const systemsConfig = [
+  ['ViewportWebGL', {debug: debug, zoom: 0.2, followName: 'hero1'}],
+  ['DebugCanvas', {container: '#game', viewportSystemName: 'ViewportWebGL'}],
+  'DrawStats',
+  'Health',
+  'Position',
+  ['Motion', {debug: true}],
+  ['Thruster', {debug: true}],
+  ['Steering', {debug: true}],
+  'Repulsor',
+  'Collision',
+  'Bounce',
+  'Spawn'
+];
 
+let world, plugins;
+function updatePlugins() {
+  plugins = require.context('./plugins', false, /^(?!.*test).*\.js$/);
+  installPlugins(plugins.keys().map(key => plugins(key)));
+}
+updatePlugins();
+
+world = window.world = new World({ systems: systemsConfig });
 world.debug = debug;
 
 const pads = [];
@@ -130,7 +102,6 @@ world.subscribe(MSG_DESPAWN, () => {
   setTimeout(spawnShip, 1000 * Math.random());
 });
 
-
 const stats = {
   last: Date.now(),
   duration: 0,
@@ -144,6 +115,38 @@ setInterval(() => {
   stats.duration += now - stats.last;
   stats.last = now;
 }, 16);
+
+if (module.hot) {
+  const rebootWorld = () => {
+    const store = world.store;
+    console.log(store);
+    world.stop();
+    ({ World, installPlugins } = require('./lib/core'));
+    updatePlugins();
+    world = window.world = new World(
+      { systems: systemsConfig },
+      store
+    );
+    world.debug = debug;
+    world.start();
+  };
+  module.hot.accept(plugins.id, () => {
+    try {
+      rebootWorld();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('plugin reload error', e);
+    }
+  });
+  module.hot.accept('./lib/core', () => {
+    try {
+      rebootWorld();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('core reload error', e);
+    }
+  });
+}
 
 world.start();
 

@@ -1,4 +1,4 @@
-import { Component, System, registerComponent, registerSystem } from '../lib/core';
+import { Component, System } from '../lib/core';
 import QuadTree from '../lib/QuadTree';
 
 const PI2 = Math.PI * 2;
@@ -9,7 +9,7 @@ export class Position extends Component {
   }
 }
 
-registerComponent('Position', Position);
+export const components = { Position };
 
 let entityId, sprite, position, positions;
 
@@ -145,4 +145,4 @@ export class PositionSystem extends System {
   }
 }
 
-registerSystem('Position', PositionSystem);
+export const systems = { Position: PositionSystem };

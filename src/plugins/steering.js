@@ -30,7 +30,7 @@ export class Steering extends Core.Component {
   }
 }
 
-Core.registerComponent('Steering', Steering);
+export const components = { Steering };
 
 export class SteeringSystem extends Core.System {
 
@@ -257,9 +257,9 @@ export class SteeringSystem extends Core.System {
           g.beginPath();
           g.moveTo(position.x, position.y);
           g.lineTo(avoidPosition.x, avoidPosition.y);
-          g.setLineDash([4, 32]);
+          g.setLineDash([8, 32]);
           g.lineWidth = 8;
-          g.strokeStyle = '#cc0000';
+          g.strokeStyle = '#cc3300';
           g.stroke();
         });
       }
@@ -296,4 +296,4 @@ export class SteeringSystem extends Core.System {
 
 }
 
-Core.registerSystem('Steering', SteeringSystem);
+export const systems = { Steering: SteeringSystem };

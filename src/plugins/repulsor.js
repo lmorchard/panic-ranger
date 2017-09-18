@@ -1,4 +1,4 @@
-import { Component, System, registerComponent, registerSystem } from '../lib/core';
+import { Component, System } from '../lib/core';
 
 const PI2 = Math.PI * 2;
 
@@ -12,9 +12,9 @@ export class Repulsor extends Component {
     }
 }
 
-registerComponent('Repulsor', Repulsor);
+export const components = { Repulsor: Repulsor };
 
-let components, component, entityId, position, repulsor, repulsorPosition,
+let component, entityId, position, repulsor, repulsorPosition,
     neighborSprite, neighborPosition, neighborMotion, repelAngle, repelForce,
     dist;
 
@@ -88,7 +88,7 @@ export class RepulsorSystem extends System {
 
     g.lineWidth = 4;
     g.strokeStyle = '#882222';
-    components = this.getMatchingComponents();
+    const components = this.getMatchingComponents();
     for (entityId in components) {
       component = components[entityId];
       position = this.world.get('Position', entityId);
@@ -98,4 +98,4 @@ export class RepulsorSystem extends System {
 
 }
 
-registerSystem('Repulsor', RepulsorSystem);
+export const systems = { Repulsor: RepulsorSystem };

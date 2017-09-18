@@ -26,6 +26,7 @@ export class ViewportWebGL extends Core.System {
 
   defaultOptions() {
     return {
+      container: '#game',
       lineWidth: 2,
       zoom: 1.0,
       zoomMin: 0.1,
@@ -446,7 +447,7 @@ export class ViewportWebGL extends Core.System {
   }
 }
 
-Core.registerSystem('ViewportWebGL', ViewportWebGL);
+export const systems = { ViewportWebGL };
 
 export class WebGLSprite extends Core.Component {
   static defaults() {
@@ -488,7 +489,7 @@ export class WebGLSprite extends Core.Component {
   }
 }
 
-Core.registerComponent('Sprite', WebGLSprite);
+export const components = { Sprite: WebGLSprite };
 
 const defaultShape = [ [-0.5, 0], [0.5, 0], [0, 0], [0, -0.5], [0, 0.5], [0, 0] ];
 for (let idx = 0; idx < 8; idx++) {

@@ -31,4 +31,4 @@ export class Name extends Core.Component {
   }
 }
 
-Core.registerComponent('Name', Name);
+export const components = { Name: Name };

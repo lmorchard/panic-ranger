@@ -31,4 +31,5 @@ export class DrawStats extends Core.System {
   drawEnd() { this.drawStats.end(); }
 
 }
-Core.registerSystem('DrawStats', DrawStats);
+
+export const systems = { DrawStats: DrawStats };
