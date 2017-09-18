@@ -1,23 +1,22 @@
-/*
+import dat from 'dat-gui';
+
 import * as Core from './lib/core';
 
 import './plugins/drawStats';
 import './plugins/memoryStats';
-import './plugins/datGui';
-import './plugins/viewportPixi';
-import './plugins/viewportCanvas';
+import './plugins/debugCanvas';
 import './plugins/viewportWebGL';
 import './plugins/name';
 import './plugins/health';
 import './plugins/position';
 import './plugins/motion';
 import './plugins/thruster';
-import './plugins/seeker';
+import './plugins/steering';
 import './plugins/collision';
-import './plugins/bounce';
+import { MSG_BOUNCE } from './plugins/bounce';
 import './plugins/repulsor';
 import './plugins/playerInputSteering';
-import './plugins/hordeSpawn';
+import { MSG_DESPAWN } from './plugins/spawn';
 
 const debug = true;
 
@@ -26,89 +25,157 @@ const world = window.world = new Core.World({
     ViewportWebGL: {
       debug: debug,
       container: '#game',
-      canvas: '#viewport',
+      zoom: 0.2,
+      gridEnabled: false,
       followName: 'hero1',
-      zoom: 0.3
+      lineWidth: 2.0
+    },
+    DebugCanvas: {
+      container: '#game',
+      viewportSystemName: 'ViewportWebGL',
     },
     DrawStats: {},
-    MemoryStats: {},
-    DatGui: {},
-    PlayerInputSteering: {},
-    Motion: {},
+    Health: {},
     Position: {},
-    Thruster: {},
-    Seeker: {},
+    Motion: { debug: true },
+    Thruster: { debug: true },
+    Steering: {
+      debug: true,
+      behaviors: [
+        'avoid',
+        'push',
+        'seek',
+        'flee',
+        'wander',
+        'evade',
+        'pursue'
+      ]
+    },
     Repulsor: {},
     Collision: {},
     Bounce: {},
-    HordeSpawn: {
-      viewportSystemName: 'ViewportWebGL',
-      offscreenTTL: 0.5,
-      spawnMargin: 125,
-      minCount: 300,
-      spawn: (x, y) => {
-        const MIN_SIZE=100;
-        const MAX_SIZE=300;
-        const size = ((MAX_SIZE - MIN_SIZE) * Math.random()) + MIN_SIZE;
-        world.insert({
-          Sprite: { name: 'mine', size: size, color: 0xff2222 },
-          Health: { max: 4 * size * size },
-          Collidable: { },
-          Bounce: { mass: 4 * size * size },
-          Position: { x: x, y: y, rotation: (Math.PI * 2) * Math.random() },
-          Motion: { dx: 0, dy: 0, drotation: (Math.PI * 2) * Math.random() },
-          Thruster: { deltaV: 2400 + Math.random() * 100, maxV: 1200 + Math.random() * 200 },
-          Seeker: { targetName: 'hero1', radPerSec: 0.5 + Math.random() * 0.2 },
-          HordeSpawn: { }
-        });
-      }
-    }
+    Spawn: {},
   }
 });
 
-world.insert({
-  Name: { name: 'hero1'},
-  Sprite: { name: 'hero', size: 150, color: 0x0000ff },
-  Collidable: {},
-  Bounce: { mass: 7000 },
-  Position: { x: 0, y: 0, rotation: -(Math.PI / 2) },
-  Motion: {},
-  Thruster: { deltaV: 2800, maxV: 1400, active: false },
-  PlayerInputSteering: { radPerSec: Math.PI }
+world.debug = debug;
+
+const pads = [];
+[-2000, 2000].forEach((x, idx) => pads.push(
+  world.insert({
+    Name: { name: `pad${idx}` },
+    Sprite: { name: 'default', color: 0x888888, size: 100 },
+    Position: { x, y: 0 }
+  })
+));
+
+function spawnShip() {
+  const idx = Math.random();
+  const sourceId = pads[Math.floor(pads.length * Math.random())];
+  const source = world.get('Position', sourceId);
+  let destId;
+  do { destId = pads[Math.floor(pads.length * Math.random())]; }
+  while (destId === sourceId);
+  const dest = world.get('Position', destId);
+
+  ships.push(world.insert({
+    Name: {
+      name: `ship${idx}`,
+      tags: ['ship']
+    },
+    Spawn: {
+      ttl: 10 + Math.random()
+    },
+    Sprite: {
+      name: (source.x < 0) ? 'hero' : 'bus',
+      size: 100,
+      color: 0xffffff * Math.random(),
+    },
+    Position: {
+      x: source.x,
+      y: source.y + (1000 - 2000 * Math.random()),
+      rotation: ((source.x > 0) ? Math.PI : 0)
+    },
+    Bounce: {
+      mass: 100
+    },
+    Collidable: { },
+    Motion: { },
+    Thruster: {
+      deltaV: 4000 + 500 * Math.random(),
+      maxV: 700 + 500 * Math.random()
+    },
+    Steering: {
+      active: true,
+      radPerSec: Math.PI * 1.5,
+      thrusterTurnCutoff: Math.PI * 0.1,
+      thrusterTurnThrottle: 0.25,
+
+      seekFactor: 1.0,
+      seekTargetPosition: dest,
+
+      avoidFactor: 1.0,
+      avoidTags: ['ship'],
+      avoidRange: 600,
+    }
+  }));
+}
+
+const ships = [];
+for (let idx = 0; idx < 25; idx++) {
+  setTimeout(spawnShip, 5000 * Math.random());
+}
+
+world.subscribe(MSG_DESPAWN, () => {
+  setTimeout(spawnShip, 1000 * Math.random());
 });
 
-let x = 0;
-for (let y = 0; y > -15000; y -= 600) {
-  world.insert({
-    Name: { name: `repulsor${y}` },
-    Sprite: { name: 'repulsor', color: 0x228822 },
-    Position: { x, y },
-    Motion: { },
-    Repulsor: { range: 600, force: 300 }
-  });
-  x += (-300 + Math.random() * 600);
-}
+
+const stats = {
+  last: Date.now(),
+  duration: 0,
+  bounces: 0,
+};
+world.subscribe(MSG_BOUNCE, () => {
+  stats.bounces++;
+});
+setInterval(() => {
+  const now = Date.now();
+  stats.duration += now - stats.last;
+  stats.last = now;
+}, 16);
 
 world.start();
 
 const vpSystem = world.getSystem('ViewportWebGL');
-const spawnSystem = world.getSystem('HordeSpawn');
-const guiSystem = world.getSystem('DatGui');
-const gui = guiSystem.gui;
+const steeringSystem = world.getSystem('Steering');
+const motionSystem = world.getSystem('Motion');
+const gui = new dat.GUI();
 
-gui.add(world, 'isPaused');
-gui.add(world, 'debug');
-gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
-gui.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
+const generalf = gui.addFolder('General');
+generalf.add(world, 'isPaused');
+generalf.add(world, 'debug');
+generalf.open();
 
+const vpf = gui.addFolder('Viewport');
 const names = [ 'gridEnabled', 'followEnabled', 'cameraX', 'cameraY' ];
-names.forEach(function (name) {
-  gui.add(vpSystem, name).listen();
-});
+names.forEach(name => vpf.add(vpSystem, name).listen());
+vpf.add(vpSystem, 'zoom',
+  vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
+vpf.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
+vpf.add(vpSystem, 'spriteCount').listen();
+vpf.add(vpSystem, 'lastVertexCount').listen();
+vpf.add(vpSystem, 'actualBufferSize').listen();
+vpf.add(vpSystem, 'calculatedBufferSize').listen();
 
-const cp = vpSystem.cursorPosition;
-gui.add(cp, 'x').listen();
-gui.add(cp, 'y').listen();
+const mf = gui.addFolder('Motion');
+[ 'debug' ].forEach(name => mf.add(motionSystem.options, name));
+mf.open();
 
-gui.add(spawnSystem, 'spawnCount').listen();
-*/
+const sf = gui.addFolder('Steering');
+[ 'debug' ].forEach(name => sf.add(steeringSystem.options, name));
+sf.open();
+
+const statsFolder = gui.addFolder('Stats');
+[ 'duration', 'bounces' ].forEach(name => statsFolder.add(stats, name).listen());
+statsFolder.open();

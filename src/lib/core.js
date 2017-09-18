@@ -1,3 +1,9 @@
+/*
+ * TODO
+ * - hot module reloading code, re-instantiate systems
+ * - systems config persists through reloads
+ * - invert component/system registry with exports
+ */
 const TARGET_FPS = 60;
 const TARGET_DURATION = 1000 / TARGET_FPS;
 
@@ -10,7 +16,7 @@ const requestAnimationFrame =
   function (fn) { setTimeout(fn, (1000/60)); };
 
 // Commonly used temp variables, pre-declared early.
-let entityId, system, systemName, systemAttrs, systemCls, componentName,
+let entityId, system, systemName, componentName,
     timeNow, timeDelta, componentAttrs, matches, idx, item, handler;
 
 export const Messages = {
@@ -112,12 +118,21 @@ export class World {
   }
 
   addSystems(systemsData) {
-    for (systemName in systemsData) {
-      systemAttrs = systemsData[systemName];
-      systemCls = getSystem(systemName);
-      system = new systemCls(systemAttrs);
+    const create = (name, attrs) => {
+      const cls = getSystem(name);
+      system = new cls(attrs);
       system.setWorld(this);
-      this.systems[systemName] = system;
+      this.systems[name] = system;
+    };
+    if (Array.isArray(systemsData)) {
+      systemsData.forEach(item =>
+        typeof item === 'string'
+          ? create(item)
+          : create(item[0], item[1])
+      );
+    } else {
+      Object.keys(systemsData)
+        .forEach(name => create(name, systemsData[name]));
     }
   }
 

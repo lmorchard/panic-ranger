@@ -89,13 +89,13 @@ export class SteeringSystem extends Core.System {
     this.applySteering(timeDelta, entityId, steering, position, motion);
   }
 
-  avoid(vector, timeDelta, entityId, steering, position, motion) {
-    const thruster = this.world.get('Thruster', entityId);
+  avoid(vector, timeDelta, entityId, steering, position/*, motion*/) {
+    // const thruster = this.world.get('Thruster', entityId);
     const range = steering.avoidRange;
     const sqRange = range * range;
 
     const goal = new Vector2D();
-    const inertia = new Vector2D(motion.dx, motion.dy);
+    // const inertia = new Vector2D(motion.dx, motion.dy);
 
     if (this.options.debug) steering.avoidPositions = [];
 

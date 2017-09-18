@@ -174,7 +174,7 @@ false && world.insert({
   Bounce: { damage: 0.0001, mass: 7000 },
   Position: { x: 0, y: 0, rotation: -(Math.PI / 2) },
   Motion: {},
-  Thruster: { deltaV: 2800, maxV: 1400, active: false },
+  Thruster: { deltaV: 500, maxV: 250, active: false },
   PlayerInputSteering: { radPerSec: Math.PI },
 });
 
