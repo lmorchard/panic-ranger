@@ -38,7 +38,7 @@ export class World {
       this.addSystems(options.systems);
     }
 
-    this.store = options.store || {};
+    this.store = options.store || { _lastEntityId: 0 };
 
     this.subscribers = {};
 
@@ -51,8 +51,6 @@ export class World {
 
     this.boundTickLoop = () => this.tickLoop();
     this.boundDrawLoop = (timestamp) => this.drawLoop(timestamp);
-
-    this.reset();
   }
 
   start() {

@@ -16,7 +16,7 @@ export class DebugCanvas extends Core.System {
     document.body.appendChild(this.debugT);
     Object.assign(this.debugT.style, {
       width: '400px', height: '300px',
-      display: 'block', position: 'absolute',
+      display: 'none', position: 'absolute',
       zIndex: 1000, bottom: '0px', right: '0px',
       color: '#fff', backgroundColor: 'rgba(0, 0, 0, 0.7)',
     });

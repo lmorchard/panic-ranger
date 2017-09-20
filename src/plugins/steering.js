@@ -257,9 +257,9 @@ export class SteeringSystem extends Core.System {
           g.beginPath();
           g.moveTo(position.x, position.y);
           g.lineTo(avoidPosition.x, avoidPosition.y);
-          g.setLineDash([8, 32]);
+          g.setLineDash([4, 32]);
           g.lineWidth = 8;
-          g.strokeStyle = '#cc3300';
+          g.strokeStyle = '#883300';
           g.stroke();
         });
       }
