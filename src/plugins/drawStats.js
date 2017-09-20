@@ -22,6 +22,11 @@ export class DrawStats extends Core.System {
 
   }
 
+  stop () {
+    document.body.removeChild(this.drawStats.domElement);
+    document.body.removeChild(this.tickStats.domElement);
+  }
+
   updateStart() { this.tickStats.begin(); }
 
   updateEnd() { this.tickStats.end(); }

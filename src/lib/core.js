@@ -25,7 +25,8 @@ export const Messages = {
 };
 
 export class World {
-  constructor(options, store = {}) {
+  constructor(options) {
+    console.log('new World', options);
     options = options || {};
 
     this.isRunning = false;
@@ -37,7 +38,7 @@ export class World {
       this.addSystems(options.systems);
     }
 
-    this.store = store;
+    this.store = options.store || {};
 
     this.subscribers = {};
 
@@ -57,6 +58,8 @@ export class World {
   start() {
     if (this.isRunning) { return; }
     this.isRunning = true;
+
+    console.log('world start()');
 
     for (const systemName in this.systems) {
       this.systems[systemName].initialize();
@@ -92,8 +95,7 @@ export class World {
   }
 
   reset() {
-    this.store = {};
-    this.lastEntityId = 0;
+    this.store = { _lastEntityId: 0 };
   }
 
   // TODO: Use a better pubsub library here. But, pubsub-js seemed to perform
@@ -204,7 +206,7 @@ export class World {
   }
 
   generateEntityId() {
-    return ++(this.lastEntityId);
+    return ++(this.store._lastEntityId);
   }
 
   insert(...items) {
@@ -224,6 +226,7 @@ export class World {
   destroy(entityId) {
     if (this.world) this.world.publish(Messages.ENTITY_DESTROY, entityId);
     for (componentName in this.store) {
+      if ('_lastEntityId' === componentName) { continue; }
       this.removeComponent(entityId, componentName);
     }
   }
@@ -238,6 +241,7 @@ export class World {
   }
 
   removeComponent(entityId, componentName) {
+    if ('_lastEntityId' === componentName) { return; }
     if (entityId in this.store[componentName]) {
       delete this.store[componentName][entityId];
     }
@@ -256,6 +260,11 @@ export class World {
     } else {
       return this.store[componentName][entityId];
     }
+  }
+
+  exportStore() {
+    return this.store;
+    // return {...this.store};
   }
 
 

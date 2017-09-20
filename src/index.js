@@ -7,7 +7,7 @@ import { MSG_DESPAWN } from './plugins/spawn';
 
 const debug = true;
 
-const systemsConfig = [
+const systems = [
   ['ViewportWebGL', {debug: debug, zoom: 0.2, followName: 'hero1'}],
   ['DebugCanvas', {container: '#game', viewportSystemName: 'ViewportWebGL'}],
   'DrawStats',
@@ -29,8 +29,31 @@ function updatePlugins() {
 }
 updatePlugins();
 
-world = window.world = new World({ systems: systemsConfig });
+world = window.world = new World({ systems });
 world.debug = debug;
+
+if (module.hot) {
+  const rebuildWorld = () => {
+    // eslint-disable-next-line no-console
+    console.log('rebuilding world on module reload');
+    try {
+      const store = world.exportStore();
+      world.stop();
+
+      ({ World, installPlugins } = require('./lib/core'));
+      updatePlugins();
+
+      world = window.world = new World({ systems, store });
+      world.debug = debug;
+      world.start();
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('reload error', e);
+    }
+  };
+  module.hot.accept(plugins.id, rebuildWorld);
+  module.hot.accept('./lib/core', rebuildWorld);
+}
 
 const pads = [];
 [-2000, 2000].forEach((x, idx) => pads.push(
@@ -45,6 +68,7 @@ function spawnShip() {
   const idx = Math.random();
   const sourceId = pads[Math.floor(pads.length * Math.random())];
   const source = world.get('Position', sourceId);
+  console.log('spawnShip', sourceId, source);
   let destId;
   do { destId = pads[Math.floor(pads.length * Math.random())]; }
   while (destId === sourceId);
@@ -56,7 +80,7 @@ function spawnShip() {
       tags: ['ship']
     },
     Spawn: {
-      ttl: 10 + Math.random()
+      // ttl: 10 + Math.random()
     },
     Sprite: {
       name: (source.x < 0) ? 'hero' : 'bus',
@@ -95,12 +119,15 @@ function spawnShip() {
 
 const ships = [];
 for (let idx = 0; idx < 25; idx++) {
-  setTimeout(spawnShip, 5000 * Math.random());
+  spawnShip();
+  // setTimeout(spawnShip, 5000 * Math.random());
 }
 
+/*
 world.subscribe(MSG_DESPAWN, () => {
   setTimeout(spawnShip, 1000 * Math.random());
 });
+*/
 
 const stats = {
   last: Date.now(),
@@ -115,38 +142,6 @@ setInterval(() => {
   stats.duration += now - stats.last;
   stats.last = now;
 }, 16);
-
-if (module.hot) {
-  const rebootWorld = () => {
-    const store = world.store;
-    console.log(store);
-    world.stop();
-    ({ World, installPlugins } = require('./lib/core'));
-    updatePlugins();
-    world = window.world = new World(
-      { systems: systemsConfig },
-      store
-    );
-    world.debug = debug;
-    world.start();
-  };
-  module.hot.accept(plugins.id, () => {
-    try {
-      rebootWorld();
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('plugin reload error', e);
-    }
-  });
-  module.hot.accept('./lib/core', () => {
-    try {
-      rebootWorld();
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('core reload error', e);
-    }
-  });
-}
 
 world.start();
 

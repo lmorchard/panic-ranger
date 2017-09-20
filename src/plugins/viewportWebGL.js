@@ -56,7 +56,7 @@ export class ViewportWebGL extends Core.System {
 
     this.scene = {};
 
-    const events = {
+    this.events = {
       'resize': (ev) => { this.updateMetrics(ev); },
       'orientationchange': (ev) => { this.updateMetrics(ev); },
       'mousedown': (ev) => { this.onMouseDown(ev); },
@@ -64,18 +64,14 @@ export class ViewportWebGL extends Core.System {
       'mouseup': (ev) => { this.onMouseUp(ev); }
     };
 
-    for (const name in events) {
-      this.canvas.addEventListener(name, events[name], false);
+    for (const name in this.events) {
+      this.canvas.addEventListener(name, this.events[name], false);
     }
 
     // See also: http://phrogz.net/JS/wheeldelta.html
-    const boundOnMouseWheel = (ev) => this.onMouseWheel(ev);
-    if (window.addEventListener){
-      window.addEventListener('mousewheel', boundOnMouseWheel, false); // Chrome/Safari/Opera
-      window.addEventListener('DOMMouseScroll', boundOnMouseWheel, false); // Firefox
-    } else if (window.attachEvent){
-      window.attachEvent('onmousewheel', boundOnMouseWheel); // IE
-    }
+    this.boundOnMouseWheel = (ev) => this.onMouseWheel(ev);
+    window.addEventListener('mousewheel', this.boundOnMouseWheel, false); // Chrome/Safari/Opera
+    window.addEventListener('DOMMouseScroll', this.boundOnMouseWheel, false); // Firefox
 
     this.followEnabled = this.options.followEnabled;
     this.zoom = this.options.zoom;
@@ -93,6 +89,15 @@ export class ViewportWebGL extends Core.System {
     this.cameraY = 0;
 
     this.updateMetrics();
+  }
+
+  stop () {
+    for (const name in this.events) {
+      this.canvas.removeEventListener(name, this.events[name], false);
+    }
+    this.container.removeChild(this.canvas);
+    window.removeEventListener('mousewheel', this.boundOnMouseWheel, false); // Chrome/Safari/Opera
+    window.removeEventListener('DOMMouseScroll',this.boundOnMouseWheel, false); // Firefox
   }
 
   onMouseWheel(ev) {

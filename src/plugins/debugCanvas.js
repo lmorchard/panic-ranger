@@ -44,6 +44,11 @@ export class DebugCanvas extends Core.System {
     this.debug = true;
   }
 
+  stop () {
+    document.body.removeChild(this.debugT);
+    this.container.removeChild(this.canvas);
+  }
+
   update() {
     this.debugT.style.display = (this.options.debugText)
       ? 'block'
