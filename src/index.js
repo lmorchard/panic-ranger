@@ -1,14 +1,12 @@
 import dat from 'dat-gui';
 
-let { World, installPlugins } = require('./lib/core');
-
-import { MSG_BOUNCE } from './plugins/bounce';
+import { Name } from './plugins/name';
 import { MSG_DESPAWN } from './plugins/spawn';
 
-const debug = true;
+let World, installPlugins, world, plugins, gui;
 
 const systems = [
-  ['ViewportWebGL', {debug: debug, zoom: 0.2, followName: 'hero1'}],
+  ['ViewportWebGL', {debug: true, zoom: 0.2, followName: 'hero1'}],
   ['DebugCanvas', {container: '#game', viewportSystemName: 'ViewportWebGL'}],
   'DrawStats',
   'Health',
@@ -22,65 +20,70 @@ const systems = [
   'Spawn'
 ];
 
-let world, plugins;
-function updatePlugins() {
-  plugins = require.context('./plugins', false, /^(?!.*test).*\.js$/);
-  installPlugins(plugins.keys().map(key => plugins(key)));
+function init () {
+  buildWorld();
+  populateWorld();
+
+  if (module.hot) {
+    module.hot.accept(plugins.id, buildWorld);
+    module.hot.accept('./lib/core', buildWorld);
+  }
 }
-updatePlugins();
 
-world = window.world = new World({ systems });
-world.debug = debug;
-
-if (module.hot) {
-  const rebuildWorld = () => {
-    // eslint-disable-next-line no-console
-    console.log('rebuilding world on module reload');
-    try {
-      const store = world.exportStore();
+function buildWorld () {
+  try {
+    let store;
+    if (world) {
       world.stop();
-
-      ({ World, installPlugins } = require('./lib/core'));
-      updatePlugins();
-
-      world = window.world = new World({ systems, store });
-      world.debug = debug;
-      world.start();
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('reload error', e);
+      store = world.exportStore();
     }
-  };
-  module.hot.accept(plugins.id, rebuildWorld);
-  module.hot.accept('./lib/core', rebuildWorld);
+
+    ({ World, installPlugins } = require('./lib/core'));
+    plugins = require.context('./plugins', false, /^(?!.*test).*\.js$/);
+    installPlugins(plugins.keys().map(key => plugins(key)));
+
+    world = window.world = new World({ debug: true, systems, store });
+    world.start();
+    setupGui(world);
+
+    (world => world.subscribe(MSG_DESPAWN, () => {
+      if (!world.isRunning) { return; }
+      setTimeout(spawnShip, 1000 * Math.random());
+    }))(world);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('build world error', e);
+  }
 }
 
-const pads = [];
-[-2000, 2000].forEach((x, idx) => pads.push(
-  world.insert({
-    Name: { name: `pad${idx}` },
+function populateWorld() {
+  [-2000, 2000].forEach((x, idx) => world.insert({
+    Name: { name: `pad${idx}`, tags: ['pad'] },
     Sprite: { name: 'default', color: 0x888888, size: 100 },
     Position: { x, y: 0 }
-  })
-));
+  }));
+  for (let idx = 0; idx < 25; idx++) { spawnShip(); }
+}
 
 function spawnShip() {
+  const pads = Object.keys(Name.findEntitiesByTags(world, ['pad']));
+
   const idx = Math.random();
   const sourceId = pads[Math.floor(pads.length * Math.random())];
   const source = world.get('Position', sourceId);
-  console.log('spawnShip', sourceId, source);
+
   let destId;
   do { destId = pads[Math.floor(pads.length * Math.random())]; }
   while (destId === sourceId);
   const dest = world.get('Position', destId);
 
-  ships.push(world.insert({
+  world.insert({
     Name: {
       name: `ship${idx}`,
       tags: ['ship']
     },
     Spawn: {
-      // ttl: 10 + Math.random()
+      ttl: 10 * Math.random()
     },
     Sprite: {
       name: (source.x < 0) ? 'hero' : 'bus',
@@ -114,66 +117,41 @@ function spawnShip() {
       avoidTags: ['ship'],
       avoidRange: 600,
     }
-  }));
+  });
 }
 
-const ships = [];
-for (let idx = 0; idx < 25; idx++) {
-  spawnShip();
-  // setTimeout(spawnShip, 5000 * Math.random());
+function setupGui () {
+  if (gui) { gui.destroy(); }
+  gui = new dat.GUI();
+
+  const generalf = gui.addFolder('General');
+  generalf.add(world, 'isPaused');
+  generalf.add(world, 'debug');
+  generalf.open();
+
+  const vpSystem = world.getSystem('ViewportWebGL');
+  const vpf = gui.addFolder('Viewport');
+  vpf.add(
+    vpSystem, 'zoom',
+    vpSystem.options.zoomMin,
+    vpSystem.options.zoomMax
+  ).listen();
+  vpf.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
+  [
+    'gridEnabled', 'followEnabled', 'cameraX', 'cameraY',
+    'spriteCount', 'lastVertexCount', 'actualBufferSize',
+    'calculatedBufferSize'
+  ].forEach(name => vpf.add(vpSystem, name).listen());
+
+  const motionSystem = world.getSystem('Motion');
+  const mf = gui.addFolder('Motion');
+  [ 'debug' ].forEach(name => mf.add(motionSystem.options, name));
+  mf.open();
+
+  const steeringSystem = world.getSystem('Steering');
+  const sf = gui.addFolder('Steering');
+  [ 'debug' ].forEach(name => sf.add(steeringSystem.options, name));
+  sf.open();
 }
 
-/*
-world.subscribe(MSG_DESPAWN, () => {
-  setTimeout(spawnShip, 1000 * Math.random());
-});
-*/
-
-const stats = {
-  last: Date.now(),
-  duration: 0,
-  bounces: 0,
-};
-world.subscribe(MSG_BOUNCE, () => {
-  stats.bounces++;
-});
-setInterval(() => {
-  const now = Date.now();
-  stats.duration += now - stats.last;
-  stats.last = now;
-}, 16);
-
-world.start();
-
-const vpSystem = world.getSystem('ViewportWebGL');
-const steeringSystem = world.getSystem('Steering');
-const motionSystem = world.getSystem('Motion');
-const gui = new dat.GUI();
-
-const generalf = gui.addFolder('General');
-generalf.add(world, 'isPaused');
-generalf.add(world, 'debug');
-generalf.open();
-
-const vpf = gui.addFolder('Viewport');
-const names = [ 'gridEnabled', 'followEnabled', 'cameraX', 'cameraY' ];
-names.forEach(name => vpf.add(vpSystem, name).listen());
-vpf.add(vpSystem, 'zoom',
-  vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
-vpf.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
-vpf.add(vpSystem, 'spriteCount').listen();
-vpf.add(vpSystem, 'lastVertexCount').listen();
-vpf.add(vpSystem, 'actualBufferSize').listen();
-vpf.add(vpSystem, 'calculatedBufferSize').listen();
-
-const mf = gui.addFolder('Motion');
-[ 'debug' ].forEach(name => mf.add(motionSystem.options, name));
-mf.open();
-
-const sf = gui.addFolder('Steering');
-[ 'debug' ].forEach(name => sf.add(steeringSystem.options, name));
-sf.open();
-
-const statsFolder = gui.addFolder('Stats');
-[ 'duration', 'bounces' ].forEach(name => statsFolder.add(stats, name).listen());
-statsFolder.open();
+init();

@@ -1,99 +1,99 @@
-import * as Core from '../lib/core';
+import dat from 'dat-gui';
 
-import '../plugins/drawStats';
-import '../plugins/memoryStats';
-import '../plugins/datGui';
-import '../plugins/debugCanvas';
-import '../plugins/viewportWebGL';
-import '../plugins/name';
-import '../plugins/health';
-import '../plugins/position';
-import '../plugins/motion';
-import '../plugins/thruster';
-import '../plugins/steering';
-import '../plugins/collision';
-import '../plugins/bounce';
-import '../plugins/repulsor';
-import '../plugins/playerInputSteering';
+import { Name } from '../plugins/name';
 import { MSG_DESPAWN } from '../plugins/spawn';
 
-const debug = true;
+let World, installPlugins, world, plugins, gui;
 
-const world = window.world = new Core.World({
-  systems: {
-    ViewportWebGL: {
-      debug: debug,
-      container: '#game',
-      zoom: 0.2,
-      gridEnabled: false,
-      followName: 'hero1',
-      lineWidth: 2.0
-    },
-    DebugCanvas: {
-      container: '#game',
-      viewportSystemName: 'ViewportWebGL',
-    },
-    DrawStats: {},
-    DatGui: {},
-    Health: {},
-    Motion: {},
-    Position: {},
-    Thruster: {},
-    Steering: {
-      behaviors: [
-        'avoid',
-        'push',
-        'seek',
-        'flee',
-        'wander',
-        'evade',
-        'pursue'
-      ]
-    },
-    Repulsor: {},
-    Collision: {},
-    Bounce: {},
-    Spawn: {},
+const systems = [
+  ['ViewportWebGL', {debug: true, zoom: 0.2, followName: 'hero1'}],
+  ['DebugCanvas', {container: '#game', viewportSystemName: 'ViewportWebGL'}],
+  'DrawStats',
+  'Health',
+  'Position',
+  ['Motion', {debug: true}],
+  ['Thruster', {debug: true}],
+  ['Steering', {debug: true}],
+  'Repulsor',
+  'Collision',
+  'Bounce',
+  'Spawn'
+];
+
+function init () {
+  buildWorld();
+  populateWorld();
+
+  if (module.hot) {
+    module.hot.accept(plugins.id, buildWorld);
+    module.hot.accept('../lib/core', buildWorld);
   }
-});
+}
 
-world.debug = debug;
+function buildWorld () {
+  try {
+    let store;
+    if (world) {
+      world.stop();
+      store = world.exportStore();
+    }
 
-const pads = [];
-[-2000, 2000].forEach((x, idx) => pads.push(
-  world.insert({
-    Name: { name: `pad${idx}` },
+    ({ World, installPlugins } = require('../lib/core'));
+    plugins = require.context('../plugins', false, /^(?!.*test).*\.js$/);
+    installPlugins(plugins.keys().map(key => plugins(key)));
+
+    world = window.world = new World({ debug: true, systems, store });
+    world.start();
+    setupGui(world);
+
+    (world => world.subscribe(MSG_DESPAWN, () => {
+      if (!world.isRunning) { return; }
+      setTimeout(spawnShip, 1000 * Math.random());
+    }))(world);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('build world error', e);
+  }
+}
+
+function populateWorld() {
+  [-2000, 2000].forEach((x, idx) => world.insert({
+    Name: { name: `pad${idx}`, tags: ['pad'] },
     Sprite: { name: 'default', color: 0x888888, size: 100 },
     Position: { x, y: 0 }
-  })
-));
+  }));
+  for (let idx = 0; idx < 25; idx++) { spawnShip(); }
+}
 
 function spawnShip() {
+  const pads = Object.keys(Name.findEntitiesByTags(world, ['pad']));
+
   const idx = Math.random();
   const sourceId = pads[Math.floor(pads.length * Math.random())];
   const source = world.get('Position', sourceId);
+
   let destId;
   do { destId = pads[Math.floor(pads.length * Math.random())]; }
   while (destId === sourceId);
   const dest = world.get('Position', destId);
 
-  ships.push(world.insert({
+  world.insert({
     Name: {
       name: `ship${idx}`,
       tags: ['ship']
     },
     Spawn: {
-      ttl: 10 + Math.random()
+      ttl: 10 * Math.random()
     },
     Sprite: {
-      name: 'hero',
+      name: (source.x < 0) ? 'hero' : 'bus',
       size: 100,
       color: 0xffffff * Math.random(),
     },
     Position: {
-      x: source.x + (250 * Math.random()),
-      y: source.y + (250 * Math.random()),
-      rotation: Math.PI * 2 * Math.random()
+      x: source.x,
+      y: source.y + (1000 - 2000 * Math.random()),
+      rotation: ((source.x > 0) ? Math.PI : 0)
     },
     Bounce: {
       mass: 100
@@ -101,52 +101,57 @@ function spawnShip() {
     Collidable: { },
     Motion: { },
     Thruster: {
-      deltaV: 5000,// + 500 * Math.random(),
-      maxV: 1000,// + 500 * Math.random()
+      deltaV: 4000 + 500 * Math.random(),
+      maxV: 700 + 500 * Math.random()
     },
     Steering: {
       active: true,
-      // thrusterTurnCutoff: Math.PI * 0.1,
-      // thrusterTurnThrottle: 0.0,
       radPerSec: Math.PI * 1.5,
+      thrusterTurnCutoff: Math.PI * 0.1,
+      thrusterTurnThrottle: 0.25,
 
       seekFactor: 1.0,
       seekTargetPosition: dest,
 
-      avoidFactor: 1.75,
+      avoidFactor: 1.0,
       avoidTags: ['ship'],
-      avoidSensorRange: 500,
+      avoidRange: 600,
     }
-  }));
+  });
 }
 
-const ships = [];
-for (let idx = 0; idx < 25; idx++) {
-  setTimeout(spawnShip, 5000 * Math.random());
+function setupGui () {
+  if (gui) { gui.destroy(); }
+  gui = new dat.GUI();
+
+  const generalf = gui.addFolder('General');
+  generalf.add(world, 'isPaused');
+  generalf.add(world, 'debug');
+  generalf.open();
+
+  const vpSystem = world.getSystem('ViewportWebGL');
+  const vpf = gui.addFolder('Viewport');
+  vpf.add(
+    vpSystem, 'zoom',
+    vpSystem.options.zoomMin,
+    vpSystem.options.zoomMax
+  ).listen();
+  vpf.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
+  [
+    'gridEnabled', 'followEnabled', 'cameraX', 'cameraY',
+    'spriteCount', 'lastVertexCount', 'actualBufferSize',
+    'calculatedBufferSize'
+  ].forEach(name => vpf.add(vpSystem, name).listen());
+
+  const motionSystem = world.getSystem('Motion');
+  const mf = gui.addFolder('Motion');
+  [ 'debug' ].forEach(name => mf.add(motionSystem.options, name));
+  mf.open();
+
+  const steeringSystem = world.getSystem('Steering');
+  const sf = gui.addFolder('Steering');
+  [ 'debug' ].forEach(name => sf.add(steeringSystem.options, name));
+  sf.open();
 }
 
-world.subscribe(MSG_DESPAWN, () => {
-  setTimeout(spawnShip, 1000 * Math.random());
-});
-
-world.start();
-
-const vpSystem = world.getSystem('ViewportWebGL');
-const guiSystem = world.getSystem('DatGui');
-const gui = guiSystem.gui;
-
-const generalf = gui.addFolder('General');
-generalf.add(world, 'isPaused');
-generalf.add(world, 'debug');
-generalf.open();
-
-const vpf = gui.addFolder('Viewport');
-const names = [ 'gridEnabled', 'followEnabled', 'cameraX', 'cameraY' ];
-names.forEach(name => vpf.add(vpSystem, name).listen());
-vpf.add(vpSystem, 'zoom',
-  vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
-vpf.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
-vpf.add(vpSystem, 'spriteCount').listen();
-vpf.add(vpSystem, 'lastVertexCount').listen();
-vpf.add(vpSystem, 'actualBufferSize').listen();
-vpf.add(vpSystem, 'calculatedBufferSize').listen();
+init();

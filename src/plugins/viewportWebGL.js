@@ -26,7 +26,9 @@ export class ViewportWebGL extends Core.System {
 
   defaultOptions() {
     return {
-      container: '#game',
+      containerId: 'game',
+      canvasId: 'gameCanvas',
+      removeCanvas: false,
       lineWidth: 2,
       zoom: 1.0,
       zoomMin: 0.1,
@@ -48,9 +50,13 @@ export class ViewportWebGL extends Core.System {
     this.actualBufferSize = 0;
     this.calculatedBufferSize = 0;
 
-    this.container = document.querySelector(this.options.container);
-    this.canvas = document.createElement('canvas');
-    this.container.appendChild(this.canvas);
+    this.container = document.querySelector(`#${this.options.containerId}`);
+    this.canvas = document.querySelector(`#${this.options.canvasId}`);
+    if (!this.canvas) {
+      this.canvas = document.createElement('canvas');
+      this.canvas.setAttribute('id', this.options.canvasId);
+      this.container.appendChild(this.canvas);
+    }
 
     this.initWebGL(this.canvas);
 
@@ -95,7 +101,9 @@ export class ViewportWebGL extends Core.System {
     for (const name in this.events) {
       this.canvas.removeEventListener(name, this.events[name], false);
     }
-    this.container.removeChild(this.canvas);
+    if (this.options.removeCanvas) {
+      this.container.removeChild(this.canvas);
+    }
     window.removeEventListener('mousewheel', this.boundOnMouseWheel, false); // Chrome/Safari/Opera
     window.removeEventListener('DOMMouseScroll',this.boundOnMouseWheel, false); // Firefox
   }

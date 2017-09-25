@@ -72,23 +72,6 @@ export class CollisionSystem extends Core.System {
     bCollidable.inCollision = true;
     bCollidable.inCollisionWith[aPosition.entityId] = 1;
   }
-
-  draw(/* timeDelta */) {
-    const g = this.getDebugGraphics();
-    if (!g) { return; }
-
-    g.lineStyle(4, 0x999999);
-    const collidables = this.world.get('Collidable');
-    for (const entityId in collidables) {
-      const collidable = collidables[entityId];
-      const position = this.world.get('Position', entityId);
-
-      if (collidable.inCollision) {
-        g.drawCircle(position.x, position.y, 40);
-      }
-    }
-
-  }
 }
 
 export const systems = { Collision: CollisionSystem };

@@ -41,7 +41,7 @@
     "start": "npm run server",
     "dev": "npm-run-all --parallel server test:watch",
     "server": "NODE_ENV=development webpack-dev-server",
-    "start:current": "NODE_ENV=development SKETCHES=current webpack-dev-server --progress --colors",
+    "start:current": "NODE_ENV=development SKETCHES=current webpack-dev-server",
     "build": "NODE_ENV=production webpack -p",
     "deploy": "gh-pages -d dist",
     "test": "mocha --colors --compilers js:babel-core/register --require test-setup.js 'src/**/*.test.js'",

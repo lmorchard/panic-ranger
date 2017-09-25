@@ -26,19 +26,21 @@ export const Messages = {
 
 export class World {
   constructor(options) {
-    console.log('new World', options);
     options = options || {};
 
     this.isRunning = false;
     this.isPaused = false;
-    this.debug = false;
+    this.debug = options.debug || false;
 
     this.systems = {};
     if (options.systems) {
       this.addSystems(options.systems);
     }
 
-    this.store = options.store || { _lastEntityId: 0 };
+    this.store = options.store || {};
+    if (!this.store._lastEntityId) {
+      this.store._lastEntityId = 0;
+    }
 
     this.subscribers = {};
 
@@ -56,8 +58,6 @@ export class World {
   start() {
     if (this.isRunning) { return; }
     this.isRunning = true;
-
-    console.log('world start()');
 
     for (const systemName in this.systems) {
       this.systems[systemName].initialize();
@@ -321,11 +321,6 @@ export class System {
   drawStart(/* timeDelta */) { }
 
   draw(/* timeDelta */) { }
-
-  getDebugGraphics() {
-    // TODO make this work again someday
-    return;
-  }
 
   drawEnd(/* timeDelta */) { }
 

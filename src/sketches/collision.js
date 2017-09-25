@@ -1,55 +1,89 @@
-import * as Core from '../lib/core';
-
+import dat from 'dat-gui';
 import Vector2D from '../lib/Vector2D';
 
-import '../plugins/drawStats';
-import '../plugins/memoryStats';
-import '../plugins/datGui';
-import '../plugins/viewportWebGL';
-import '../plugins/name';
-import '../plugins/health';
-import '../plugins/position';
-import '../plugins/motion';
-import '../plugins/thruster';
-import '../plugins/seeker';
-import '../plugins/collision';
-import '../plugins/bounce';
-import '../plugins/playerInputSteering';
+let World, installPlugins, world, plugins, gui;
 
-const debug = true;
+const systems = [
+  ['ViewportWebGL', { debug: true, zoom: 0.2, followName: 'hero1' }],
+  'DrawStats',
+  'PlayerInputSteering',
+  'Motion',
+  'Position',
+  'Thruster',
+  'Seeker',
+  'Collision',
+  'Bounce'
+];
 
-const world = window.world = new Core.World({
-  systems: {
-    ViewportWebGL: {
-      debug: debug,
-      container: '#game',
-      followName: 'hero1',
-      lineWidth: 1.5,
-      zoom: 0.5
-    },
-    DrawStats: {},
-    MemoryStats: {},
-    DatGui: {},
-    PlayerInputSteering: {},
-    Motion: {},
-    Position: {},
-    Thruster: {},
-    Seeker: {},
-    Collision: {},
-    Bounce: {}
+function init () {
+  buildWorld();
+  populateWorld();
+  if (module.hot) {
+    module.hot.accept(plugins.id, buildWorld);
+    module.hot.accept('../lib/core', buildWorld);
   }
-});
+}
 
-world.insert({
-  Name: { name: 'hero1'},
-  Sprite: { name: 'hero', size: 100, color: 0x3333ff },
-  Collidable: {},
-  Bounce: { mass: 7000 },
-  Position: { x: 0, y: 0 },
-  Motion: {},
-  Thruster: { deltaV: 1200, maxV: 500, active: false },
-  PlayerInputSteering: { radPerSec: Math.PI }
-});
+function buildWorld () {
+  try {
+    let store;
+    if (world) {
+      world.stop();
+      store = world.exportStore();
+    }
+
+    ({ World, installPlugins } = require('../lib/core'));
+    plugins = require.context('../plugins', false, /^(?!.*test).*\.js$/);
+    installPlugins(plugins.keys().map(key => plugins(key)));
+
+    world = window.world = new World({ debug: true, systems, store });
+    world.start();
+    setupGui(world);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('build world error', e);
+  }
+}
+
+function setupGui () {
+  if (gui) { gui.destroy(); }
+  gui = new dat.GUI();
+
+  gui.add(world, 'isPaused');
+  gui.add(world, 'debug');
+
+  const vpSystem = world.getSystem('ViewportWebGL');
+  gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
+  gui.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
+  ['gridEnabled', 'followEnabled', 'cameraX', 'cameraY']
+    .forEach(name => gui.add(vpSystem, name).listen());
+
+  const cp = vpSystem.cursorPosition;
+  gui.add(cp, 'x').listen();
+  gui.add(cp, 'y').listen();
+}
+
+function populateWorld () {
+  world.insert({
+    Name: { name: 'hero1'},
+    Sprite: { name: 'hero', size: 100, color: 0x3333ff },
+    Collidable: {},
+    Bounce: { mass: 7000 },
+    Position: { x: 0, y: 0 },
+    Motion: {},
+    Thruster: { deltaV: 1200, maxV: 500, active: false },
+    PlayerInputSteering: { radPerSec: Math.PI }
+  });
+
+  const pos = 470;
+  const size = 440;
+  const num = 200;
+
+  spawnField(-pos, -pos, size, num);
+  spawnField(pos, pos, size, num);
+  spawnField(pos, -pos, size, num);
+  spawnField(-pos, pos, size, num);
+}
 
 function spawnAsteroid(x, y, width, height, dx, dy, dr, mass, health) {
   world.insert({
@@ -106,31 +140,4 @@ function spawnField(centerX, centerY, radius=300,
   }
 }
 
-const pos = 470;
-const size = 440;
-const num = 200;
-
-spawnField(-pos, -pos, size, num);
-spawnField(pos, pos, size, num);
-spawnField(pos, -pos, size, num);
-spawnField(-pos, pos, size, num);
-
-world.start();
-
-const vpSystem = world.getSystem('ViewportWebGL');
-const guiSystem = world.getSystem('DatGui');
-const gui = guiSystem.gui;
-
-gui.add(world, 'isPaused');
-gui.add(world, 'debug');
-gui.add(vpSystem, 'zoom', vpSystem.options.zoomMin, vpSystem.options.zoomMax).listen();
-gui.add(vpSystem, 'lineWidth', 1.0, 4.0).step(0.5).listen();
-
-const names = [ 'gridEnabled', 'followEnabled', 'cameraX', 'cameraY' ];
-names.forEach(function (name) {
-  gui.add(vpSystem, name).listen();
-});
-
-const cp = vpSystem.cursorPosition;
-gui.add(cp, 'x').listen();
-gui.add(cp, 'y').listen();
+init();

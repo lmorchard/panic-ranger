@@ -32,19 +32,27 @@ if (!SKETCHES) {
     template: './src/sketch.html.ejs',
     filename: `index.html`
   }));
+} else if (SKETCHES === 'current') {
+  entries['index.js'] = './src/sketches/current.js';
+  htmlPlugins.push(new HtmlWebpackPlugin({
+    chunks: ['core.js', 'index.js'],
+    template: './src/sketch.html.ejs',
+    filename: `index.html`
+  }));
 } else {
   sketches.forEach(name =>
     entries[`sketches/${name}/index.js`] = [`./src/sketches/${name}.js`]);
   htmlPlugins.push(new HtmlWebpackPlugin({
     template: './src/sketch-index.html.ejs',
     filename: 'index.html',
+    chunks: [],
     sketches
   }));
   sketches.forEach(name =>
     htmlPlugins.push(new HtmlWebpackPlugin({
-      chunks: ['core.js', `sketches/${name}/index.js`],
       template: './src/sketch.html.ejs',
-      filename: `sketches/${name}/index.html`
+      filename: `sketches/${name}/index.html`,
+      chunks: ['core.js', `sketches/${name}/index.js`]
     }))
   );
 }
