@@ -37,7 +37,7 @@ export class ViewportWebGL extends Core.System {
       visibleMargin: 250,
       gridEnabled: true,
       gridSize: 250,
-      gridColor: 0x222222,
+      gridColor: 0x111111,
       followEnabled: true,
       followName: null,
       followEntityId: null

@@ -21,7 +21,11 @@ let entityId, system, systemName, componentName,
 
 export const Messages = {
   ENTITY_INSERT: 'entity_insert',
-  ENTITY_DESTROY: 'entity_destroy'
+  ENTITY_DESTROY: 'entity_destroy',
+  BEFORE_UPDATE: 'BEFORE_UPDATE',
+  AFTER_UPDATE: 'AFTER_UPDATE',
+  BEFORE_DRAW: 'BEFORE_DRAW',
+  AFTER_DRAW: 'AFTER_DRAW'
 };
 
 export class World {
@@ -144,6 +148,7 @@ export class World {
   }
 
   tick(timeDeltaMS) {
+    this.publish(Messages.BEFORE_UPDATE);
     timeDelta = timeDeltaMS / 1000;
     for (systemName in this.systems) {
       this.systems[systemName].updateStart(timeDelta);
@@ -154,6 +159,7 @@ export class World {
     for (systemName in this.systems) {
       this.systems[systemName].updateEnd(timeDelta);
     }
+    this.publish(Messages.AFTER_UPDATE);
   }
 
   tickLoop() {
@@ -177,6 +183,7 @@ export class World {
   }
 
   draw(timeDeltaMS) {
+    this.publish(Messages.BEFORE_DRAW);
     timeDelta = timeDeltaMS / 1000;
     for (systemName in this.systems) {
       this.systems[systemName].drawStart(timeDelta);
@@ -187,6 +194,7 @@ export class World {
     for (systemName in this.systems) {
       this.systems[systemName].drawEnd(timeDelta);
     }
+    this.publish(Messages.AFTER_DRAW);
   }
 
   drawLoop(timestamp) {
@@ -215,14 +223,14 @@ export class World {
         componentAttrs = item[componentName];
         this.addComponent(entityId, componentName, componentAttrs);
       }
-      if (this.world) this.world.publish(Messages.ENTITY_INSERT, entityId);
+      this.publish(Messages.ENTITY_INSERT, entityId);
       out.push(entityId);
     }
     return out.length > 1 ? out : out[0];
   }
 
   destroy(entityId) {
-    if (this.world) this.world.publish(Messages.ENTITY_DESTROY, entityId);
+    this.publish(Messages.ENTITY_DESTROY, entityId);
     for (componentName in this.store) {
       if ('_lastEntityId' === componentName) { continue; }
       this.removeComponent(entityId, componentName);

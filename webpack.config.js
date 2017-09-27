@@ -25,29 +25,30 @@ const entries = {
 
 const htmlPlugins = [];
 
-if (!SKETCHES) {
-  entries['index.js'] = './src/index.js';
-  htmlPlugins.push(new HtmlWebpackPlugin({
-    chunks: ['core.js', 'index.js'],
-    template: './src/sketch.html.ejs',
-    filename: `index.html`
-  }));
-} else if (SKETCHES === 'current') {
+if (SKETCHES === 'current') {
+
+  // Build only the "current" sketch for dev speed
   entries['index.js'] = './src/sketches/current.js';
+
   htmlPlugins.push(new HtmlWebpackPlugin({
     chunks: ['core.js', 'index.js'],
     template: './src/sketch.html.ejs',
     filename: `index.html`
   }));
-} else {
+
+} else if (!!SKETCHES) {
+
+  // Build all sketches and the index page
   sketches.forEach(name =>
     entries[`sketches/${name}/index.js`] = [`./src/sketches/${name}.js`]);
+
   htmlPlugins.push(new HtmlWebpackPlugin({
     template: './src/sketch-index.html.ejs',
     filename: 'index.html',
     chunks: [],
     sketches
   }));
+
   sketches.forEach(name =>
     htmlPlugins.push(new HtmlWebpackPlugin({
       template: './src/sketch.html.ejs',
@@ -55,49 +56,57 @@ if (!SKETCHES) {
       chunks: ['core.js', `sketches/${name}/index.js`]
     }))
   );
+
+} else {
+
+  // Only build the main app
+  entries['index.js'] = './src/index.js';
+
+  htmlPlugins.push(new HtmlWebpackPlugin({
+    chunks: ['core.js', 'index.js'],
+    template: './src/sketch.html.ejs',
+    filename: `index.html`
+  }));
+
 }
 
-module.exports = [
-  {
-    devServer: {
-      public: PROJECT_DOMAIN
-        ? `${PROJECT_DOMAIN}.glitch.me`
-        : `${HOST}:${PORT}`,
-      port: PORT,
-      disableHostCheck: true,
-      contentBase: 'dist',
-      hot: true
-    },
-    watchOptions: {
-      aggregateTimeout: IS_GLITCH ? 500 : 0
-    },
-    devtool: 'source-map',
-    entry: entries,
-    output: {
-      path: path.resolve(__dirname, 'dist'),
-      filename: '[name]',
-      chunkFilename: '[id].bundle.js'
-    },
-    module: {
-      rules: [
-        {
-          test: /\.css$/,
-          use: ['style-loader', 'css-loader']
-        },
-        {
-          test: /\.(js|jsx)/,
-          exclude: /node_modules/,
-          loader: ['babel-loader', 'eslint-loader']
-        }
-      ]
-    },
-    plugins: [
-      new webpack.DefinePlugin({
-        'process.env.NODE_ENV': `"${process.env.NODE_ENV || 'dev'}"`
-      }),
-      new webpack.optimize.CommonsChunkPlugin('core.js'),
-      new webpack.NamedModulesPlugin(),
-      new webpack.HotModuleReplacementPlugin()
-    ].concat(htmlPlugins)
-  }
-];
+module.exports = {
+  devServer: {
+    public: PROJECT_DOMAIN
+      ? `${PROJECT_DOMAIN}.glitch.me`
+      : `${HOST}:${PORT}`,
+    port: PORT,
+    disableHostCheck: true,
+    contentBase: 'dist',
+    hot: true
+  },
+  watchOptions: {
+    aggregateTimeout: IS_GLITCH ? 500 : 0
+  },
+  devtool: 'source-map',
+  entry: entries,
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name]',
+    chunkFilename: '[id].bundle.js'
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      },
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        loader: ['babel-loader', 'eslint-loader']
+      }
+    ]
+  },
+  plugins: [
+    new webpack.DefinePlugin({ 'process.env.NODE_ENV': `"${NODE_ENV}"` }),
+    new webpack.optimize.CommonsChunkPlugin('core.js'),
+    new webpack.NamedModulesPlugin(),
+    new webpack.HotModuleReplacementPlugin()
+  ].concat(htmlPlugins)
+};

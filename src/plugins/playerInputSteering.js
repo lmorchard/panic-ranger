@@ -4,7 +4,11 @@ export class PlayerInputSteering extends Component {
   static defaults() {
     return {
       active: true,
-      radPerSec: Math.PI * 2
+      strafe: false,
+      radPerSec: Math.PI * 2,
+      useKeys: true,
+      usePointer: true,
+      useGamepad: true
     };
   }
 }
@@ -58,25 +62,37 @@ export class PlayerInputSteeringSystem extends System {
   }
 
   updateComponent(timeDelta, entityId, steering) {
-    const thruster = this.world.get('Thruster', entityId);
     const motion = this.world.get('Motion', entityId);
+    const thruster = this.world.get('Thruster', entityId);
+    const lateralThruster = this.world.get('LateralThruster', entityId);
 
-    thruster.active = true;
-    thruster.stop = false;
+    if (thruster) {
+      thruster.active = true;
+      thruster.stop = false;
+    }
+    if (lateralThruster) {
+      lateralThruster.active = true;
+      lateralThruster.stop = false;
+    }
 
-    if (this.keys.active) {
+    if (this.keys.active && steering.useKeys) {
       return this.updateComponentFromKeyboard(timeDelta, entityId, steering);
     }
 
-    if (this.pointer.active) {
+    if (this.pointer.active && steering.usePointer) {
       return this.updateComponentFromPointer(timeDelta, entityId, steering);
     }
 
-    if (this.gamepad.active) {
+    if (this.gamepad.active && steering.useGamepad) {
       return this.updateComponentFromGamepad(timeDelta, entityId, steering);
     }
 
-    thruster.stop = true;
+    if (thruster) { thruster.stop = true; }
+    if (lateralThruster) {
+      lateralThruster.stop = true;
+      lateralThruster.throttle = 0.0;
+    }
+
     motion.drotation = 0;
   }
 
@@ -94,21 +110,38 @@ export class PlayerInputSteeringSystem extends System {
   updateComponentFromKeyboard(timeDelta, entityId, steering) {
     const thruster = this.world.get('Thruster', entityId);
     const motion = this.world.get('Motion', entityId);
+    const lateralThruster = this.world.get('LateralThruster', entityId);
 
     const dleft  = (this.keys[65] || this.keys[37] || this.gamepad.button13);
     const dright = (this.keys[68] || this.keys[39] || this.gamepad.button14);
     const dup    = (this.keys[87] || this.keys[38] || this.gamepad.button11);
     // const ddown  = (this.keys[83] || this.keys[40] || this.gamepad.button12);
 
-    if (dup) {
-      thruster.active = true;
-    } else {
-      thruster.stop = true;
+    if (thruster) {
+      if (dup) {
+        thruster.active = true;
+      } else {
+        thruster.stop = true;
+      }
     }
 
-    const direction = dleft ? -1 : (dright ? 1 : 0);
-    const targetDr = direction * steering.radPerSec;
-    motion.drotation = targetDr;
+    if (!steering.strafe) {
+      const direction = dleft ? -1 : (dright ? 1 : 0);
+      const targetDr = direction * steering.radPerSec;
+      motion.drotation = targetDr;
+    } else {
+      if (dleft) {
+        lateralThruster.stop = false;
+        lateralThruster.active = true;
+        lateralThruster.throttle = -1.0;
+      } else if (dright) {
+        lateralThruster.stop = false;
+        lateralThruster.active = true;
+        lateralThruster.throttle = 1.0;
+      } else {
+        lateralThruster.stop = true;
+      }
+    }
   }
 
   updateGamepads() {
